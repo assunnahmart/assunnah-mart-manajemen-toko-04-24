@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -111,8 +110,7 @@ const POSPayment = ({
           bayar: paid,
           kembalian: selectedPaymentMethod === 'cash' ? calculateChange() : 0,
           status: paymentStatus,
-          catatan: notes,
-          sisa_piutang: remainingDebt
+          catatan: notes
         },
         detail: cartItems.map(item => ({
           barang_id: item.id,

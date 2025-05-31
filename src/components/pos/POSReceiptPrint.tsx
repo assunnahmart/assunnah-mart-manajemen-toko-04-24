@@ -71,16 +71,16 @@ const POSReceiptPrint = ({
       <body>
         <div class="receipt">
           <div class="center">
-            <img src="https://images.unsplash.com/photo-1618160702438-9b02ab6515c9?w=80&h=80&fit=crop&crop=center" 
+            <img src="/lovable-uploads/a2af9547-58f3-45de-b565-8283573a9b0e.png" 
                  alt="Logo Assunnah Mart" class="logo" />
           </div>
           <div class="center bold">
             ASSUNNAH MART
           </div>
           <div class="center">
-            Jl. Raya Bogor No. 123<br>
-            Cibinong, Bogor 16911<br>
-            Telp: (021) 8756-4321<br>
+            Jl. Kalitanjung No. 52B<br>
+            Kec. Kesambi, Cirebon<br>
+            Telp: +62 896-0335-0353<br>
             Email: info@assunnahmart.com
           </div>
           <div class="line"></div>
@@ -162,15 +162,15 @@ const POSReceiptPrint = ({
       <div className="max-w-sm mx-auto bg-white p-4 font-mono text-xs border">
         <div className="text-center mb-4">
           <img 
-            src="https://images.unsplash.com/photo-1618160702438-9b02ab6515c9?w=80&h=80&fit=crop&crop=center" 
+            src="/lovable-uploads/a2af9547-58f3-45de-b565-8283573a9b0e.png" 
             alt="Logo Assunnah Mart" 
             className="w-16 h-16 mx-auto rounded-lg mb-2"
           />
           <div className="font-bold text-sm">ASSUNNAH MART</div>
           <div className="text-xs text-gray-600">
-            Jl. Raya Bogor No. 123<br/>
-            Cibinong, Bogor 16911<br/>
-            Telp: (021) 8756-4321<br/>
+            Jl. Kalitanjung No. 52B<br/>
+            Kec. Kesambi, Cirebon<br/>
+            Telp: +62 896-0335-0353<br/>
             Email: info@assunnahmart.com
           </div>
         </div>

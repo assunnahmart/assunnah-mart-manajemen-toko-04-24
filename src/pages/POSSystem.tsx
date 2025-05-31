@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import NewProtectedRoute from '@/components/NewProtectedRoute';
 import NewNavbar from '@/components/NewNavbar';
@@ -6,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Search, ShoppingCart, Save, CreditCard, History } from 'lucide-react';
+import { Search, ShoppingCart, Save, CreditCard, History, Receipt } from 'lucide-react';
 import { useSimpleAuth } from '@/hooks/useSimpleAuth';
 import { useCreatePOSTransaction } from '@/hooks/usePOSTransactions';
 import { useToast } from '@/hooks/use-toast';
@@ -34,7 +33,7 @@ const POSSystem = () => {
   const [showHistory, setShowHistory] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
-  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState('cash');
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState('cash'); // Default to cash
   
   const createTransaction = useCreatePOSTransaction();
 
@@ -85,7 +84,7 @@ const POSSystem = () => {
         change_amount: 0,
         items_count: cartItems.length,
         status: 'saved' as const,
-        notes: `Quick save - ${selectedCustomer ? `Pelanggan: ${selectedCustomer.name}` : 'Tanpa pelanggan'}`
+        notes: `Quick save - ${selectedCustomer ? `Pelanggan: ${selectedCustomer.name}` : 'Tanpa pelanggan'} - Metode: ${selectedPaymentMethod === 'cash' ? 'Tunai' : 'Kredit'}`
       };
 
       const itemsData = cartItems.map(item => ({
@@ -108,7 +107,7 @@ const POSSystem = () => {
       setSelectedCustomer(null);
       toast({
         title: "Transaksi berhasil disimpan",
-        description: "Transaksi telah disimpan ke database Supabase"
+        description: "Transaksi telah disimpan dan terintegrasi dengan laporan rekap penjualan kasir"
       });
     } catch (error) {
       console.error('Error saving transaction:', error);
@@ -129,6 +128,17 @@ const POSSystem = () => {
       });
       return;
     }
+
+    // For credit payment, require customer selection
+    if (selectedPaymentMethod === 'credit' && !selectedCustomer) {
+      toast({
+        title: "Pilih pelanggan",
+        description: "Pembayaran kredit memerlukan pemilihan pelanggan",
+        variant: "destructive"
+      });
+      return;
+    }
+
     setShowPayment(true);
   };
 
@@ -218,6 +228,16 @@ const POSSystem = () => {
                 onMethodSelect={setSelectedPaymentMethod}
               />
 
+              {/* Credit Payment Warning */}
+              {selectedPaymentMethod === 'credit' && !selectedCustomer && (
+                <div className="bg-orange-50 border border-orange-200 p-3 rounded-lg">
+                  <p className="text-orange-700 text-sm flex items-center gap-2">
+                    <Receipt className="h-4 w-4" />
+                    Pembayaran kredit memerlukan pemilihan pelanggan
+                  </p>
+                </div>
+              )}
+
               {/* Cart */}
               <Card>
                 <CardHeader>
@@ -276,12 +296,12 @@ const POSSystem = () => {
                       {/* Regular Payment Button */}
                       <Button
                         onClick={handleRegularPayment}
-                        disabled={cartItems.length === 0}
+                        disabled={cartItems.length === 0 || (selectedPaymentMethod === 'credit' && !selectedCustomer)}
                         className="w-full"
                         size="lg"
                       >
-                        <CreditCard className="h-4 w-4 mr-2" />
-                        Bayar & Cetak
+                        {selectedPaymentMethod === 'credit' ? <Receipt className="h-4 w-4 mr-2" /> : <CreditCard className="h-4 w-4 mr-2" />}
+                        {selectedPaymentMethod === 'credit' ? 'Proses Kredit' : 'Bayar & Cetak'}
                       </Button>
                     </div>
                   </div>

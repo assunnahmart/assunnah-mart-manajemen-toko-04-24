@@ -1,7 +1,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { CreditCard, Banknote, Smartphone } from 'lucide-react';
+import { CreditCard, Banknote, Receipt } from 'lucide-react';
 
 interface PaymentMethod {
   id: string;
@@ -22,14 +22,9 @@ const POSPaymentMethod = ({ selectedMethod, onMethodSelect }: POSPaymentMethodPr
       icon: <Banknote className="h-4 w-4" />
     },
     {
-      id: 'card',
-      name: 'Kartu',
-      icon: <CreditCard className="h-4 w-4" />
-    },
-    {
-      id: 'digital',
-      name: 'Digital',
-      icon: <Smartphone className="h-4 w-4" />
+      id: 'credit',
+      name: 'Kredit',
+      icon: <Receipt className="h-4 w-4" />
     }
   ];
 
@@ -42,7 +37,7 @@ const POSPaymentMethod = ({ selectedMethod, onMethodSelect }: POSPaymentMethodPr
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="grid grid-cols-3 gap-2">
+        <div className="grid grid-cols-2 gap-2">
           {paymentMethods.map((method) => (
             <Button
               key={method.id}

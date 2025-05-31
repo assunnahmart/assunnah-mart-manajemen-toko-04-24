@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import NewProtectedRoute from '@/components/NewProtectedRoute';
 import NewNavbar from '@/components/NewNavbar';
@@ -77,13 +76,15 @@ const POSSystem = () => {
       };
 
       const itemsData = cartItems.map(item => ({
-        product_id: item.id,
+        product_id: item.id.toString(), // Convert UUID to string
         product_name: item.nama,
         unit_price: item.harga_jual,
         quantity: item.quantity,
         subtotal: item.harga_jual * item.quantity,
         unit: item.satuan || 'pcs'
       }));
+
+      console.log('Saving transaction data:', { transactionData, itemsData });
 
       await createTransaction.mutateAsync({
         transaction: transactionData,
@@ -99,7 +100,7 @@ const POSSystem = () => {
       console.error('Error saving transaction:', error);
       toast({
         title: "Gagal menyimpan",
-        description: "Terjadi kesalahan saat menyimpan transaksi",
+        description: `Terjadi kesalahan: ${error.message || 'Unknown error'}`,
         variant: "destructive"
       });
     }

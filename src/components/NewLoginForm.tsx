@@ -7,22 +7,24 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useNavigate } from 'react-router-dom';
+import WelcomeScreen from './WelcomeScreen';
 
 const NewLoginForm = () => {
-  const { signIn, isAuthenticated } = useSimpleAuth();
+  const { signIn, isAuthenticated, user } = useSimpleAuth();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showWelcome, setShowWelcome] = useState(false);
   const navigate = useNavigate();
 
-  // Auto redirect when authenticated
+  // Auto redirect when authenticated (but not if showing welcome screen)
   useEffect(() => {
-    if (isAuthenticated) {
+    if (isAuthenticated && !showWelcome) {
       console.log('NewLoginForm: User is authenticated, redirecting to dashboard');
       navigate('/', { replace: true });
     }
-  }, [isAuthenticated, navigate]);
+  }, [isAuthenticated, navigate, showWelcome]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -44,11 +46,12 @@ const NewLoginForm = () => {
         console.log('NewLoginForm: Login failed:', result.error.message);
         setError(result.error.message || 'Login gagal. Periksa username dan password Anda.');
       } else {
-        console.log('NewLoginForm: Login successful, will redirect automatically');
+        console.log('NewLoginForm: Login successful, showing welcome screen');
         // Reset form
         setUsername('');
         setPassword('');
-        // Navigation will happen automatically via useEffect
+        // Show welcome screen instead of immediate redirect
+        setShowWelcome(true);
       }
     } catch (error) {
       console.error('NewLoginForm: Unexpected error during login:', error);
@@ -58,11 +61,21 @@ const NewLoginForm = () => {
     setLoading(false);
   };
 
+  const handleWelcomeComplete = () => {
+    setShowWelcome(false);
+    // Navigation will happen automatically via useEffect
+  };
+
   const handleDemoLogin = (demoUsername: string, demoPassword: string) => {
     setUsername(demoUsername);
     setPassword(demoPassword);
     setError('');
   };
+
+  // Show welcome screen if user just logged in
+  if (showWelcome && user) {
+    return <WelcomeScreen userName={user.full_name} onComplete={handleWelcomeComplete} />;
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center gradient-assunnah p-4">

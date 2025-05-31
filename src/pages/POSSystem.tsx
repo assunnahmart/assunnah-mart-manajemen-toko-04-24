@@ -8,8 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Search, ShoppingCart, Save, CreditCard, History } from 'lucide-react';
 import { useSimpleAuth } from '@/hooks/useSimpleAuth';
-import { useCreatePOSTransaction, usePOSTransactionsToday } from '@/hooks/usePOSTransactions';
-import { useTransaksiHariIni } from '@/hooks/useTransaksi';
+import { useCreatePOSTransaction } from '@/hooks/usePOSTransactions';
 import { useToast } from '@/hooks/use-toast';
 import POSCart from '@/components/pos/POSCart';
 import POSProductSearch from '@/components/pos/POSProductSearch';
@@ -27,8 +26,6 @@ const POSSystem = () => {
   const [searchQuery, setSearchQuery] = useState('');
   
   const createTransaction = useCreatePOSTransaction();
-  const { data: todayStats } = usePOSTransactionsToday();
-  const { data: transaksiHariIni } = useTransaksiHariIni();
 
   const addToCart = (product) => {
     const existingItem = cartItems.find(item => item.id === product.id);
@@ -159,42 +156,6 @@ const POSSystem = () => {
                 </Button>
                 <POSExportImport />
               </div>
-            </div>
-
-            {/* Enhanced Today's Stats */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-              <Card>
-                <CardContent className="pt-6">
-                  <div className="text-center">
-                    <p className="text-2xl font-bold text-blue-600">
-                      {todayStats?.totalTransactions || 0}
-                    </p>
-                    <p className="text-sm text-gray-600">Transaksi POS Hari Ini</p>
-                  </div>
-                </CardContent>
-              </Card>
-              
-              <Card>
-                <CardContent className="pt-6">
-                  <div className="text-center">
-                    <p className="text-2xl font-bold text-green-600">
-                      {transaksiHariIni?.totalTransaksi || 0}
-                    </p>
-                    <p className="text-sm text-gray-600">Total Transaksi Hari Ini</p>
-                  </div>
-                </CardContent>
-              </Card>
-              
-              <Card>
-                <CardContent className="pt-6">
-                  <div className="text-center">
-                    <p className="text-2xl font-bold text-purple-600">
-                      Rp {(transaksiHariIni?.totalPendapatan || 0).toLocaleString('id-ID')}
-                    </p>
-                    <p className="text-sm text-gray-600">Pendapatan Hari Ini</p>
-                  </div>
-                </CardContent>
-              </Card>
             </div>
           </div>
 

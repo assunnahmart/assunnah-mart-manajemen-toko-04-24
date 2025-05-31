@@ -62,16 +62,23 @@ const POSReceiptPrint = ({
           .line { border-bottom: 1px dashed #000; margin: 5px 0; }
           .row { display: flex; justify-content: space-between; margin: 2px 0; }
           .bold { font-weight: bold; }
+          .logo { width: 80px; height: 80px; margin: 0 auto 10px; border-radius: 8px; }
         </style>
       </head>
       <body>
         <div class="receipt">
+          <div class="center">
+            <img src="https://images.unsplash.com/photo-1618160702438-9b02ab6515c9?w=80&h=80&fit=crop&crop=center" 
+                 alt="Logo Assunnah Mart" class="logo" />
+          </div>
           <div class="center bold">
-            TOKO ASSUNNAH
+            ASSUNNAH MART
           </div>
           <div class="center">
-            Jl. Contoh No. 123<br>
-            Telp: (021) 1234567
+            Jl. Raya Bogor No. 123<br>
+            Cibinong, Bogor 16911<br>
+            Telp: (021) 8756-4321<br>
+            Email: info@assunnahmart.com
           </div>
           <div class="line"></div>
           
@@ -100,8 +107,8 @@ const POSReceiptPrint = ({
             <span>${item.nama}</span>
           </div>
           <div class="row">
-            <span>${item.quantity} x ${item.harga_jual.toLocaleString('id-ID')}</span>
-            <span>${(item.quantity * item.harga_jual).toLocaleString('id-ID')}</span>
+            <span>${item.quantity} x Rp ${item.harga_jual.toLocaleString('id-ID')}</span>
+            <span>Rp ${(item.quantity * item.harga_jual).toLocaleString('id-ID')}</span>
           </div>
           `).join('')}
           
@@ -128,8 +135,14 @@ const POSReceiptPrint = ({
           <div class="line"></div>
           <div class="center">
             Terima kasih atas kunjungan Anda<br>
+            Semoga berkah dan barokah<br>
+            <br>
             Barang yang sudah dibeli<br>
-            tidak dapat dikembalikan
+            tidak dapat dikembalikan<br>
+            kecuali ada kesepakatan
+          </div>
+          <div class="center" style="margin-top: 10px; font-size: 10px;">
+            www.assunnahmart.com
           </div>
         </div>
       </body>

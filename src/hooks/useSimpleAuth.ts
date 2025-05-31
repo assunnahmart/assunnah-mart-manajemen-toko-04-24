@@ -61,7 +61,6 @@ export const useSimpleAuth = () => {
   const signIn = async (username: string, password: string) => {
     try {
       console.log('useSimpleAuth: Attempting login with:', { username, password: '***' });
-      console.log('useSimpleAuth: Available users:', DEMO_USERS.map(u => ({ username: u.username, role: u.role })));
       
       // Trim whitespace and ensure case-sensitive matching
       const trimmedUsername = username.trim();
@@ -71,8 +70,6 @@ export const useSimpleAuth = () => {
       
       if (!user) {
         console.log('useSimpleAuth: User not found or password incorrect');
-        console.log('useSimpleAuth: Tried username:', trimmedUsername);
-        console.log('useSimpleAuth: Available usernames:', DEMO_USERS.map(u => u.username));
         return { error: { message: 'Username atau password salah' } };
       }
 
@@ -87,12 +84,15 @@ export const useSimpleAuth = () => {
       // Save to localStorage
       localStorage.setItem('assunnah_auth_user', JSON.stringify(userProfile));
       
-      // Update state immediately
+      // Update state immediately with forced re-render
       setAuthState({
         isAuthenticated: true,
         user: userProfile,
         loading: false
       });
+
+      // Force a small delay to ensure state is updated before redirect
+      await new Promise(resolve => setTimeout(resolve, 100));
 
       console.log('useSimpleAuth: Auth state updated successfully');
       return { data: userProfile, error: null };

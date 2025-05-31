@@ -1,18 +1,28 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useSimpleAuth } from '@/hooks/useSimpleAuth';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { useNavigate } from 'react-router-dom';
 
 const NewLoginForm = () => {
-  const { signIn } = useSimpleAuth();
+  const { signIn, isAuthenticated } = useSimpleAuth();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
+
+  // Auto redirect when authenticated
+  useEffect(() => {
+    if (isAuthenticated) {
+      console.log('NewLoginForm: User is authenticated, redirecting to dashboard');
+      navigate('/', { replace: true });
+    }
+  }, [isAuthenticated, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -34,11 +44,11 @@ const NewLoginForm = () => {
         console.log('NewLoginForm: Login failed:', result.error.message);
         setError(result.error.message || 'Login gagal. Periksa username dan password Anda.');
       } else {
-        console.log('NewLoginForm: Login successful, auth state should update automatically');
+        console.log('NewLoginForm: Login successful, will redirect automatically');
         // Reset form
         setUsername('');
         setPassword('');
-        // Login berhasil, komponen akan otomatis redirect karena isAuthenticated berubah
+        // Navigation will happen automatically via useEffect
       }
     } catch (error) {
       console.error('NewLoginForm: Unexpected error during login:', error);

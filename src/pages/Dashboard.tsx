@@ -1,5 +1,7 @@
+
 import NewProtectedRoute from '@/components/NewProtectedRoute';
 import NewNavbar from '@/components/NewNavbar';
+import DashboardSummary from '@/components/DashboardSummary';
 import { useSimpleAuth } from '@/hooks/useSimpleAuth';
 import StatsCard from '@/components/StatsCard';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -17,6 +19,9 @@ const Dashboard = () => {
         <NewNavbar />
         
         <div className="container mx-auto px-4 py-6 space-y-6">
+          {/* Summary Section - Now at the top with large numbers */}
+          <DashboardSummary />
+
           {/* Welcome Section */}
           <div className="bg-white rounded-lg shadow-sm border p-6">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">

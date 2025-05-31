@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -61,9 +60,9 @@ const POSPayment = ({
 
   const getPaymentMethodText = (method: string) => {
     switch (method) {
-      case 'cash': return 'tunai';
-      case 'credit': return 'kredit';
-      default: return 'tunai'; // Default fallback
+      case 'cash': return 'cash';
+      case 'credit': return 'credit';
+      default: return 'cash'; // Default fallback
     }
   };
 
@@ -101,6 +100,16 @@ const POSPayment = ({
       // For credit payment, calculate remaining debt
       const remainingDebt = selectedPaymentMethod === 'credit' ? totalAmount - paid : 0;
       const paymentStatus = selectedPaymentMethod === 'credit' && remainingDebt > 0 ? 'kredit' : 'selesai';
+
+      console.log('Payment data:', {
+        jenis_pembayaran: getPaymentMethodText(selectedPaymentMethod),
+        subtotal: totalAmount,
+        total: totalAmount,
+        bayar: paid,
+        kembalian: selectedPaymentMethod === 'cash' ? calculateChange() : 0,
+        status: paymentStatus,
+        catatan: notes
+      });
 
       const result = await createTransaksi.mutateAsync({
         transaksi: {

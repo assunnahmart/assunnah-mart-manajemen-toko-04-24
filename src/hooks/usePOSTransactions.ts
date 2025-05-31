@@ -47,37 +47,59 @@ export const useCreatePOSTransaction = () => {
       const { data: transactionNumber, error: numberError } = await supabase
         .rpc('generate_pos_transaction_number');
       
-      if (numberError) throw numberError;
+      if (numberError) {
+        console.error('Error generating transaction number:', numberError);
+        throw numberError;
+      }
       
-      // Insert transaction
-      const { data: transactionData, error: transactionError } = await supabase
+      console.log('Generated transaction number:', transactionNumber);
+      
+      // Insert transaction with the generated number as string
+      const transactionData = {
+        ...transaction,
+        transaction_number: transactionNumber as string
+      };
+      
+      console.log('Inserting transaction:', transactionData);
+      
+      const { data: insertedTransaction, error: transactionError } = await supabase
         .from('pos_transactions')
-        .insert({
-          ...transaction,
-          transaction_number: transactionNumber
-        })
+        .insert(transactionData)
         .select()
         .single();
       
-      if (transactionError) throw transactionError;
+      if (transactionError) {
+        console.error('Error inserting transaction:', transactionError);
+        throw transactionError;
+      }
+      
+      console.log('Transaction inserted successfully:', insertedTransaction);
       
       // Insert transaction items
       const itemsWithTransactionId = items.map(item => ({
         ...item,
-        transaction_id: transactionData.id
+        transaction_id: insertedTransaction.id
       }));
+      
+      console.log('Inserting items:', itemsWithTransactionId);
       
       const { data: itemsData, error: itemsError } = await supabase
         .from('pos_transaction_items')
         .insert(itemsWithTransactionId)
         .select();
       
-      if (itemsError) throw itemsError;
+      if (itemsError) {
+        console.error('Error inserting items:', itemsError);
+        throw itemsError;
+      }
       
-      return { transaction: transactionData, items: itemsData };
+      console.log('Items inserted successfully:', itemsData);
+      
+      return { transaction: insertedTransaction, items: itemsData };
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['pos_transactions'] });
+      queryClient.invalidateQueries({ queryKey: ['pos_transactions_today'] });
     },
   });
 };

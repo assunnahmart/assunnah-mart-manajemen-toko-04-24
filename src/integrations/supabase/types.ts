@@ -9,7 +9,518 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      barang_konsinyasi: {
+        Row: {
+          barcode: string | null
+          created_at: string | null
+          harga_beli: number | null
+          harga_jual: number | null
+          id: string
+          jenis_konsinyasi: string
+          kategori_id: string | null
+          nama: string
+          satuan: string | null
+          status: string | null
+          stok_minimal: number | null
+          stok_saat_ini: number | null
+          supplier_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          barcode?: string | null
+          created_at?: string | null
+          harga_beli?: number | null
+          harga_jual?: number | null
+          id?: string
+          jenis_konsinyasi: string
+          kategori_id?: string | null
+          nama: string
+          satuan?: string | null
+          status?: string | null
+          stok_minimal?: number | null
+          stok_saat_ini?: number | null
+          supplier_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          barcode?: string | null
+          created_at?: string | null
+          harga_beli?: number | null
+          harga_jual?: number | null
+          id?: string
+          jenis_konsinyasi?: string
+          kategori_id?: string | null
+          nama?: string
+          satuan?: string | null
+          status?: string | null
+          stok_minimal?: number | null
+          stok_saat_ini?: number | null
+          supplier_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "barang_konsinyasi_kategori_id_fkey"
+            columns: ["kategori_id"]
+            isOneToOne: false
+            referencedRelation: "kategori_barang"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "barang_konsinyasi_supplier_id_fkey"
+            columns: ["supplier_id"]
+            isOneToOne: false
+            referencedRelation: "supplier"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      detail_transaksi_penjualan: {
+        Row: {
+          barang_id: string | null
+          created_at: string | null
+          harga_satuan: number
+          id: string
+          jumlah: number
+          nama_barang: string
+          subtotal: number
+          transaksi_id: string | null
+        }
+        Insert: {
+          barang_id?: string | null
+          created_at?: string | null
+          harga_satuan: number
+          id?: string
+          jumlah: number
+          nama_barang: string
+          subtotal: number
+          transaksi_id?: string | null
+        }
+        Update: {
+          barang_id?: string | null
+          created_at?: string | null
+          harga_satuan?: number
+          id?: string
+          jumlah?: number
+          nama_barang?: string
+          subtotal?: number
+          transaksi_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "detail_transaksi_penjualan_barang_id_fkey"
+            columns: ["barang_id"]
+            isOneToOne: false
+            referencedRelation: "barang_konsinyasi"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "detail_transaksi_penjualan_transaksi_id_fkey"
+            columns: ["transaksi_id"]
+            isOneToOne: false
+            referencedRelation: "transaksi_penjualan"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      jadwal_kasir: {
+        Row: {
+          created_at: string | null
+          hari: string
+          id: string
+          jam_mulai: string
+          jam_selesai: string
+          kasir_id: string | null
+          minggu_ke: number | null
+          shift: string
+          tahun: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          hari: string
+          id?: string
+          jam_mulai: string
+          jam_selesai: string
+          kasir_id?: string | null
+          minggu_ke?: number | null
+          shift: string
+          tahun?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          hari?: string
+          id?: string
+          jam_mulai?: string
+          jam_selesai?: string
+          kasir_id?: string | null
+          minggu_ke?: number | null
+          shift?: string
+          tahun?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "jadwal_kasir_kasir_id_fkey"
+            columns: ["kasir_id"]
+            isOneToOne: false
+            referencedRelation: "kasir"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      kasir: {
+        Row: {
+          created_at: string | null
+          email: string | null
+          id: string
+          nama: string
+          shift: string | null
+          status: string | null
+          telepon: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          email?: string | null
+          id?: string
+          nama: string
+          shift?: string | null
+          status?: string | null
+          telepon?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          email?: string | null
+          id?: string
+          nama?: string
+          shift?: string | null
+          status?: string | null
+          telepon?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      kategori_barang: {
+        Row: {
+          created_at: string | null
+          deskripsi: string | null
+          id: string
+          nama: string
+        }
+        Insert: {
+          created_at?: string | null
+          deskripsi?: string | null
+          id?: string
+          nama: string
+        }
+        Update: {
+          created_at?: string | null
+          deskripsi?: string | null
+          id?: string
+          nama?: string
+        }
+        Relationships: []
+      }
+      mutasi_stok: {
+        Row: {
+          barang_id: string | null
+          created_at: string | null
+          id: string
+          jenis_mutasi: string
+          jumlah: number
+          keterangan: string | null
+          referensi_id: string | null
+          referensi_tipe: string | null
+          stok_sebelum: number
+          stok_sesudah: number
+        }
+        Insert: {
+          barang_id?: string | null
+          created_at?: string | null
+          id?: string
+          jenis_mutasi: string
+          jumlah: number
+          keterangan?: string | null
+          referensi_id?: string | null
+          referensi_tipe?: string | null
+          stok_sebelum: number
+          stok_sesudah: number
+        }
+        Update: {
+          barang_id?: string | null
+          created_at?: string | null
+          id?: string
+          jenis_mutasi?: string
+          jumlah?: number
+          keterangan?: string | null
+          referensi_id?: string | null
+          referensi_tipe?: string | null
+          stok_sebelum?: number
+          stok_sesudah?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mutasi_stok_barang_id_fkey"
+            columns: ["barang_id"]
+            isOneToOne: false
+            referencedRelation: "barang_konsinyasi"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pelanggan_perorangan: {
+        Row: {
+          alamat: string | null
+          batas_potong_gaji: number | null
+          created_at: string | null
+          departemen: string | null
+          gaji_pokok: number | null
+          id: string
+          jabatan: string | null
+          nama: string
+          nik: string | null
+          sisa_piutang: number | null
+          status: string | null
+          telepon: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          alamat?: string | null
+          batas_potong_gaji?: number | null
+          created_at?: string | null
+          departemen?: string | null
+          gaji_pokok?: number | null
+          id?: string
+          jabatan?: string | null
+          nama: string
+          nik?: string | null
+          sisa_piutang?: number | null
+          status?: string | null
+          telepon?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          alamat?: string | null
+          batas_potong_gaji?: number | null
+          created_at?: string | null
+          departemen?: string | null
+          gaji_pokok?: number | null
+          id?: string
+          jabatan?: string | null
+          nama?: string
+          nik?: string | null
+          sisa_piutang?: number | null
+          status?: string | null
+          telepon?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      pelanggan_unit: {
+        Row: {
+          alamat: string | null
+          created_at: string | null
+          id: string
+          jenis_pembayaran: string | null
+          kontak_person: string | null
+          limit_kredit: number | null
+          nama_unit: string
+          status: string | null
+          telepon: string | null
+          total_tagihan: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          alamat?: string | null
+          created_at?: string | null
+          id?: string
+          jenis_pembayaran?: string | null
+          kontak_person?: string | null
+          limit_kredit?: number | null
+          nama_unit: string
+          status?: string | null
+          telepon?: string | null
+          total_tagihan?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          alamat?: string | null
+          created_at?: string | null
+          id?: string
+          jenis_pembayaran?: string | null
+          kontak_person?: string | null
+          limit_kredit?: number | null
+          nama_unit?: string
+          status?: string | null
+          telepon?: string | null
+          total_tagihan?: number | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      stok_opname: {
+        Row: {
+          barang_id: string | null
+          created_at: string | null
+          id: string
+          kasir_id: string | null
+          keterangan: string | null
+          selisih: number | null
+          status: string | null
+          stok_fisik: number
+          stok_sistem: number
+          tanggal_opname: string
+        }
+        Insert: {
+          barang_id?: string | null
+          created_at?: string | null
+          id?: string
+          kasir_id?: string | null
+          keterangan?: string | null
+          selisih?: number | null
+          status?: string | null
+          stok_fisik: number
+          stok_sistem: number
+          tanggal_opname: string
+        }
+        Update: {
+          barang_id?: string | null
+          created_at?: string | null
+          id?: string
+          kasir_id?: string | null
+          keterangan?: string | null
+          selisih?: number | null
+          status?: string | null
+          stok_fisik?: number
+          stok_sistem?: number
+          tanggal_opname?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stok_opname_barang_id_fkey"
+            columns: ["barang_id"]
+            isOneToOne: false
+            referencedRelation: "barang_konsinyasi"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stok_opname_kasir_id_fkey"
+            columns: ["kasir_id"]
+            isOneToOne: false
+            referencedRelation: "kasir"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      supplier: {
+        Row: {
+          alamat: string | null
+          created_at: string | null
+          email: string | null
+          id: string
+          jenis: string | null
+          nama: string
+          telepon: string | null
+        }
+        Insert: {
+          alamat?: string | null
+          created_at?: string | null
+          email?: string | null
+          id?: string
+          jenis?: string | null
+          nama: string
+          telepon?: string | null
+        }
+        Update: {
+          alamat?: string | null
+          created_at?: string | null
+          email?: string | null
+          id?: string
+          jenis?: string | null
+          nama?: string
+          telepon?: string | null
+        }
+        Relationships: []
+      }
+      transaksi_penjualan: {
+        Row: {
+          bayar: number | null
+          catatan: string | null
+          created_at: string | null
+          diskon: number | null
+          id: string
+          jenis_pembayaran: string
+          kasir_id: string | null
+          kembalian: number | null
+          nomor_transaksi: string
+          pajak: number | null
+          pelanggan_perorangan_id: string | null
+          pelanggan_unit_id: string | null
+          status: string | null
+          subtotal: number
+          tanggal_transaksi: string | null
+          total: number
+        }
+        Insert: {
+          bayar?: number | null
+          catatan?: string | null
+          created_at?: string | null
+          diskon?: number | null
+          id?: string
+          jenis_pembayaran: string
+          kasir_id?: string | null
+          kembalian?: number | null
+          nomor_transaksi: string
+          pajak?: number | null
+          pelanggan_perorangan_id?: string | null
+          pelanggan_unit_id?: string | null
+          status?: string | null
+          subtotal: number
+          tanggal_transaksi?: string | null
+          total: number
+        }
+        Update: {
+          bayar?: number | null
+          catatan?: string | null
+          created_at?: string | null
+          diskon?: number | null
+          id?: string
+          jenis_pembayaran?: string
+          kasir_id?: string | null
+          kembalian?: number | null
+          nomor_transaksi?: string
+          pajak?: number | null
+          pelanggan_perorangan_id?: string | null
+          pelanggan_unit_id?: string | null
+          status?: string | null
+          subtotal?: number
+          tanggal_transaksi?: string | null
+          total?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "transaksi_penjualan_kasir_id_fkey"
+            columns: ["kasir_id"]
+            isOneToOne: false
+            referencedRelation: "kasir"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transaksi_penjualan_pelanggan_perorangan_id_fkey"
+            columns: ["pelanggan_perorangan_id"]
+            isOneToOne: false
+            referencedRelation: "pelanggan_perorangan"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transaksi_penjualan_pelanggan_unit_id_fkey"
+            columns: ["pelanggan_unit_id"]
+            isOneToOne: false
+            referencedRelation: "pelanggan_unit"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never

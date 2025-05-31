@@ -42,7 +42,7 @@ export const useBarangStokRendah = () => {
           kategori_barang (nama),
           supplier (nama)
         `)
-        .lt('stok_saat_ini', supabase.raw('stok_minimal'))
+        .filter('stok_saat_ini', 'lt', 'stok_minimal')
         .eq('status', 'aktif')
         .order('nama');
       

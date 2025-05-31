@@ -521,12 +521,63 @@ export type Database = {
           },
         ]
       }
+      user_profiles: {
+        Row: {
+          created_at: string | null
+          full_name: string
+          id: string
+          is_active: boolean | null
+          kasir_id: string | null
+          role: string
+          updated_at: string | null
+          user_id: string | null
+          username: string
+        }
+        Insert: {
+          created_at?: string | null
+          full_name: string
+          id?: string
+          is_active?: boolean | null
+          kasir_id?: string | null
+          role: string
+          updated_at?: string | null
+          user_id?: string | null
+          username: string
+        }
+        Update: {
+          created_at?: string | null
+          full_name?: string
+          id?: string
+          is_active?: boolean | null
+          kasir_id?: string | null
+          role?: string
+          updated_at?: string | null
+          user_id?: string | null
+          username?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_profiles_kasir_id_fkey"
+            columns: ["kasir_id"]
+            isOneToOne: false
+            referencedRelation: "kasir"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      generate_transaction_number: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
+      update_stok_barang: {
+        Args: { barang_id: string; jumlah_keluar: number }
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never

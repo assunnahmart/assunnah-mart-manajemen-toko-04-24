@@ -1,30 +1,23 @@
-
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { 
-  Store, 
-  Users, 
-  Package, 
-  CreditCard, 
-  TrendingUp, 
-  AlertTriangle,
-  Calendar,
-  Banknote
-} from "lucide-react";
-import { useTransaksiHariIni } from "@/hooks/useTransaksi";
-import { useBarangStokRendah } from "@/hooks/useBarangKonsinyasi";
-import { usePelangganKredit } from "@/hooks/usePelanggan";
-import { useKasir } from "@/hooks/useKasir";
+import { Button } from "@/components/ui/button";
+import { CalendarDays, Users, Package, TrendingUp, CreditCard, AlertTriangle, ShoppingCart, FileText, BarChart3, Clipboard } from "lucide-react";
+import { Link } from "react-router-dom";
 import StatsCard from "@/components/StatsCard";
-import { useNavigate } from "react-router-dom";
+import { useKasir } from "@/hooks/useKasir";
+import { useBarangKonsinyasi, useBarangStokRendah } from "@/hooks/useBarangKonsinyasi";
+import { usePelangganKredit } from "@/hooks/usePelanggan";
+import { useTransaksiHariIni } from "@/hooks/useTransaksi";
+import Navbar from "@/components/Navbar";
+import ProtectedRoute from "@/components/ProtectedRoute";
 
 const Dashboard = () => {
-  const navigate = useNavigate();
-  const { data: transaksiHariIni } = useTransaksiHariIni();
+  const { data: kasirData } = useKasir();
+  const { data: barangHarian } = useBarangKonsinyasi('harian');
+  const { data: barangMingguan } = useBarangKonsinyasi('mingguan');
   const { data: barangStokRendah } = useBarangStokRendah();
   const { data: pelangganKredit } = usePelangganKredit();
-  const { data: kasirData } = useKasir();
+  const { data: transaksiHariIni } = useTransaksiHariIni();
 
   const formatRupiah = (amount: number) => {
     return new Intl.NumberFormat('id-ID', {
@@ -34,210 +27,188 @@ const Dashboard = () => {
     }).format(amount);
   };
 
-  const kasirAktif = kasirData?.filter(k => k.status === 'aktif').length || 0;
-  const totalPiutangUnit = pelangganKredit?.unit.reduce((sum, p) => sum + (p.total_tagihan || 0), 0) || 0;
-  const totalPiutangPerorangan = pelangganKredit?.perorangan.reduce((sum, p) => sum + (p.sisa_piutang || 0), 0) || 0;
+  const totalTagihanKredit = (pelangganKredit?.unit.reduce((sum, u) => sum + Number(u.total_tagihan), 0) || 0) +
+                            (pelangganKredit?.perorangan.reduce((sum, p) => sum + Number(p.sisa_piutang), 0) || 0);
+
+  const menuItems = [
+    {
+      title: "Point of Sale",
+      description: "Sistem kasir dan penjualan",
+      icon: ShoppingCart,
+      href: "/pos",
+      color: "bg-blue-500",
+      status: "Coming Soon"
+    },
+    {
+      title: "Manajemen Kasir",
+      description: "Kelola data kasir dan jadwal",
+      icon: Users,
+      href: "/kasir",
+      color: "bg-green-500"
+    },
+    {
+      title: "Konsinyasi",
+      description: "Barang konsinyasi harian & mingguan",
+      icon: Package,
+      href: "/konsinyasi",
+      color: "bg-purple-500"
+    },
+    {
+      title: "Penjualan Kredit",
+      description: "Tagihan unit & potong gaji",
+      icon: CreditCard,
+      href: "/kredit",
+      color: "bg-orange-500"
+    },
+    {
+      title: "Laporan Keuangan",
+      description: "Laporan penjualan dan keuangan",
+      icon: BarChart3,
+      href: "/laporan",
+      color: "bg-indigo-500",
+      status: "Coming Soon"
+    },
+    {
+      title: "Stok Opname",
+      description: "Pemeriksaan dan penyesuaian stok",
+      icon: Clipboard,
+      href: "/stok-opname",
+      color: "bg-red-500",
+      status: "Coming Soon"
+    }
+  ];
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
-      <div className="mx-auto max-w-7xl space-y-6">
-        {/* Header */}
-        <div className="text-center space-y-2">
-          <h1 className="text-3xl font-bold text-gray-900">Dashboard Assunnah Mart</h1>
-          <p className="text-gray-600">Jalan Kalitanjung No 52B</p>
-          <p className="text-sm text-gray-500">
-            {new Date().toLocaleDateString('id-ID', { 
-              weekday: 'long', 
-              year: 'numeric', 
-              month: 'long', 
-              day: 'numeric' 
-            })}
-          </p>
-        </div>
+    <ProtectedRoute>
+      <div className="min-h-screen bg-gray-50">
+        <Navbar />
+        <div className="p-6">
+          <div className="mx-auto max-w-7xl space-y-6">
+            {/* Header */}
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
+              <p className="text-gray-600">Selamat datang di sistem manajemen Assunnah Mart</p>
+            </div>
 
-        {/* Stats Grid */}
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          <StatsCard
-            title="Transaksi Hari Ini"
-            value={transaksiHariIni?.totalTransaksi || 0}
-            description="Total transaksi"
-            icon={Store}
-          />
-          <StatsCard
-            title="Pendapatan Hari Ini"
-            value={formatRupiah(transaksiHariIni?.totalPendapatan || 0)}
-            description="Total pendapatan"
-            icon={Banknote}
-          />
-          <StatsCard
-            title="Kasir Aktif"
-            value={kasirAktif}
-            description="Dari total kasir"
-            icon={Users}
-          />
-          <StatsCard
-            title="Stok Rendah"
-            value={barangStokRendah?.length || 0}
-            description="Barang perlu restock"
-            icon={AlertTriangle}
-          />
-        </div>
+            {/* Stats Cards */}
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+              <StatsCard
+                title="Transaksi Hari Ini"
+                value={transaksiHariIni?.totalTransaksi || 0}
+                description={`Pendapatan: ${formatRupiah(transaksiHariIni?.totalPendapatan || 0)}`}
+                icon={TrendingUp}
+              />
+              <StatsCard
+                title="Total Kasir"
+                value={kasirData?.length || 0}
+                description="Kasir aktif"
+                icon={Users}
+              />
+              <StatsCard
+                title="Barang Konsinyasi"
+                value={(barangHarian?.length || 0) + (barangMingguan?.length || 0)}
+                description={`${barangHarian?.length || 0} harian, ${barangMingguan?.length || 0} mingguan`}
+                icon={Package}
+              />
+              <StatsCard
+                title="Total Tagihan Kredit"
+                value={formatRupiah(totalTagihanKredit)}
+                description={`${(pelangganKredit?.unit.length || 0) + (pelangganKredit?.perorangan.length || 0)} pelanggan`}
+                icon={CreditCard}
+              />
+            </div>
 
-        {/* Action Cards */}
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {/* Quick Actions */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Store className="h-5 w-5" />
-                Menu Utama
-              </CardTitle>
-              <CardDescription>Akses cepat ke fitur utama</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              <Button 
-                className="w-full justify-start" 
-                variant="outline"
-                onClick={() => navigate('/pos')}
-              >
-                <Store className="mr-2 h-4 w-4" />
-                POS System
-              </Button>
-              <Button 
-                className="w-full justify-start" 
-                variant="outline"
-                onClick={() => navigate('/kasir')}
-              >
-                <Users className="mr-2 h-4 w-4" />
-                Manajemen Kasir
-              </Button>
-              <Button 
-                className="w-full justify-start" 
-                variant="outline"
-                onClick={() => navigate('/konsinyasi')}
-              >
-                <Package className="mr-2 h-4 w-4" />
-                Konsinyasi
-              </Button>
-            </CardContent>
-          </Card>
-
-          {/* Stok Rendah */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <AlertTriangle className="h-5 w-5 text-orange-500" />
-                Stok Rendah
-              </CardTitle>
-              <CardDescription>Barang yang perlu direstock</CardDescription>
-            </CardHeader>
-            <CardContent>
-              {barangStokRendah && barangStokRendah.length > 0 ? (
-                <div className="space-y-2">
-                  {barangStokRendah.slice(0, 3).map((barang) => (
-                    <div key={barang.id} className="flex justify-between items-center">
-                      <div>
-                        <p className="text-sm font-medium">{barang.nama}</p>
-                        <p className="text-xs text-gray-500">{barang.jenis_konsinyasi}</p>
+            {/* Quick Actions */}
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              {menuItems.map((item, index) => (
+                <Card key={index} className="relative overflow-hidden">
+                  <CardHeader className="pb-2">
+                    <div className="flex items-center justify-between">
+                      <div className={`p-2 rounded-lg ${item.color} text-white`}>
+                        <item.icon className="h-6 w-6" />
                       </div>
-                      <Badge variant="destructive" className="text-xs">
-                        {barang.stok_saat_ini}/{barang.stok_minimal}
-                      </Badge>
+                      {item.status && (
+                        <Badge variant="secondary" className="text-xs">
+                          {item.status}
+                        </Badge>
+                      )}
                     </div>
-                  ))}
-                  {barangStokRendah.length > 3 && (
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      className="w-full mt-2"
-                      onClick={() => navigate('/konsinyasi')}
-                    >
-                      Lihat Semua ({barangStokRendah.length})
+                  </CardHeader>
+                  <CardContent>
+                    <h3 className="font-semibold text-lg mb-1">{item.title}</h3>
+                    <p className="text-sm text-gray-600 mb-4">{item.description}</p>
+                    <Button asChild className="w-full" disabled={item.status === "Coming Soon"}>
+                      <Link to={item.href}>
+                        Buka {item.title}
+                      </Link>
                     </Button>
-                  )}
-                </div>
-              ) : (
-                <p className="text-sm text-gray-500">Semua stok dalam kondisi baik</p>
-              )}
-            </CardContent>
-          </Card>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
 
-          {/* Piutang */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <CreditCard className="h-5 w-5 text-blue-500" />
-                Total Piutang
-              </CardTitle>
-              <CardDescription>Piutang yang belum terbayar</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <div className="flex justify-between">
-                <span className="text-sm">Unit:</span>
-                <span className="font-medium">{formatRupiah(totalPiutangUnit)}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-sm">Perorangan:</span>
-                <span className="font-medium">{formatRupiah(totalPiutangPerorangan)}</span>
-              </div>
-              <div className="border-t pt-2">
-                <div className="flex justify-between font-bold">
-                  <span>Total:</span>
-                  <span>{formatRupiah(totalPiutangUnit + totalPiutangPerorangan)}</span>
-                </div>
-              </div>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className="w-full"
-                onClick={() => navigate('/kredit')}
-              >
-                <CreditCard className="mr-2 h-4 w-4" />
-                Kelola Piutang
-              </Button>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Recent Transactions */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <TrendingUp className="h-5 w-5" />
-              Transaksi Terbaru
-            </CardTitle>
-            <CardDescription>5 transaksi terakhir hari ini</CardDescription>
-          </CardHeader>
-          <CardContent>
-            {transaksiHariIni?.transaksi && transaksiHariIni.transaksi.length > 0 ? (
-              <div className="space-y-3">
-                {transaksiHariIni.transaksi.slice(0, 5).map((transaksi) => (
-                  <div key={transaksi.id} className="flex justify-between items-center p-3 border rounded-lg">
-                    <div>
-                      <p className="font-medium">{transaksi.nomor_transaksi}</p>
-                      <p className="text-sm text-gray-500">
-                        {new Date(transaksi.created_at || '').toLocaleTimeString('id-ID')}
-                      </p>
-                    </div>
-                    <div className="text-right">
-                      <p className="font-bold">{formatRupiah(transaksi.total)}</p>
-                      <Badge variant={transaksi.jenis_pembayaran === 'cash' ? 'default' : 'secondary'}>
-                        {transaksi.jenis_pembayaran}
-                      </Badge>
-                    </div>
-                  </div>
-                ))}
-                <Button variant="outline" className="w-full" onClick={() => navigate('/laporan')}>
-                  Lihat Semua Transaksi
-                </Button>
-              </div>
-            ) : (
-              <p className="text-center text-gray-500 py-4">Belum ada transaksi hari ini</p>
+            {/* Alerts */}
+            {barangStokRendah && barangStokRendah.length > 0 && (
+              <Card className="border-orange-200 bg-orange-50">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-orange-800">
+                    <AlertTriangle className="h-5 w-5" />
+                    Peringatan Stok Rendah
+                  </CardTitle>
+                  <CardDescription className="text-orange-700">
+                    Terdapat {barangStokRendah.length} barang dengan stok di bawah batas minimal
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <Button asChild variant="outline" className="border-orange-300 text-orange-800 hover:bg-orange-100">
+                    <Link to="/konsinyasi">
+                      Lihat Detail Stok
+                    </Link>
+                  </Button>
+                </CardContent>
+              </Card>
             )}
-          </CardContent>
-        </Card>
+
+            {/* Recent Activity */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Aktivitas Terbaru</CardTitle>
+                <CardDescription>
+                  Transaksi dan aktivitas terbaru hari ini
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {transaksiHariIni?.transaksi && transaksiHariIni.transaksi.length > 0 ? (
+                  <div className="space-y-4">
+                    {transaksiHariIni.transaksi.slice(0, 5).map((transaksi) => (
+                      <div key={transaksi.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                        <div>
+                          <p className="font-medium">{transaksi.nomor_transaksi}</p>
+                          <p className="text-sm text-gray-600">
+                            {new Date(transaksi.tanggal_transaksi || '').toLocaleTimeString('id-ID')}
+                          </p>
+                        </div>
+                        <div className="text-right">
+                          <p className="font-medium">{formatRupiah(Number(transaksi.total))}</p>
+                          <Badge variant={transaksi.status === 'selesai' ? 'default' : 'secondary'}>
+                            {transaksi.status}
+                          </Badge>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-8 text-gray-500">
+                    <FileText className="mx-auto h-12 w-12 text-gray-400" />
+                    <p className="mt-2">Belum ada transaksi hari ini</p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+        </div>
       </div>
-    </div>
+    </ProtectedRoute>
   );
 };
 

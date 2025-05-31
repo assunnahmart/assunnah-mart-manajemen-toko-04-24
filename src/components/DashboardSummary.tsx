@@ -1,15 +1,15 @@
 
 import { Card, CardContent } from '@/components/ui/card';
 import { useSimpleAuth } from '@/hooks/useSimpleAuth';
+import { usePOSTransactionsToday } from '@/hooks/usePOSTransactions';
 import { ShoppingCart, DollarSign, Package, Users } from 'lucide-react';
 
 const DashboardSummary = () => {
   const { user } = useSimpleAuth();
+  const { data: posStats } = usePOSTransactionsToday();
 
-  // Mock data - in real app this would come from API
+  // Mock data for non-POS metrics - in real app this would come from API
   const summaryData = {
-    totalTransaksi: 156,
-    totalPenjualan: 2450000,
     totalProduk: 1234,
     totalPelanggan: 89
   };
@@ -18,7 +18,7 @@ const DashboardSummary = () => {
     <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg shadow-lg p-6 mb-6">
       <div className="text-center mb-6">
         <h2 className="text-4xl font-bold mb-2">
-          {summaryData.totalTransaksi}
+          {posStats?.totalTransactions || 0}
         </h2>
         <p className="text-xl opacity-90">Total Transaksi Hari Ini</p>
         <p className="text-sm opacity-75 mt-1">
@@ -30,9 +30,9 @@ const DashboardSummary = () => {
         <div className="bg-white/10 rounded-lg p-4 text-center">
           <DollarSign className="h-8 w-8 mx-auto mb-2 opacity-80" />
           <p className="text-2xl font-bold">
-            Rp {summaryData.totalPenjualan.toLocaleString('id-ID')}
+            Rp {(posStats?.totalAmount || 0).toLocaleString('id-ID')}
           </p>
-          <p className="text-sm opacity-75">Penjualan</p>
+          <p className="text-sm opacity-75">Penjualan POS</p>
         </div>
 
         <div className="bg-white/10 rounded-lg p-4 text-center">

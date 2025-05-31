@@ -8,15 +8,23 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Plus, Search, ShoppingCart, Save, CreditCard, Printer } from 'lucide-react';
 import { useSimpleAuth } from '@/hooks/useSimpleAuth';
+import { useCreatePOSTransaction, usePOSTransactionsToday } from '@/hooks/usePOSTransactions';
+import { useToast } from '@/hooks/use-toast';
 import POSCart from '@/components/pos/POSCart';
 import POSProductSearch from '@/components/pos/POSProductSearch';
 import POSPayment from '@/components/pos/POSPayment';
+import POSExportImport from '@/components/pos/POSExportImport';
+import POSReceiptPrint from '@/components/pos/POSReceiptPrint';
 
 const POSSystem = () => {
   const { user } = useSimpleAuth();
+  const { toast } = useToast();
   const [cartItems, setCartItems] = useState([]);
   const [showPayment, setShowPayment] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  
+  const createTransaction = useCreatePOSTransaction();
+  const { data: todayStats } = usePOSTransactionsToday();
 
   const addToCart = (product) => {
     const existingItem = cartItems.find(item => item.id === product.id);
@@ -47,22 +55,63 @@ const POSSystem = () => {
 
   const handleQuickSave = async () => {
     if (cartItems.length === 0) {
-      alert('Keranjang kosong!');
+      toast({
+        title: "Keranjang kosong",
+        description: "Tambahkan produk terlebih dahulu",
+        variant: "destructive"
+      });
       return;
     }
 
-    // Logic for quick save without payment input
-    console.log('Quick save transaction:', cartItems);
-    // Here you would typically call an API to save the transaction
-    
-    // Reset cart after save
-    setCartItems([]);
-    alert('Transaksi berhasil disimpan!');
+    try {
+      const transactionData = {
+        kasir_username: user?.username || 'unknown',
+        kasir_name: user?.full_name || 'Unknown',
+        total_amount: getTotalAmount(),
+        payment_method: 'quick_save',
+        amount_paid: 0,
+        change_amount: 0,
+        items_count: cartItems.length,
+        status: 'saved' as const,
+        notes: 'Quick save - tidak ada pembayaran'
+      };
+
+      const itemsData = cartItems.map(item => ({
+        product_id: item.id,
+        product_name: item.nama,
+        unit_price: item.harga_jual,
+        quantity: item.quantity,
+        subtotal: item.harga_jual * item.quantity,
+        unit: item.satuan || 'pcs'
+      }));
+
+      await createTransaction.mutateAsync({
+        transaction: transactionData,
+        items: itemsData
+      });
+
+      setCartItems([]);
+      toast({
+        title: "Transaksi berhasil disimpan",
+        description: "Transaksi telah disimpan tanpa pembayaran"
+      });
+    } catch (error) {
+      console.error('Error saving transaction:', error);
+      toast({
+        title: "Gagal menyimpan",
+        description: "Terjadi kesalahan saat menyimpan transaksi",
+        variant: "destructive"
+      });
+    }
   };
 
   const handleRegularPayment = () => {
     if (cartItems.length === 0) {
-      alert('Keranjang kosong!');
+      toast({
+        title: "Keranjang kosong",
+        description: "Tambahkan produk terlebih dahulu",
+        variant: "destructive"
+      });
       return;
     }
     setShowPayment(true);
@@ -79,17 +128,56 @@ const POSSystem = () => {
         
         <div className="container mx-auto p-4">
           <div className="mb-6">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">POS System</h1>
-            <div className="flex items-center gap-2">
-              <Badge variant="outline">Kasir: {user?.full_name}</Badge>
-              <Badge variant="secondary">
-                {new Date().toLocaleDateString('id-ID', { 
-                  weekday: 'long', 
-                  year: 'numeric', 
-                  month: 'long', 
-                  day: 'numeric' 
-                })}
-              </Badge>
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h1 className="text-3xl font-bold text-gray-900 mb-2">POS System</h1>
+                <div className="flex items-center gap-2">
+                  <Badge variant="outline">Kasir: {user?.full_name}</Badge>
+                  <Badge variant="secondary">
+                    {new Date().toLocaleDateString('id-ID', { 
+                      weekday: 'long', 
+                      year: 'numeric', 
+                      month: 'long', 
+                      day: 'numeric' 
+                    })}
+                  </Badge>
+                </div>
+              </div>
+              <POSExportImport />
+            </div>
+
+            {/* Today's Statistics */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+              <Card>
+                <CardContent className="pt-6">
+                  <div className="text-center">
+                    <p className="text-2xl font-bold text-blue-600">
+                      {todayStats?.totalTransactions || 0}
+                    </p>
+                    <p className="text-sm text-gray-600">Transaksi Hari Ini</p>
+                  </div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="pt-6">
+                  <div className="text-center">
+                    <p className="text-2xl font-bold text-green-600">
+                      Rp {(todayStats?.totalAmount || 0).toLocaleString('id-ID')}
+                    </p>
+                    <p className="text-sm text-gray-600">Total Penjualan Hari Ini</p>
+                  </div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="pt-6">
+                  <div className="text-center">
+                    <p className="text-2xl font-bold text-purple-600">
+                      Rp {getTotalAmount().toLocaleString('id-ID')}
+                    </p>
+                    <p className="text-sm text-gray-600">Total Keranjang Saat Ini</p>
+                  </div>
+                </CardContent>
+              </Card>
             </div>
           </div>
 
@@ -130,14 +218,20 @@ const POSSystem = () => {
                       <ShoppingCart className="h-5 w-5" />
                       Keranjang ({cartItems.length})
                     </span>
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      onClick={clearCart}
-                      disabled={cartItems.length === 0}
-                    >
-                      Clear
-                    </Button>
+                    <div className="flex gap-2">
+                      <POSReceiptPrint 
+                        cartItems={cartItems}
+                        totalAmount={getTotalAmount()}
+                      />
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={clearCart}
+                        disabled={cartItems.length === 0}
+                      >
+                        Clear
+                      </Button>
+                    </div>
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -163,12 +257,12 @@ const POSSystem = () => {
                       {/* Quick Save Button */}
                       <Button
                         onClick={handleQuickSave}
-                        disabled={cartItems.length === 0}
+                        disabled={cartItems.length === 0 || createTransaction.isPending}
                         className="w-full bg-green-600 hover:bg-green-700"
                         size="lg"
                       >
                         <Save className="h-4 w-4 mr-2" />
-                        NEW - Simpan Cepat
+                        {createTransaction.isPending ? 'Menyimpan...' : 'Simpan Cepat'}
                       </Button>
 
                       {/* Regular Payment Button */}

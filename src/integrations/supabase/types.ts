@@ -358,6 +358,98 @@ export type Database = {
         }
         Relationships: []
       }
+      pos_transaction_items: {
+        Row: {
+          created_at: string
+          id: string
+          product_id: string
+          product_name: string
+          quantity: number
+          subtotal: number
+          transaction_id: string
+          unit: string
+          unit_price: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          product_id: string
+          product_name: string
+          quantity: number
+          subtotal: number
+          transaction_id: string
+          unit?: string
+          unit_price: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          product_id?: string
+          product_name?: string
+          quantity?: number
+          subtotal?: number
+          transaction_id?: string
+          unit?: string
+          unit_price?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pos_transaction_items_transaction_id_fkey"
+            columns: ["transaction_id"]
+            isOneToOne: false
+            referencedRelation: "pos_transactions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pos_transactions: {
+        Row: {
+          amount_paid: number
+          change_amount: number
+          created_at: string
+          id: string
+          items_count: number
+          kasir_name: string
+          kasir_username: string
+          notes: string | null
+          payment_method: string
+          status: string
+          total_amount: number
+          transaction_number: string
+          updated_at: string
+        }
+        Insert: {
+          amount_paid?: number
+          change_amount?: number
+          created_at?: string
+          id?: string
+          items_count?: number
+          kasir_name: string
+          kasir_username: string
+          notes?: string | null
+          payment_method?: string
+          status?: string
+          total_amount?: number
+          transaction_number: string
+          updated_at?: string
+        }
+        Update: {
+          amount_paid?: number
+          change_amount?: number
+          created_at?: string
+          id?: string
+          items_count?: number
+          kasir_name?: string
+          kasir_username?: string
+          notes?: string | null
+          payment_method?: string
+          status?: string
+          total_amount?: number
+          transaction_number?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       stok_opname: {
         Row: {
           barang_id: string | null
@@ -570,6 +662,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      generate_pos_transaction_number: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
       generate_transaction_number: {
         Args: Record<PropertyKey, never>
         Returns: string

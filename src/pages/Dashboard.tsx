@@ -1,3 +1,4 @@
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -36,7 +37,7 @@ const Dashboard = () => {
       description: "Sistem kasir dan penjualan",
       icon: ShoppingCart,
       href: "/pos",
-      color: "bg-blue-500",
+      color: "from-blue-500 to-blue-600",
       status: "Coming Soon"
     },
     {
@@ -44,28 +45,28 @@ const Dashboard = () => {
       description: "Kelola data kasir dan jadwal",
       icon: Users,
       href: "/kasir",
-      color: "bg-green-500"
+      color: "from-green-500 to-green-600"
     },
     {
       title: "Konsinyasi",
       description: "Barang konsinyasi harian & mingguan",
       icon: Package,
       href: "/konsinyasi",
-      color: "bg-purple-500"
+      color: "from-purple-500 to-purple-600"
     },
     {
       title: "Penjualan Kredit",
       description: "Tagihan unit & potong gaji",
       icon: CreditCard,
       href: "/kredit",
-      color: "bg-orange-500"
+      color: "from-orange-500 to-orange-600"
     },
     {
       title: "Laporan Keuangan",
       description: "Laporan penjualan dan keuangan",
       icon: BarChart3,
       href: "/laporan",
-      color: "bg-indigo-500",
+      color: "from-indigo-500 to-indigo-600",
       status: "Coming Soon"
     },
     {
@@ -73,25 +74,25 @@ const Dashboard = () => {
       description: "Pemeriksaan dan penyesuaian stok",
       icon: Clipboard,
       href: "/stok-opname",
-      color: "bg-red-500",
+      color: "from-red-500 to-red-600",
       status: "Coming Soon"
     }
   ];
 
   return (
     <ProtectedRoute>
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50">
         <Navbar />
-        <div className="p-6">
-          <div className="mx-auto max-w-7xl space-y-6">
+        <div className="p-3 sm:p-6">
+          <div className="mx-auto max-w-7xl space-y-4 sm:space-y-6">
             {/* Header */}
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
-              <p className="text-gray-600">Selamat datang di sistem manajemen Assunnah Mart</p>
+            <div className="text-center sm:text-left">
+              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Dashboard</h1>
+              <p className="text-gray-600 mobile-optimized mt-1">Selamat datang di sistem manajemen Assunnah Mart</p>
             </div>
 
             {/* Stats Cards */}
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+            <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
               <StatsCard
                 title="Transaksi Hari Ini"
                 value={transaksiHariIni?.totalTransaksi || 0}
@@ -119,13 +120,13 @@ const Dashboard = () => {
             </div>
 
             {/* Quick Actions */}
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
               {menuItems.map((item, index) => (
-                <Card key={index} className="relative overflow-hidden">
-                  <CardHeader className="pb-2">
+                <Card key={index} className="relative overflow-hidden hover:shadow-lg transition-all duration-200 border-0 shadow-md">
+                  <CardHeader className="pb-3">
                     <div className="flex items-center justify-between">
-                      <div className={`p-2 rounded-lg ${item.color} text-white`}>
-                        <item.icon className="h-6 w-6" />
+                      <div className={`p-3 rounded-xl bg-gradient-to-r ${item.color} text-white shadow-lg`}>
+                        <item.icon className="h-5 w-5 sm:h-6 sm:w-6" />
                       </div>
                       {item.status && (
                         <Badge variant="secondary" className="text-xs">
@@ -134,10 +135,10 @@ const Dashboard = () => {
                       )}
                     </div>
                   </CardHeader>
-                  <CardContent>
-                    <h3 className="font-semibold text-lg mb-1">{item.title}</h3>
-                    <p className="text-sm text-gray-600 mb-4">{item.description}</p>
-                    <Button asChild className="w-full" disabled={item.status === "Coming Soon"}>
+                  <CardContent className="pt-0">
+                    <h3 className="font-semibold text-base sm:text-lg mb-2">{item.title}</h3>
+                    <p className="text-sm text-gray-600 mb-4 mobile-optimized">{item.description}</p>
+                    <Button asChild className="w-full h-10 font-medium" disabled={item.status === "Coming Soon"}>
                       <Link to={item.href}>
                         Buka {item.title}
                       </Link>
@@ -149,18 +150,18 @@ const Dashboard = () => {
 
             {/* Alerts */}
             {barangStokRendah && barangStokRendah.length > 0 && (
-              <Card className="border-orange-200 bg-orange-50">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-orange-800">
+              <Card className="border-orange-200 bg-gradient-to-r from-orange-50 to-yellow-50 shadow-md">
+                <CardHeader className="pb-3">
+                  <CardTitle className="flex items-center gap-2 text-orange-800 text-base sm:text-lg">
                     <AlertTriangle className="h-5 w-5" />
                     Peringatan Stok Rendah
                   </CardTitle>
-                  <CardDescription className="text-orange-700">
+                  <CardDescription className="text-orange-700 mobile-optimized">
                     Terdapat {barangStokRendah.length} barang dengan stok di bawah batas minimal
                   </CardDescription>
                 </CardHeader>
-                <CardContent>
-                  <Button asChild variant="outline" className="border-orange-300 text-orange-800 hover:bg-orange-100">
+                <CardContent className="pt-0">
+                  <Button asChild variant="outline" className="border-orange-300 text-orange-800 hover:bg-orange-100 h-10">
                     <Link to="/konsinyasi">
                       Lihat Detail Stok
                     </Link>
@@ -170,27 +171,27 @@ const Dashboard = () => {
             )}
 
             {/* Recent Activity */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Aktivitas Terbaru</CardTitle>
-                <CardDescription>
+            <Card className="shadow-md border-0">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base sm:text-lg">Aktivitas Terbaru</CardTitle>
+                <CardDescription className="mobile-optimized">
                   Transaksi dan aktivitas terbaru hari ini
                 </CardDescription>
               </CardHeader>
-              <CardContent>
+              <CardContent className="pt-0">
                 {transaksiHariIni?.transaksi && transaksiHariIni.transaksi.length > 0 ? (
-                  <div className="space-y-4">
+                  <div className="space-y-3">
                     {transaksiHariIni.transaksi.slice(0, 5).map((transaksi) => (
-                      <div key={transaksi.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                        <div>
-                          <p className="font-medium">{transaksi.nomor_transaksi}</p>
-                          <p className="text-sm text-gray-600">
+                      <div key={transaksi.id} className="flex items-center justify-between p-3 bg-gradient-to-r from-gray-50 to-blue-50 rounded-lg border border-gray-100">
+                        <div className="min-w-0 flex-1">
+                          <p className="font-medium text-sm sm:text-base truncate">{transaksi.nomor_transaksi}</p>
+                          <p className="text-xs sm:text-sm text-gray-600">
                             {new Date(transaksi.tanggal_transaksi || '').toLocaleTimeString('id-ID')}
                           </p>
                         </div>
-                        <div className="text-right">
-                          <p className="font-medium">{formatRupiah(Number(transaksi.total))}</p>
-                          <Badge variant={transaksi.status === 'selesai' ? 'default' : 'secondary'}>
+                        <div className="text-right ml-3">
+                          <p className="font-medium text-sm sm:text-base">{formatRupiah(Number(transaksi.total))}</p>
+                          <Badge variant={transaksi.status === 'selesai' ? 'default' : 'secondary'} className="text-xs">
                             {transaksi.status}
                           </Badge>
                         </div>
@@ -199,8 +200,8 @@ const Dashboard = () => {
                   </div>
                 ) : (
                   <div className="text-center py-8 text-gray-500">
-                    <FileText className="mx-auto h-12 w-12 text-gray-400" />
-                    <p className="mt-2">Belum ada transaksi hari ini</p>
+                    <FileText className="mx-auto h-8 w-8 sm:h-12 sm:w-12 text-gray-400" />
+                    <p className="mt-2 mobile-optimized">Belum ada transaksi hari ini</p>
                   </div>
                 )}
               </CardContent>

@@ -1,14 +1,14 @@
 
 import { useState } from 'react';
-import { useAuth } from '@/hooks/useAuth';
+import { useSimpleAuth } from '@/hooks/useSimpleAuth';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 
-const LoginForm = () => {
-  const { signIn } = useAuth();
+const NewLoginForm = () => {
+  const { signIn } = useSimpleAuth();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -34,9 +34,9 @@ const LoginForm = () => {
         <CardHeader className="text-center pb-6">
           <div className="flex justify-center mb-6">
             <img 
-              src="/lovable-uploads/aa462b6e-0c4c-44bf-95db-9fba0991ee3b.png" 
+              src="/lovable-uploads/a2af9547-58f3-45de-b565-8283573a9b0e.png" 
               alt="Assunnah Mart Logo" 
-              className="h-24 w-auto sm:h-28 md:h-32"
+              className="h-32 w-auto sm:h-36 md:h-40"
             />
           </div>
           <CardTitle className="text-2xl sm:text-3xl font-bold text-gray-900">Assunnah Mart</CardTitle>
@@ -106,4 +106,4 @@ const LoginForm = () => {
   );
 };
 
-export default LoginForm;
+export default NewLoginForm;

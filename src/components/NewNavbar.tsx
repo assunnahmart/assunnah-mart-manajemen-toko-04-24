@@ -1,12 +1,12 @@
 
-import { useAuth } from '@/hooks/useAuth';
+import { useSimpleAuth } from '@/hooks/useSimpleAuth';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { LogOut, User, Menu } from 'lucide-react';
 import { useState } from 'react';
 
-const Navbar = () => {
-  const { profile, signOut } = useAuth();
+const NewNavbar = () => {
+  const { user, signOut } = useSimpleAuth();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const handleSignOut = async () => {
@@ -20,15 +20,15 @@ const Navbar = () => {
           {/* Logo dan Brand */}
           <div className="flex items-center space-x-3">
             <img 
-              src="/lovable-uploads/aa462b6e-0c4c-44bf-95db-9fba0991ee3b.png" 
+              src="/lovable-uploads/a2af9547-58f3-45de-b565-8283573a9b0e.png" 
               alt="Assunnah Mart Logo" 
               className="h-10 w-auto sm:h-12 md:h-14"
             />
             <div className="hidden sm:block">
               <h1 className="text-lg sm:text-xl font-bold text-gray-900">Assunnah Mart</h1>
-              {profile && (
-                <Badge variant={profile.role === 'admin' ? 'default' : 'secondary'} className="text-xs">
-                  {profile.role === 'admin' ? 'Admin' : 'Kasir'}
+              {user && (
+                <Badge variant={user.role === 'admin' ? 'default' : 'secondary'} className="text-xs">
+                  {user.role === 'admin' ? 'Admin' : 'Kasir'}
                 </Badge>
               )}
             </div>
@@ -36,7 +36,7 @@ const Navbar = () => {
           
           {/* Mobile menu button */}
           <div className="sm:hidden">
-            {profile && (
+            {user && (
               <Button 
                 variant="ghost" 
                 size="sm"
@@ -49,11 +49,11 @@ const Navbar = () => {
           </div>
 
           {/* Desktop menu */}
-          {profile && (
+          {user && (
             <div className="hidden sm:flex items-center space-x-4">
               <div className="flex items-center space-x-2 text-sm text-gray-600">
                 <User className="h-4 w-4" />
-                <span className="max-w-32 truncate">{profile.full_name}</span>
+                <span className="max-w-32 truncate">{user.full_name}</span>
               </div>
               <Button 
                 variant="ghost" 
@@ -69,16 +69,16 @@ const Navbar = () => {
         </div>
 
         {/* Mobile dropdown menu */}
-        {isMenuOpen && profile && (
+        {isMenuOpen && user && (
           <div className="sm:hidden mt-3 pt-3 border-t border-gray-200">
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-2 text-sm text-gray-600">
                   <User className="h-4 w-4" />
-                  <span>{profile.full_name}</span>
+                  <span>{user.full_name}</span>
                 </div>
-                <Badge variant={profile.role === 'admin' ? 'default' : 'secondary'} className="text-xs">
-                  {profile.role === 'admin' ? 'Admin' : 'Kasir'}
+                <Badge variant={user.role === 'admin' ? 'default' : 'secondary'} className="text-xs">
+                  {user.role === 'admin' ? 'Admin' : 'Kasir'}
                 </Badge>
               </div>
               <Button 
@@ -98,4 +98,4 @@ const Navbar = () => {
   );
 };
 
-export default Navbar;
+export default NewNavbar;

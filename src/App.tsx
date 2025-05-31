@@ -4,7 +4,6 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { useInitializeDemoUsers } from "@/hooks/useInitializeDemoUsers";
 import Dashboard from "./pages/Dashboard";
 import KasirManagement from "./pages/KasirManagement";
 import Konsinyasi from "./pages/Konsinyasi";
@@ -14,8 +13,6 @@ import NotFound from "./pages/NotFound";
 const queryClient = new QueryClient();
 
 const App = () => {
-  useInitializeDemoUsers();
-
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>

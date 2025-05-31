@@ -1,14 +1,14 @@
 
-import { useAuth } from '@/hooks/useAuth';
-import LoginForm from './LoginForm';
+import { useSimpleAuth } from '@/hooks/useSimpleAuth';
+import NewLoginForm from './NewLoginForm';
 
-interface ProtectedRouteProps {
+interface NewProtectedRouteProps {
   children: React.ReactNode;
   requiredRole?: 'admin' | 'kasir';
 }
 
-const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) => {
-  const { isAuthenticated, profile, loading } = useAuth();
+const NewProtectedRoute = ({ children, requiredRole }: NewProtectedRouteProps) => {
+  const { isAuthenticated, user, loading } = useSimpleAuth();
 
   if (loading) {
     return (
@@ -19,10 +19,10 @@ const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) => {
   }
 
   if (!isAuthenticated) {
-    return <LoginForm />;
+    return <NewLoginForm />;
   }
 
-  if (requiredRole && profile?.role !== requiredRole) {
+  if (requiredRole && user?.role !== requiredRole) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
@@ -36,4 +36,4 @@ const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) => {
   return <>{children}</>;
 };
 
-export default ProtectedRoute;
+export default NewProtectedRoute;

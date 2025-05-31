@@ -116,11 +116,11 @@ const NewLoginForm = () => {
             <div className="text-xs space-y-2 mobile-optimized">
               <div className="bg-white p-2 rounded border border-gray-200">
                 <p className="font-medium text-red-600">Admin:</p>
-                <p>Ginanjar / admin1, Jamhur / admin2</p>
+                <p>Ginanjar / admin, Jamhur / admin1</p>
               </div>
               <div className="bg-white p-2 rounded border border-gray-200">
                 <p className="font-medium text-blue-600">Kasir:</p>
-                <p>Jamhur2 / kasir11, Agus / kasir44, Yadi / kasir77</p>
+                <p>Jamhur2 / kasir1, Agus / kasir4, Yadi / kasir7</p>
               </div>
             </div>
           </div>

@@ -15,11 +15,11 @@ interface AuthState {
 
 // Demo users data
 const DEMO_USERS = [
-  { username: 'Ginanjar', password: 'admin1', full_name: 'Ginanjar', role: 'admin' as const },
-  { username: 'Jamhur', password: 'admin2', full_name: 'Jamhur', role: 'admin' as const },
-  { username: 'Jamhur2', password: 'kasir11', full_name: 'Jamhur2', role: 'kasir' as const },
-  { username: 'Agus', password: 'kasir44', full_name: 'Agus Setiawan', role: 'kasir' as const },
-  { username: 'Yadi', password: 'kasir77', full_name: 'Yadi Rahman', role: 'kasir' as const }
+  { username: 'Ginanjar', password: 'admin', full_name: 'Ginanjar', role: 'admin' as const },
+  { username: 'Jamhur', password: 'admin1', full_name: 'Jamhur', role: 'admin' as const },
+  { username: 'Jamhur2', password: 'kasir1', full_name: 'Jamhur2', role: 'kasir' as const },
+  { username: 'Agus', password: 'kasir4', full_name: 'Agus', role: 'kasir' as const },
+  { username: 'Yadi', password: 'kasir7', full_name: 'Yadi', role: 'kasir' as const }
 ];
 
 export const useSimpleAuth = () => {

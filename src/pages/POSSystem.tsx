@@ -145,40 +145,6 @@ const POSSystem = () => {
               </div>
               <POSExportImport />
             </div>
-
-            {/* Today's Statistics */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-              <Card>
-                <CardContent className="pt-6">
-                  <div className="text-center">
-                    <p className="text-2xl font-bold text-blue-600">
-                      {todayStats?.totalTransactions || 0}
-                    </p>
-                    <p className="text-sm text-gray-600">Transaksi Hari Ini</p>
-                  </div>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardContent className="pt-6">
-                  <div className="text-center">
-                    <p className="text-2xl font-bold text-green-600">
-                      Rp {(todayStats?.totalAmount || 0).toLocaleString('id-ID')}
-                    </p>
-                    <p className="text-sm text-gray-600">Total Penjualan Hari Ini</p>
-                  </div>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardContent className="pt-6">
-                  <div className="text-center">
-                    <p className="text-2xl font-bold text-purple-600">
-                      Rp {getTotalAmount().toLocaleString('id-ID')}
-                    </p>
-                    <p className="text-sm text-gray-600">Total Keranjang Saat Ini</p>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -279,6 +245,40 @@ const POSSystem = () => {
                   </div>
                 </CardContent>
               </Card>
+
+              {/* Today's Statistics - Moved below payment buttons */}
+              <div className="grid grid-cols-1 gap-4">
+                <Card>
+                  <CardContent className="pt-6">
+                    <div className="text-center">
+                      <p className="text-2xl font-bold text-blue-600">
+                        {todayStats?.totalTransactions || 0}
+                      </p>
+                      <p className="text-sm text-gray-600">Transaksi Hari Ini</p>
+                    </div>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="pt-6">
+                    <div className="text-center">
+                      <p className="text-2xl font-bold text-green-600">
+                        Rp {(todayStats?.totalAmount || 0).toLocaleString('id-ID')}
+                      </p>
+                      <p className="text-sm text-gray-600">Total Penjualan Hari Ini</p>
+                    </div>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="pt-6">
+                    <div className="text-center">
+                      <p className="text-2xl font-bold text-purple-600">
+                        Rp {getTotalAmount().toLocaleString('id-ID')}
+                      </p>
+                      <p className="text-sm text-gray-600">Total Keranjang Saat Ini</p>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
             </div>
           </div>
         </div>

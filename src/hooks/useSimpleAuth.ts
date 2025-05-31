@@ -60,12 +60,19 @@ export const useSimpleAuth = () => {
 
   const signIn = async (username: string, password: string) => {
     try {
-      console.log('useSimpleAuth: Attempting login with:', { username });
+      console.log('useSimpleAuth: Attempting login with:', { username, password: '***' });
+      console.log('useSimpleAuth: Available users:', DEMO_USERS.map(u => ({ username: u.username, role: u.role })));
       
-      const user = DEMO_USERS.find(u => u.username === username && u.password === password);
+      // Trim whitespace and ensure case-sensitive matching
+      const trimmedUsername = username.trim();
+      const trimmedPassword = password.trim();
+      
+      const user = DEMO_USERS.find(u => u.username === trimmedUsername && u.password === trimmedPassword);
       
       if (!user) {
         console.log('useSimpleAuth: User not found or password incorrect');
+        console.log('useSimpleAuth: Tried username:', trimmedUsername);
+        console.log('useSimpleAuth: Available usernames:', DEMO_USERS.map(u => u.username));
         return { error: { message: 'Username atau password salah' } };
       }
 

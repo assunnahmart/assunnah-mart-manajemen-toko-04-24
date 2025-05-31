@@ -16,7 +16,7 @@ const NewLoginForm = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('NewLoginForm: Form submitted with:', { username });
+    console.log('NewLoginForm: Form submitted with:', { username, password: '***' });
     
     if (!username || !password) {
       setError('Username dan password harus diisi');
@@ -46,6 +46,12 @@ const NewLoginForm = () => {
     }
     
     setLoading(false);
+  };
+
+  const handleDemoLogin = (demoUsername: string, demoPassword: string) => {
+    setUsername(demoUsername);
+    setPassword(demoPassword);
+    setError('');
   };
 
   return (
@@ -112,15 +118,52 @@ const NewLoginForm = () => {
           </form>
           
           <div className="mt-6 p-4 bg-gradient-to-r from-blue-50 to-yellow-50 rounded-lg border border-blue-100">
-            <p className="text-sm font-semibold text-gray-700 mb-3">Akun Demo:</p>
+            <p className="text-sm font-semibold text-gray-700 mb-3">Akun Demo (Klik untuk isi otomatis):</p>
             <div className="text-xs space-y-2 mobile-optimized">
               <div className="bg-white p-2 rounded border border-gray-200">
-                <p className="font-medium text-red-600">Admin:</p>
-                <p>Ginanjar / admin, Jamhur / admin1</p>
+                <p className="font-medium text-red-600 mb-2">Admin:</p>
+                <div className="space-y-1">
+                  <button
+                    type="button"
+                    onClick={() => handleDemoLogin('Ginanjar', 'admin')}
+                    className="block w-full text-left p-1 hover:bg-gray-100 rounded text-xs"
+                  >
+                    Ginanjar / admin
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleDemoLogin('Jamhur', 'admin1')}
+                    className="block w-full text-left p-1 hover:bg-gray-100 rounded text-xs"
+                  >
+                    Jamhur / admin1
+                  </button>
+                </div>
               </div>
               <div className="bg-white p-2 rounded border border-gray-200">
-                <p className="font-medium text-blue-600">Kasir:</p>
-                <p>Jamhur2 / kasir1, Agus / kasir4, Yadi / kasir7</p>
+                <p className="font-medium text-blue-600 mb-2">Kasir:</p>
+                <div className="space-y-1">
+                  <button
+                    type="button"
+                    onClick={() => handleDemoLogin('Jamhur2', 'kasir1')}
+                    className="block w-full text-left p-1 hover:bg-gray-100 rounded text-xs"
+                  >
+                    Jamhur2 / kasir1
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleDemoLogin('Agus', 'kasir4')}
+                    className="block w-full text-left p-1 hover:bg-gray-100 rounded text-xs"
+                  >
+                    Agus / kasir4
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleDemoLogin('Yadi', 'kasir7')}
+                    className="block w-full text-left p-1 hover:bg-gray-100 rounded text-xs"
+                  >
+                    Yadi / kasir7
+                  </button>
+                </div>
               </div>
             </div>
           </div>

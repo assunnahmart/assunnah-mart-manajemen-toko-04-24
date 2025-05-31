@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Search, ShoppingCart, Save, CreditCard, Printer } from 'lucide-react';
+import { Search, ShoppingCart, Save, CreditCard } from 'lucide-react';
 import { useSimpleAuth } from '@/hooks/useSimpleAuth';
 import { useCreatePOSTransaction, usePOSTransactionsToday } from '@/hooks/usePOSTransactions';
 import { useToast } from '@/hooks/use-toast';
@@ -93,7 +93,7 @@ const POSSystem = () => {
       setCartItems([]);
       toast({
         title: "Transaksi berhasil disimpan",
-        description: "Transaksi telah disimpan tanpa pembayaran"
+        description: "Transaksi telah disimpan ke database Supabase"
       });
     } catch (error) {
       console.error('Error saving transaction:', error);
@@ -145,6 +145,18 @@ const POSSystem = () => {
               </div>
               <POSExportImport />
             </div>
+
+            {/* Today's Transaction Count */}
+            <Card className="mb-4">
+              <CardContent className="pt-6">
+                <div className="text-center">
+                  <p className="text-2xl font-bold text-blue-600">
+                    {todayStats?.totalTransactions || 0}
+                  </p>
+                  <p className="text-sm text-gray-600">Transaksi Hari Ini</p>
+                </div>
+              </CardContent>
+            </Card>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -228,7 +240,7 @@ const POSSystem = () => {
                         size="lg"
                       >
                         <Save className="h-4 w-4 mr-2" />
-                        {createTransaction.isPending ? 'Menyimpan...' : 'Simpan Cepat'}
+                        {createTransaction.isPending ? 'Menyimpan...' : 'Simpan ke Database'}
                       </Button>
 
                       {/* Regular Payment Button */}
@@ -245,40 +257,6 @@ const POSSystem = () => {
                   </div>
                 </CardContent>
               </Card>
-
-              {/* Today's Statistics - Moved below payment buttons */}
-              <div className="grid grid-cols-1 gap-4">
-                <Card>
-                  <CardContent className="pt-6">
-                    <div className="text-center">
-                      <p className="text-2xl font-bold text-blue-600">
-                        {todayStats?.totalTransactions || 0}
-                      </p>
-                      <p className="text-sm text-gray-600">Transaksi Hari Ini</p>
-                    </div>
-                  </CardContent>
-                </Card>
-                <Card>
-                  <CardContent className="pt-6">
-                    <div className="text-center">
-                      <p className="text-2xl font-bold text-green-600">
-                        Rp {(todayStats?.totalAmount || 0).toLocaleString('id-ID')}
-                      </p>
-                      <p className="text-sm text-gray-600">Total Penjualan Hari Ini</p>
-                    </div>
-                  </CardContent>
-                </Card>
-                <Card>
-                  <CardContent className="pt-6">
-                    <div className="text-center">
-                      <p className="text-2xl font-bold text-purple-600">
-                        Rp {getTotalAmount().toLocaleString('id-ID')}
-                      </p>
-                      <p className="text-sm text-gray-600">Total Keranjang Saat Ini</p>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
             </div>
           </div>
         </div>

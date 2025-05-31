@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import NewProtectedRoute from '@/components/NewProtectedRoute';
 import NewNavbar from '@/components/NewNavbar';
@@ -5,25 +6,29 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Search, ShoppingCart, Save, CreditCard } from 'lucide-react';
+import { Search, ShoppingCart, Save, CreditCard, History } from 'lucide-react';
 import { useSimpleAuth } from '@/hooks/useSimpleAuth';
 import { useCreatePOSTransaction, usePOSTransactionsToday } from '@/hooks/usePOSTransactions';
+import { useTransaksiHariIni } from '@/hooks/useTransaksi';
 import { useToast } from '@/hooks/use-toast';
 import POSCart from '@/components/pos/POSCart';
 import POSProductSearch from '@/components/pos/POSProductSearch';
 import POSPayment from '@/components/pos/POSPayment';
 import POSExportImport from '@/components/pos/POSExportImport';
 import POSReceiptPrint from '@/components/pos/POSReceiptPrint';
+import POSTransactionHistory from '@/components/pos/POSTransactionHistory';
 
 const POSSystem = () => {
   const { user } = useSimpleAuth();
   const { toast } = useToast();
   const [cartItems, setCartItems] = useState([]);
   const [showPayment, setShowPayment] = useState(false);
+  const [showHistory, setShowHistory] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   
   const createTransaction = useCreatePOSTransaction();
   const { data: todayStats } = usePOSTransactionsToday();
+  const { data: transaksiHariIni } = useTransaksiHariIni();
 
   const addToCart = (product) => {
     const existingItem = cartItems.find(item => item.id === product.id);
@@ -76,7 +81,7 @@ const POSSystem = () => {
       };
 
       const itemsData = cartItems.map(item => ({
-        product_id: item.id.toString(), // Convert UUID to string
+        product_id: item.id.toString(),
         product_name: item.nama,
         unit_price: item.harga_jual,
         quantity: item.quantity,
@@ -144,48 +149,85 @@ const POSSystem = () => {
                   </Badge>
                 </div>
               </div>
-              <POSExportImport />
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  onClick={() => setShowHistory(!showHistory)}
+                >
+                  <History className="h-4 w-4 mr-2" />
+                  Riwayat
+                </Button>
+                <POSExportImport />
+              </div>
             </div>
 
-            {/* Today's Transaction Count */}
-            <Card className="mb-4">
-              <CardContent className="pt-6">
-                <div className="text-center">
-                  <p className="text-2xl font-bold text-blue-600">
-                    {todayStats?.totalTransactions || 0}
-                  </p>
-                  <p className="text-sm text-gray-600">Transaksi Hari Ini</p>
-                </div>
-              </CardContent>
-            </Card>
+            {/* Enhanced Today's Stats */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+              <Card>
+                <CardContent className="pt-6">
+                  <div className="text-center">
+                    <p className="text-2xl font-bold text-blue-600">
+                      {todayStats?.totalTransactions || 0}
+                    </p>
+                    <p className="text-sm text-gray-600">Transaksi POS Hari Ini</p>
+                  </div>
+                </CardContent>
+              </Card>
+              
+              <Card>
+                <CardContent className="pt-6">
+                  <div className="text-center">
+                    <p className="text-2xl font-bold text-green-600">
+                      {transaksiHariIni?.totalTransaksi || 0}
+                    </p>
+                    <p className="text-sm text-gray-600">Total Transaksi Hari Ini</p>
+                  </div>
+                </CardContent>
+              </Card>
+              
+              <Card>
+                <CardContent className="pt-6">
+                  <div className="text-center">
+                    <p className="text-2xl font-bold text-purple-600">
+                      Rp {(transaksiHariIni?.totalPendapatan || 0).toLocaleString('id-ID')}
+                    </p>
+                    <p className="text-sm text-gray-600">Pendapatan Hari Ini</p>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Product Search & List */}
             <div className="lg:col-span-2">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Search className="h-5 w-5" />
-                    Cari Produk
-                  </CardTitle>
-                  <div className="relative">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                    <Input
-                      placeholder="Cari nama produk atau scan barcode..."
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      className="pl-10"
+              {showHistory ? (
+                <POSTransactionHistory />
+              ) : (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Search className="h-5 w-5" />
+                      Cari Produk
+                    </CardTitle>
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                      <Input
+                        placeholder="Cari nama produk atau scan barcode..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="pl-10"
+                      />
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <POSProductSearch 
+                      searchQuery={searchQuery}
+                      onAddToCart={addToCart}
                     />
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <POSProductSearch 
-                    searchQuery={searchQuery}
-                    onAddToCart={addToCart}
-                  />
-                </CardContent>
-              </Card>
+                  </CardContent>
+                </Card>
+              )}
             </div>
 
             {/* Cart & Actions */}

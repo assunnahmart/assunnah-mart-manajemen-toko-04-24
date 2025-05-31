@@ -20,9 +20,9 @@ const Navbar = () => {
           {/* Logo dan Brand */}
           <div className="flex items-center space-x-3">
             <img 
-              src="/lovable-uploads/a2af9547-58f3-45de-b565-8283573a9b0e.png" 
+              src="/lovable-uploads/aa462b6e-0c4c-44bf-95db-9fba0991ee3b.png" 
               alt="Assunnah Mart Logo" 
-              className="h-8 w-auto sm:h-10"
+              className="h-10 w-auto sm:h-12 md:h-14"
             />
             <div className="hidden sm:block">
               <h1 className="text-lg sm:text-xl font-bold text-gray-900">Assunnah Mart</h1>

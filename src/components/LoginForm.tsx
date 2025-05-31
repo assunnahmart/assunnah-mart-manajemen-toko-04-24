@@ -34,9 +34,9 @@ const LoginForm = () => {
         <CardHeader className="text-center pb-6">
           <div className="flex justify-center mb-6">
             <img 
-              src="/lovable-uploads/a2af9547-58f3-45de-b565-8283573a9b0e.png" 
+              src="/lovable-uploads/aa462b6e-0c4c-44bf-95db-9fba0991ee3b.png" 
               alt="Assunnah Mart Logo" 
-              className="h-16 w-auto sm:h-20"
+              className="h-24 w-auto sm:h-28 md:h-32"
             />
           </div>
           <CardTitle className="text-2xl sm:text-3xl font-bold text-gray-900">Assunnah Mart</CardTitle>

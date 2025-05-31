@@ -17,56 +17,43 @@ export const useInitializeDemoUsers = () => {
           return;
         }
 
-        // Create demo users
+        // Create demo user profiles first (without auth users)
         const demoUsers = [
-          { email: 'Ginanjar@assunnahmart.com', password: 'admin1', username: 'Ginanjar', full_name: 'Ginanjar', role: 'admin' },
-          { email: 'Jamhur@assunnahmart.com', password: 'admin2', username: 'Jamhur', full_name: 'Jamhur', role: 'admin' },
-          { email: 'Jamhur2@assunnahmart.com', password: 'kasir11', username: 'Jamhur2', full_name: 'Jamhur2', role: 'kasir' },
-          { email: 'Agus@assunnahmart.com', password: 'kasir44', username: 'Agus', full_name: 'Agus Setiawan', role: 'kasir' },
-          { email: 'Yadi@assunnahmart.com', password: 'kasir77', username: 'Yadi', full_name: 'Yadi Rahman', role: 'kasir' }
+          { username: 'Ginanjar', full_name: 'Ginanjar', role: 'admin', password: 'admin1' },
+          { username: 'Jamhur', full_name: 'Jamhur', role: 'admin', password: 'admin2' },
+          { username: 'Jamhur2', full_name: 'Jamhur2', role: 'kasir', password: 'kasir11' },
+          { username: 'Agus', full_name: 'Agus Setiawan', role: 'kasir', password: 'kasir44' },
+          { username: 'Yadi', full_name: 'Yadi Rahman', role: 'kasir', password: 'kasir77' }
         ];
 
         for (const user of demoUsers) {
-          // Sign up the user
-          const { data: authData, error: authError } = await supabase.auth.signUp({
-            email: user.email,
-            password: user.password,
-          });
-
-          if (authError) {
-            console.error('Error creating user:', authError);
-            continue;
+          // Get kasir_id for kasir users
+          let kasir_id = null;
+          if (user.role === 'kasir') {
+            const { data: kasirData } = await supabase
+              .from('kasir')
+              .select('id')
+              .eq('nama', user.full_name)
+              .single();
+            
+            kasir_id = kasirData?.id || null;
           }
 
-          if (authData.user) {
-            // Get kasir_id for kasir users
-            let kasir_id = null;
-            if (user.role === 'kasir') {
-              const { data: kasirData } = await supabase
-                .from('kasir')
-                .select('id')
-                .eq('nama', user.full_name)
-                .single();
-              
-              kasir_id = kasirData?.id || null;
-            }
+          // Create user profile without user_id (will be updated on first login)
+          const { error: profileError } = await supabase
+            .from('user_profiles')
+            .insert({
+              user_id: null,
+              username: user.username,
+              full_name: user.full_name,
+              role: user.role,
+              kasir_id: kasir_id
+            });
 
-            // Create user profile
-            const { error: profileError } = await supabase
-              .from('user_profiles')
-              .insert({
-                user_id: authData.user.id,
-                username: user.username,
-                full_name: user.full_name,
-                role: user.role,
-                kasir_id: kasir_id
-              });
-
-            if (profileError) {
-              console.error('Error creating profile:', profileError);
-            } else {
-              console.log(`Created demo user: ${user.username}`);
-            }
+          if (profileError) {
+            console.error('Error creating profile:', profileError);
+          } else {
+            console.log(`Created demo user profile: ${user.username}`);
           }
         }
       } catch (error) {

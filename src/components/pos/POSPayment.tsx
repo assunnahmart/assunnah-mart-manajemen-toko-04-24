@@ -67,6 +67,13 @@ const POSPayment = ({
     }
   };
 
+  const generateFallbackTransactionNumber = () => {
+    const now = new Date();
+    const dateStr = now.toISOString().slice(0, 10).replace(/-/g, '');
+    const timeStr = now.getTime().toString().slice(-6);
+    return `TRX-${dateStr}-${timeStr}`;
+  };
+
   const handlePayment = async () => {
     const paid = parseFloat(amountPaid) || 0;
     
@@ -93,16 +100,24 @@ const POSPayment = ({
     setProcessing(true);
     
     try {
-      // Generate unique transaction number using database function
-      const { data: transactionNumber, error: numberError } = await supabase
-        .rpc('generate_transaction_number');
+      let transactionNumber;
       
-      if (numberError) {
-        console.error('Error generating transaction number:', numberError);
-        throw new Error('Gagal membuat nomor transaksi');
+      // Try to generate transaction number using database function
+      try {
+        const { data, error } = await supabase.rpc('generate_transaction_number');
+        
+        if (error || !data) {
+          console.warn('Database function failed, using fallback:', error);
+          transactionNumber = generateFallbackTransactionNumber();
+        } else {
+          transactionNumber = data;
+        }
+      } catch (error) {
+        console.warn('Error calling database function, using fallback:', error);
+        transactionNumber = generateFallbackTransactionNumber();
       }
 
-      console.log('Generated transaction number:', transactionNumber);
+      console.log('Using transaction number:', transactionNumber);
 
       const customerNote = selectedCustomer ? `Pelanggan: ${selectedCustomer.name}` : 'Tanpa pelanggan';
       const creditNote = selectedPaymentMethod === 'credit' ? `Catatan kredit: ${creditNotes}` : '';
@@ -126,7 +141,7 @@ const POSPayment = ({
 
       const result = await createTransaksi.mutateAsync({
         transaksi: {
-          nomor_transaksi: transactionNumber, // Use generated number
+          nomor_transaksi: transactionNumber,
           jenis_pembayaran: getPaymentMethodText(selectedPaymentMethod),
           subtotal: totalAmount,
           total: totalAmount,

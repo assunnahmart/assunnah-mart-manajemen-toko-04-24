@@ -16,7 +16,7 @@ const NewLoginForm = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Form submitted with:', { username, password });
+    console.log('NewLoginForm: Form submitted with:', { username });
     
     if (!username || !password) {
       setError('Username dan password harus diisi');
@@ -28,16 +28,20 @@ const NewLoginForm = () => {
 
     try {
       const result = await signIn(username, password);
-      console.log('Sign in result:', result);
+      console.log('NewLoginForm: Sign in result:', result);
       
       if (result.error) {
+        console.log('NewLoginForm: Login failed:', result.error.message);
         setError(result.error.message || 'Login gagal. Periksa username dan password Anda.');
       } else {
-        console.log('Login successful, user should be redirected');
+        console.log('NewLoginForm: Login successful, auth state should update automatically');
+        // Reset form
+        setUsername('');
+        setPassword('');
         // Login berhasil, komponen akan otomatis redirect karena isAuthenticated berubah
       }
     } catch (error) {
-      console.error('Unexpected error during login:', error);
+      console.error('NewLoginForm: Unexpected error during login:', error);
       setError('Terjadi kesalahan yang tidak terduga');
     }
     
@@ -79,6 +83,7 @@ const NewLoginForm = () => {
                 required
                 className="h-12 text-base"
                 disabled={loading}
+                autoComplete="username"
               />
             </div>
             
@@ -93,6 +98,7 @@ const NewLoginForm = () => {
                 required
                 className="h-12 text-base"
                 disabled={loading}
+                autoComplete="current-password"
               />
             </div>
             

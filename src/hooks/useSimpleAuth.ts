@@ -30,19 +30,21 @@ export const useSimpleAuth = () => {
   });
 
   useEffect(() => {
+    console.log('useSimpleAuth: Initializing auth state check');
+    
     // Check for existing session in localStorage
     const savedUser = localStorage.getItem('assunnah_auth_user');
     if (savedUser) {
       try {
         const user = JSON.parse(savedUser);
-        console.log('Found saved user:', user);
+        console.log('useSimpleAuth: Found saved user:', user);
         setAuthState({
           isAuthenticated: true,
           user,
           loading: false
         });
       } catch (error) {
-        console.error('Error parsing saved user:', error);
+        console.error('useSimpleAuth: Error parsing saved user:', error);
         localStorage.removeItem('assunnah_auth_user');
         setAuthState({
           isAuthenticated: false,
@@ -51,19 +53,19 @@ export const useSimpleAuth = () => {
         });
       }
     } else {
-      console.log('No saved user found');
+      console.log('useSimpleAuth: No saved user found');
       setAuthState(prev => ({ ...prev, loading: false }));
     }
   }, []);
 
   const signIn = async (username: string, password: string) => {
     try {
-      console.log('Attempting login with:', { username, password });
+      console.log('useSimpleAuth: Attempting login with:', { username });
       
       const user = DEMO_USERS.find(u => u.username === username && u.password === password);
       
       if (!user) {
-        console.log('User not found or password incorrect');
+        console.log('useSimpleAuth: User not found or password incorrect');
         return { error: { message: 'Username atau password salah' } };
       }
 
@@ -73,27 +75,28 @@ export const useSimpleAuth = () => {
         role: user.role
       };
 
-      console.log('Login successful, saving user:', userProfile);
+      console.log('useSimpleAuth: Login successful, saving user:', userProfile);
       
       // Save to localStorage
       localStorage.setItem('assunnah_auth_user', JSON.stringify(userProfile));
       
+      // Update state immediately
       setAuthState({
         isAuthenticated: true,
         user: userProfile,
         loading: false
       });
 
-      console.log('Auth state updated successfully');
+      console.log('useSimpleAuth: Auth state updated successfully');
       return { data: userProfile, error: null };
     } catch (error) {
-      console.error('Login error:', error);
+      console.error('useSimpleAuth: Login error:', error);
       return { error: { message: 'Terjadi kesalahan saat login' } };
     }
   };
 
   const signOut = async () => {
-    console.log('Signing out user');
+    console.log('useSimpleAuth: Signing out user');
     localStorage.removeItem('assunnah_auth_user');
     setAuthState({
       isAuthenticated: false,
@@ -103,7 +106,7 @@ export const useSimpleAuth = () => {
     return { error: null };
   };
 
-  console.log('Current auth state:', authState);
+  console.log('useSimpleAuth: Current auth state:', authState);
 
   return {
     user: authState.user,

@@ -10,9 +10,10 @@ interface NewProtectedRouteProps {
 const NewProtectedRoute = ({ children, requiredRole }: NewProtectedRouteProps) => {
   const { isAuthenticated, user, loading } = useSimpleAuth();
 
-  console.log('ProtectedRoute check:', { isAuthenticated, user, loading, requiredRole });
+  console.log('NewProtectedRoute: Check state:', { isAuthenticated, user: user?.username, loading, requiredRole });
 
   if (loading) {
+    console.log('NewProtectedRoute: Still loading...');
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-lg">Loading...</div>
@@ -21,12 +22,12 @@ const NewProtectedRoute = ({ children, requiredRole }: NewProtectedRouteProps) =
   }
 
   if (!isAuthenticated || !user) {
-    console.log('User not authenticated, showing login form');
+    console.log('NewProtectedRoute: User not authenticated, showing login form');
     return <NewLoginForm />;
   }
 
   if (requiredRole && user.role !== requiredRole) {
-    console.log('User role mismatch:', { userRole: user.role, requiredRole });
+    console.log('NewProtectedRoute: User role mismatch:', { userRole: user.role, requiredRole });
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
@@ -37,7 +38,7 @@ const NewProtectedRoute = ({ children, requiredRole }: NewProtectedRouteProps) =
     );
   }
 
-  console.log('Access granted, showing protected content');
+  console.log('NewProtectedRoute: Access granted, showing protected content');
   return <>{children}</>;
 };
 

@@ -16,6 +16,15 @@ import POSPayment from '@/components/pos/POSPayment';
 import POSExportImport from '@/components/pos/POSExportImport';
 import POSReceiptPrint from '@/components/pos/POSReceiptPrint';
 import POSTransactionHistory from '@/components/pos/POSTransactionHistory';
+import POSCustomerSelect from '@/components/pos/POSCustomerSelect';
+import POSPaymentMethod from '@/components/pos/POSPaymentMethod';
+
+interface Customer {
+  id: string;
+  name: string;
+  type: 'unit' | 'perorangan' | 'guest';
+  phone?: string;
+}
 
 const POSSystem = () => {
   const { user } = useSimpleAuth();
@@ -24,6 +33,8 @@ const POSSystem = () => {
   const [showPayment, setShowPayment] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState('cash');
   
   const createTransaction = useCreatePOSTransaction();
 
@@ -69,12 +80,12 @@ const POSSystem = () => {
         kasir_username: user?.username || 'unknown',
         kasir_name: user?.full_name || 'Unknown',
         total_amount: getTotalAmount(),
-        payment_method: 'quick_save',
+        payment_method: selectedPaymentMethod,
         amount_paid: 0,
         change_amount: 0,
         items_count: cartItems.length,
         status: 'saved' as const,
-        notes: 'Quick save - tidak ada pembayaran'
+        notes: `Quick save - ${selectedCustomer ? `Pelanggan: ${selectedCustomer.name}` : 'Tanpa pelanggan'}`
       };
 
       const itemsData = cartItems.map(item => ({
@@ -94,6 +105,7 @@ const POSSystem = () => {
       });
 
       setCartItems([]);
+      setSelectedCustomer(null);
       toast({
         title: "Transaksi berhasil disimpan",
         description: "Transaksi telah disimpan ke database Supabase"
@@ -122,6 +134,7 @@ const POSSystem = () => {
 
   const clearCart = () => {
     setCartItems([]);
+    setSelectedCustomer(null);
   };
 
   return (
@@ -191,8 +204,21 @@ const POSSystem = () => {
               )}
             </div>
 
-            {/* Cart & Actions */}
+            {/* Right Sidebar */}
             <div className="space-y-4">
+              {/* Customer Selection */}
+              <POSCustomerSelect
+                selectedCustomer={selectedCustomer}
+                onCustomerSelect={setSelectedCustomer}
+              />
+
+              {/* Payment Method */}
+              <POSPaymentMethod
+                selectedMethod={selectedPaymentMethod}
+                onMethodSelect={setSelectedPaymentMethod}
+              />
+
+              {/* Cart */}
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center justify-between">
@@ -270,9 +296,12 @@ const POSSystem = () => {
           <POSPayment
             cartItems={cartItems}
             totalAmount={getTotalAmount()}
+            selectedCustomer={selectedCustomer}
+            selectedPaymentMethod={selectedPaymentMethod}
             onClose={() => setShowPayment(false)}
             onSuccess={() => {
               setCartItems([]);
+              setSelectedCustomer(null);
               setShowPayment(false);
             }}
           />

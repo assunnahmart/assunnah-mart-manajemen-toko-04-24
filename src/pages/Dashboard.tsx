@@ -1,4 +1,3 @@
-
 import NewProtectedRoute from '@/components/NewProtectedRoute';
 import NewNavbar from '@/components/NewNavbar';
 import { useSimpleAuth } from '@/hooks/useSimpleAuth';
@@ -47,28 +46,24 @@ const Dashboard = () => {
               value="Rp 2.450.000"
               icon={DollarSign}
               trend={{ value: 12, isPositive: true }}
-              color="bg-green-500"
             />
             <StatsCard
               title="Transaksi"
               value="156"
               icon={ShoppingCart}
               trend={{ value: 8, isPositive: true }}
-              color="bg-blue-500"
             />
             <StatsCard
               title="Produk Aktif"
               value="1,234"
               icon={Package}
               trend={{ value: 3, isPositive: false }}
-              color="bg-purple-500"
             />
             <StatsCard
               title="Pelanggan"
               value="89"
               icon={Users}
               trend={{ value: 15, isPositive: true }}
-              color="bg-orange-500"
             />
           </div>
 

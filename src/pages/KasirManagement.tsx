@@ -9,8 +9,8 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Calendar, Users, Plus, Clock, Edit, Trash2 } from "lucide-react";
 import { useKasir, useCreateKasir, useUpdateKasir, useDeleteKasir } from "@/hooks/useKasir";
 import { useToast } from "@/hooks/use-toast";
-import Navbar from "@/components/Navbar";
-import ProtectedRoute from "@/components/ProtectedRoute";
+import NewNavbar from "@/components/NewNavbar";
+import NewProtectedRoute from "@/components/NewProtectedRoute";
 
 const KasirManagement = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -154,9 +154,9 @@ const KasirManagement = () => {
   );
 
   return (
-    <ProtectedRoute requiredRole="admin">
+    <NewProtectedRoute requiredRole="admin">
       <div className="min-h-screen bg-gray-50">
-        <Navbar />
+        <NewNavbar />
         <div className="p-6">
           <div className="mx-auto max-w-7xl space-y-6">
             {/* Header */}
@@ -320,7 +320,7 @@ const KasirManagement = () => {
           </div>
         </div>
       </div>
-    </ProtectedRoute>
+    </NewProtectedRoute>
   );
 };
 

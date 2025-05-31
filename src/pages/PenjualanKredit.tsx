@@ -1,12 +1,11 @@
-
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CreditCard, Building2, User, AlertCircle } from "lucide-react";
 import { usePelangganKredit } from "@/hooks/usePelanggan";
-import Navbar from "@/components/Navbar";
-import ProtectedRoute from "@/components/ProtectedRoute";
+import NewNavbar from "@/components/NewNavbar";
+import NewProtectedRoute from "@/components/NewProtectedRoute";
 
 const PenjualanKredit = () => {
   const { data: pelangganKredit } = usePelangganKredit();
@@ -128,9 +127,9 @@ const PenjualanKredit = () => {
   const totalPiutangPerorangan = pelangganKredit?.perorangan.reduce((sum, p) => sum + Number(p.sisa_piutang), 0) || 0;
 
   return (
-    <ProtectedRoute>
+    <NewProtectedRoute>
       <div className="min-h-screen bg-gray-50">
-        <Navbar />
+        <NewNavbar />
         <div className="p-6">
           <div className="mx-auto max-w-7xl space-y-6">
             {/* Header */}
@@ -243,7 +242,7 @@ const PenjualanKredit = () => {
           </div>
         </div>
       </div>
-    </ProtectedRoute>
+    </NewProtectedRoute>
   );
 };
 

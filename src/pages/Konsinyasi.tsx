@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -11,8 +10,8 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Package, Plus, AlertTriangle, TrendingDown, Calendar } from "lucide-react";
 import { useBarangKonsinyasi, useBarangStokRendah, useCreateBarangKonsinyasi, useUpdateBarangKonsinyasi } from "@/hooks/useBarangKonsinyasi";
 import { useToast } from "@/hooks/use-toast";
-import Navbar from "@/components/Navbar";
-import ProtectedRoute from "@/components/ProtectedRoute";
+import NewNavbar from "@/components/NewNavbar";
+import NewProtectedRoute from "@/components/NewProtectedRoute";
 
 const Konsinyasi = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -143,9 +142,9 @@ const Konsinyasi = () => {
   };
 
   return (
-    <ProtectedRoute>
+    <NewProtectedRoute>
       <div className="min-h-screen bg-gray-50">
-        <Navbar />
+        <NewNavbar />
         <div className="p-6">
           <div className="mx-auto max-w-7xl space-y-6">
             {/* Header */}
@@ -405,7 +404,7 @@ const Konsinyasi = () => {
           </div>
         </div>
       </div>
-    </ProtectedRoute>
+    </NewProtectedRoute>
   );
 };
 

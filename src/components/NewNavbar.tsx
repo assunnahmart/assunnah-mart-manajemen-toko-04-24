@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -18,9 +17,12 @@ import {
 import { useSimpleAuth } from '@/hooks/useSimpleAuth';
 
 const NewNavbar = () => {
-  const [isOpen, setIsOpen] = useState(false);
-  const { user, logout } = useSimpleAuth();
-  const location = useLocation();
+  const { user, signOut } = useSimpleAuth();
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  const handleLogout = async () => {
+    await signOut();
+  };
 
   const isActive = (path: string) => location.pathname === path;
 
@@ -77,7 +79,7 @@ const NewNavbar = () => {
               </Badge>
             </div>
             <Button
-              onClick={logout}
+              onClick={handleLogout}
               variant="outline"
               size="sm"
               className="flex items-center space-x-1"
@@ -92,15 +94,15 @@ const NewNavbar = () => {
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => setIsOpen(!isOpen)}
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             >
-              {isOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+              {isMobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
             </Button>
           </div>
         </div>
 
         {/* Mobile Menu */}
-        {isOpen && (
+        {isMobileMenuOpen && (
           <div className="md:hidden">
             <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
               {menuItems.map((item) => {
@@ -114,7 +116,7 @@ const NewNavbar = () => {
                         ? 'bg-blue-100 text-blue-700'
                         : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
                     }`}
-                    onClick={() => setIsOpen(false)}
+                    onClick={() => setIsMobileMenuOpen(false)}
                   >
                     <Icon className="h-5 w-5" />
                     <span>{item.label}</span>
@@ -134,8 +136,8 @@ const NewNavbar = () => {
                 </div>
                 <Button
                   onClick={() => {
-                    logout();
-                    setIsOpen(false);
+                    handleLogout();
+                    setIsMobileMenuOpen(false);
                   }}
                   variant="outline"
                   size="sm"

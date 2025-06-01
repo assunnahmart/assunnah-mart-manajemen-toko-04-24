@@ -1,8 +1,10 @@
+
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Package } from 'lucide-react';
+import { Plus, Package, Loader2 } from 'lucide-react';
+import { useBarang } from '@/hooks/useBarang';
 
 interface Product {
   id: string;
@@ -19,84 +21,39 @@ interface POSProductSearchProps {
 }
 
 const POSProductSearch = ({ searchQuery, onAddToCart }: POSProductSearchProps) => {
-  const [products, setProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(false);
-
-  // Mock data - replace with actual API call
-  const mockProducts: Product[] = [
-    {
-      id: '1',
-      nama: 'Beras Premium 5kg',
-      harga_jual: 75000,
-      stok_saat_ini: 50,
-      satuan: 'karung',
-      barcode: '123456789'
-    },
-    {
-      id: '2',
-      nama: 'Minyak Goreng 1L',
-      harga_jual: 15000,
-      stok_saat_ini: 30,
-      satuan: 'botol',
-      barcode: '987654321'
-    },
-    {
-      id: '3',
-      nama: 'Gula Pasir 1kg',
-      harga_jual: 14000,
-      stok_saat_ini: 25,
-      satuan: 'kg',
-      barcode: '456789123'
-    },
-    {
-      id: '4',
-      nama: 'Tepung Terigu 1kg',
-      harga_jual: 12000,
-      stok_saat_ini: 40,
-      satuan: 'kg',
-      barcode: '789123456'
-    },
-    {
-      id: '5',
-      nama: 'Kopi Bubuk 200g',
-      harga_jual: 25000,
-      stok_saat_ini: 15,
-      satuan: 'pack',
-      barcode: '321654987'
-    }
-  ];
+  const [autoAddProcessed, setAutoAddProcessed] = useState<string>('');
+  const { data: products = [], isLoading, error } = useBarang(searchQuery);
 
   useEffect(() => {
-    setLoading(true);
-    // Simulate API call delay
-    const timer = setTimeout(() => {
-      if (searchQuery.trim()) {
-        const filtered = mockProducts.filter(product =>
-          product.nama.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          product.barcode?.includes(searchQuery)
-        );
-        setProducts(filtered);
-        
-        // Auto-add if exact barcode match is found
-        if (searchQuery.length > 5) { // Assume barcode is longer than 5 characters
-          const exactMatch = mockProducts.find(product => 
-            product.barcode === searchQuery
-          );
-          if (exactMatch && filtered.length === 1) {
-            console.log('Auto-adding product from barcode scan:', exactMatch);
-            onAddToCart(exactMatch);
-          }
-        }
-      } else {
-        setProducts(mockProducts);
+    // Auto-add if exact barcode match is found and not already processed
+    if (searchQuery.length > 5 && searchQuery !== autoAddProcessed) {
+      const exactMatch = products.find(product => 
+        product.barcode === searchQuery
+      );
+      
+      if (exactMatch && products.length === 1) {
+        console.log('Auto-adding product from barcode scan:', exactMatch);
+        onAddToCart({
+          id: exactMatch.id,
+          nama: exactMatch.nama,
+          harga_jual: Number(exactMatch.harga_jual),
+          stok_saat_ini: exactMatch.stok_saat_ini,
+          satuan: exactMatch.satuan || 'pcs',
+          barcode: exactMatch.barcode || undefined
+        });
+        setAutoAddProcessed(searchQuery);
       }
-      setLoading(false);
-    }, 300);
+    }
+  }, [searchQuery, products, onAddToCart, autoAddProcessed]);
 
-    return () => clearTimeout(timer);
-  }, [searchQuery, onAddToCart]);
+  // Reset auto-add tracking when search query changes significantly
+  useEffect(() => {
+    if (searchQuery.length <= 5) {
+      setAutoAddProcessed('');
+    }
+  }, [searchQuery]);
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
         {[1, 2, 3, 4].map((i) => (
@@ -108,6 +65,16 @@ const POSProductSearch = ({ searchQuery, onAddToCart }: POSProductSearchProps) =
             </CardContent>
           </Card>
         ))}
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="text-center py-8 text-red-500">
+        <Package className="h-12 w-12 mx-auto mb-4 text-red-300" />
+        <p>Gagal memuat data produk</p>
+        <p className="text-sm">Periksa koneksi database</p>
       </div>
     );
   }
@@ -131,7 +98,14 @@ const POSProductSearch = ({ searchQuery, onAddToCart }: POSProductSearchProps) =
               <h3 className="font-medium text-sm flex-1 mr-2">{product.nama}</h3>
               <Button
                 size="sm"
-                onClick={() => onAddToCart(product)}
+                onClick={() => onAddToCart({
+                  id: product.id,
+                  nama: product.nama,
+                  harga_jual: Number(product.harga_jual),
+                  stok_saat_ini: product.stok_saat_ini,
+                  satuan: product.satuan || 'pcs',
+                  barcode: product.barcode || undefined
+                })}
                 disabled={product.stok_saat_ini === 0}
                 className="h-8 w-8 p-0"
               >
@@ -141,7 +115,7 @@ const POSProductSearch = ({ searchQuery, onAddToCart }: POSProductSearchProps) =
             
             <div className="space-y-1">
               <p className="text-lg font-bold text-blue-600">
-                Rp {product.harga_jual.toLocaleString('id-ID')}
+                Rp {Number(product.harga_jual).toLocaleString('id-ID')}
               </p>
               
               <div className="flex items-center justify-between">

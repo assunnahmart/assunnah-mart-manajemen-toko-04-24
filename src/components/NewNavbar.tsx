@@ -2,16 +2,25 @@
 import { useSimpleAuth } from '@/hooks/useSimpleAuth';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { LogOut, User, Menu } from 'lucide-react';
+import { LogOut, User, Menu, ArrowLeft } from 'lucide-react';
 import { useState } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 const NewNavbar = () => {
   const { user, signOut } = useSimpleAuth();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const navigate = useNavigate();
+  const location = useLocation();
 
   const handleSignOut = async () => {
     await signOut();
   };
+
+  const handleBackToDashboard = () => {
+    navigate('/');
+  };
+
+  const isPOSPage = location.pathname === '/pos';
 
   return (
     <nav className="bg-white border-b border-gray-200 shadow-sm sticky top-0 z-50">
@@ -33,6 +42,21 @@ const NewNavbar = () => {
               )}
             </div>
           </div>
+          
+          {/* POS Back to Dashboard Button - Desktop */}
+          {isPOSPage && user && (
+            <div className="hidden sm:flex">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={handleBackToDashboard}
+                className="mr-4"
+              >
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                Kembali ke Dashboard
+              </Button>
+            </div>
+          )}
           
           {/* Mobile menu button */}
           <div className="sm:hidden">
@@ -72,6 +96,19 @@ const NewNavbar = () => {
         {isMenuOpen && user && (
           <div className="sm:hidden mt-3 pt-3 border-t border-gray-200">
             <div className="space-y-3">
+              {/* POS Back to Dashboard Button - Mobile */}
+              {isPOSPage && (
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={handleBackToDashboard}
+                  className="w-full justify-start mb-3"
+                >
+                  <ArrowLeft className="h-4 w-4 mr-2" />
+                  Kembali ke Dashboard
+                </Button>
+              )}
+              
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-2 text-sm text-gray-600">
                   <User className="h-4 w-4" />

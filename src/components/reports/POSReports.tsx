@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
-import { CalendarDays, CreditCard, Banknote, TrendingUp, Download, User } from 'lucide-react';
+import { CalendarDays, CreditCard, Banknote, TrendingUp, Download, User, Printer } from 'lucide-react';
 import { usePOSReportsToday, usePOSReportsByKasir } from '@/hooks/usePOSReports';
 import { useSimpleAuth } from '@/hooks/useSimpleAuth';
 
@@ -40,6 +40,138 @@ const POSReports = () => {
     URL.revokeObjectURL(url);
   };
 
+  const printReport = () => {
+    if (!todayReport) return;
+    
+    const printContent = `
+      <html>
+        <head>
+          <title>Laporan Kasir Harian - Assunnah Mart</title>
+          <style>
+            body { 
+              font-family: Arial, sans-serif; 
+              margin: 20px; 
+              line-height: 1.6;
+            }
+            .header { 
+              text-align: center; 
+              margin-bottom: 30px; 
+              border-bottom: 2px solid #e50012;
+              padding-bottom: 20px;
+            }
+            .logo { 
+              font-size: 24px; 
+              font-weight: bold; 
+              color: #e50012;
+              margin-bottom: 5px;
+            }
+            .tagline { 
+              font-size: 12px; 
+              color: #666; 
+              font-style: italic;
+            }
+            .date { 
+              font-size: 18px; 
+              margin: 20px 0; 
+              color: #333;
+            }
+            .summary { 
+              display: grid; 
+              grid-template-columns: repeat(2, 1fr); 
+              gap: 20px; 
+              margin: 20px 0; 
+            }
+            .summary-card { 
+              border: 1px solid #ddd; 
+              padding: 15px; 
+              border-radius: 8px;
+              background: #f9f9f9;
+            }
+            .summary-title { 
+              font-weight: bold; 
+              color: #e50012; 
+              margin-bottom: 10px;
+            }
+            .amount { 
+              font-size: 18px; 
+              font-weight: bold; 
+              color: #333;
+            }
+            .count { 
+              font-size: 14px; 
+              color: #666;
+            }
+            .total-section { 
+              margin-top: 30px; 
+              padding: 20px; 
+              background: #e50012; 
+              color: white; 
+              border-radius: 8px;
+              text-align: center;
+            }
+            .footer { 
+              margin-top: 40px; 
+              text-align: center; 
+              font-size: 12px; 
+              color: #666;
+            }
+            @media print {
+              body { margin: 0; }
+              .no-print { display: none; }
+            }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <div class="logo">ASSUNNAH MART</div>
+            <div class="tagline">belanja hemat, berkah, nikmat</div>
+            <div class="date">Laporan Kasir Harian</div>
+            <div class="date">${new Date().toLocaleDateString('id-ID', { 
+              weekday: 'long', 
+              year: 'numeric', 
+              month: 'long', 
+              day: 'numeric' 
+            })}</div>
+          </div>
+          
+          <div class="summary">
+            <div class="summary-card">
+              <div class="summary-title">PENJUALAN TUNAI</div>
+              <div class="amount">Rp ${todayReport.cashTotal.toLocaleString('id-ID')}</div>
+              <div class="count">${todayReport.cashTransactions} transaksi</div>
+            </div>
+            
+            <div class="summary-card">
+              <div class="summary-title">PENJUALAN KREDIT</div>
+              <div class="amount">Rp ${todayReport.creditTotal.toLocaleString('id-ID')}</div>
+              <div class="count">${todayReport.creditTransactions} transaksi</div>
+            </div>
+          </div>
+          
+          <div class="total-section">
+            <div style="font-size: 16px; margin-bottom: 10px;">TOTAL PENJUALAN HARI INI</div>
+            <div style="font-size: 28px; font-weight: bold;">Rp ${todayReport.grandTotal.toLocaleString('id-ID')}</div>
+            <div style="font-size: 14px; margin-top: 5px;">${todayReport.totalTransactions} total transaksi</div>
+          </div>
+          
+          <div class="footer">
+            <p>Operator: ${user?.full_name} (${user?.role === 'admin' ? 'Administrator' : 'Kasir'})</p>
+            <p>Dicetak pada: ${new Date().toLocaleString('id-ID')}</p>
+          </div>
+        </body>
+      </html>
+    `;
+    
+    const printWindow = window.open('', '_blank');
+    if (printWindow) {
+      printWindow.document.write(printContent);
+      printWindow.document.close();
+      printWindow.focus();
+      printWindow.print();
+      printWindow.close();
+    }
+  };
+
   if (loadingToday || loadingKasir) {
     return (
       <div className="space-y-6">
@@ -73,10 +205,16 @@ const POSReports = () => {
             })}
           </p>
         </div>
-        <Button onClick={exportToday} variant="outline" className="gap-2">
-          <Download className="h-4 w-4" />
-          Export Data
-        </Button>
+        <div className="flex gap-2">
+          <Button onClick={printReport} variant="outline" className="gap-2">
+            <Printer className="h-4 w-4" />
+            Cetak Laporan
+          </Button>
+          <Button onClick={exportToday} variant="outline" className="gap-2">
+            <Download className="h-4 w-4" />
+            Export Data
+          </Button>
+        </div>
       </div>
 
       {/* Summary Cards */}
@@ -129,11 +267,11 @@ const POSReports = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-gray-600">Grand Total</p>
-                  <p className="text-2xl font-bold text-blue-600">
+                  <p className="text-2xl font-bold text-red-600">
                     Rp {todayReport.grandTotal.toLocaleString('id-ID')}
                   </p>
                 </div>
-                <TrendingUp className="h-8 w-8 text-blue-600" />
+                <TrendingUp className="h-8 w-8 text-red-600" />
               </div>
             </CardContent>
           </Card>

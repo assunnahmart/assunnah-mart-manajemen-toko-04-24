@@ -21,18 +21,21 @@ const DashboardSummary = () => {
   };
 
   return (
-    <div className="bg-gradient-to-r from-green-600 to-green-700 text-white rounded-lg shadow-lg p-6 mb-6">
+    <div className="bg-gradient-to-r from-red-500 to-pink-600 text-white rounded-lg shadow-lg p-6 mb-6">
       <div className="text-center mb-6">
         {/* Assunnah Mart Logo Header */}
         <div className="flex items-center justify-center mb-4">
           <div className="bg-white p-3 rounded-lg shadow-md mr-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-green-600 rounded-md flex items-center justify-center">
-              <span className="text-white font-bold text-xl">A</span>
-            </div>
+            <img 
+              src="/lovable-uploads/163a7d14-7869-47b2-b33b-40be703e48e1.png" 
+              alt="Assunnah Mart Logo" 
+              className="w-12 h-12 object-contain"
+            />
           </div>
           <div>
             <h1 className="text-2xl font-bold">Assunnah Mart</h1>
-            <p className="text-green-100 text-sm">Sistem Manajemen Toko</p>
+            <p className="text-pink-100 text-sm">Sistem Manajemen Toko</p>
+            <p className="text-pink-200 text-xs">belanja hemat, berkah, nikmat</p>
           </div>
         </div>
         

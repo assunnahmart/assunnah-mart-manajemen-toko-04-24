@@ -36,21 +36,23 @@ const NewNavbar = () => {
   ];
 
   return (
-    <nav className="bg-gradient-to-r from-green-600 to-green-700 shadow-lg border-b">
+    <nav className="bg-gradient-to-r from-red-500 to-pink-600 shadow-lg border-b">
       <div className="container mx-auto px-4">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
           <div className="flex items-center">
             <Link to="/dashboard" className="flex items-center space-x-3">
-              {/* Custom Assunnah Mart Logo */}
+              {/* Assunnah Mart Logo */}
               <div className="bg-white p-2 rounded-lg shadow-md">
-                <div className="w-8 h-8 bg-gradient-to-br from-green-500 to-green-600 rounded-md flex items-center justify-center">
-                  <span className="text-white font-bold text-lg">A</span>
-                </div>
+                <img 
+                  src="/lovable-uploads/163a7d14-7869-47b2-b33b-40be703e48e1.png" 
+                  alt="Assunnah Mart Logo" 
+                  className="w-8 h-8 object-contain"
+                />
               </div>
               <div className="text-white">
                 <span className="text-xl font-bold">Assunnah</span>
-                <span className="text-lg font-medium ml-1 text-green-100">Mart</span>
+                <span className="text-lg font-medium ml-1 text-pink-100">Mart</span>
               </div>
             </Link>
           </div>
@@ -65,8 +67,8 @@ const NewNavbar = () => {
                   to={item.path}
                   className={`flex items-center space-x-1 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
                     isActive(item.path)
-                      ? 'bg-green-800 text-white'
-                      : 'text-green-100 hover:bg-green-700 hover:text-white'
+                      ? 'bg-red-700 text-white'
+                      : 'text-pink-100 hover:bg-red-600 hover:text-white'
                   }`}
                 >
                   <Icon className="h-4 w-4" />
@@ -79,10 +81,10 @@ const NewNavbar = () => {
           {/* User Info & Logout */}
           <div className="hidden md:flex items-center space-x-4">
             <div className="flex items-center space-x-2">
-              <Badge variant="outline" className="bg-white text-green-700 border-green-200">
+              <Badge variant="outline" className="bg-white text-red-700 border-pink-200">
                 {user?.full_name}
               </Badge>
-              <Badge variant="secondary" className="bg-green-800 text-green-100">
+              <Badge variant="secondary" className="bg-red-700 text-pink-100">
                 {user?.role === 'admin' ? 'Admin' : 'Kasir'}
               </Badge>
             </div>
@@ -90,7 +92,7 @@ const NewNavbar = () => {
               onClick={handleLogout}
               variant="outline"
               size="sm"
-              className="flex items-center space-x-1 border-green-200 text-green-100 hover:bg-green-800 hover:text-white"
+              className="flex items-center space-x-1 border-pink-200 text-pink-100 hover:bg-red-700 hover:text-white"
             >
               <LogOut className="h-4 w-4" />
               <span>Logout</span>
@@ -103,7 +105,7 @@ const NewNavbar = () => {
               variant="ghost"
               size="sm"
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="text-white hover:bg-green-700"
+              className="text-white hover:bg-red-600"
             >
               {isMobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
             </Button>
@@ -122,8 +124,8 @@ const NewNavbar = () => {
                     to={item.path}
                     className={`flex items-center space-x-2 px-3 py-2 rounded-md text-base font-medium ${
                       isActive(item.path)
-                        ? 'bg-green-800 text-white'
-                        : 'text-green-100 hover:bg-green-700 hover:text-white'
+                        ? 'bg-red-700 text-white'
+                        : 'text-pink-100 hover:bg-red-600 hover:text-white'
                     }`}
                     onClick={() => setIsMobileMenuOpen(false)}
                   >
@@ -134,13 +136,13 @@ const NewNavbar = () => {
               })}
               
               {/* Mobile User Info */}
-              <div className="border-t border-green-600 pt-4 mt-4">
+              <div className="border-t border-red-600 pt-4 mt-4">
                 <div className="flex items-center px-3 py-2">
                   <div className="flex items-center space-x-2">
-                    <Badge variant="outline" className="bg-white text-green-700 border-green-200">
+                    <Badge variant="outline" className="bg-white text-red-700 border-pink-200">
                       {user?.full_name}
                     </Badge>
-                    <Badge variant="secondary" className="bg-green-800 text-green-100">
+                    <Badge variant="secondary" className="bg-red-700 text-pink-100">
                       {user?.role === 'admin' ? 'Admin' : 'Kasir'}
                     </Badge>
                   </div>
@@ -152,7 +154,7 @@ const NewNavbar = () => {
                   }}
                   variant="outline"
                   size="sm"
-                  className="w-full mx-3 mt-2 flex items-center justify-center space-x-1 border-green-200 text-green-100 hover:bg-green-800 hover:text-white"
+                  className="w-full mx-3 mt-2 flex items-center justify-center space-x-1 border-pink-200 text-pink-100 hover:bg-red-700 hover:text-white"
                 >
                   <LogOut className="h-4 w-4" />
                   <span>Logout</span>

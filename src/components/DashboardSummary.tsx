@@ -3,16 +3,18 @@ import { Card, CardContent } from '@/components/ui/card';
 import { useSimpleAuth } from '@/hooks/useSimpleAuth';
 import { usePOSTransactionsToday } from '@/hooks/usePOSTransactions';
 import { useTransaksiHariIni } from '@/hooks/useTransaksi';
+import { usePOSReportsToday } from '@/hooks/usePOSReports';
 import { ShoppingCart, DollarSign, Package, Users } from 'lucide-react';
 
 const DashboardSummary = () => {
   const { user } = useSimpleAuth();
   const { data: posStats } = usePOSTransactionsToday();
   const { data: transaksiStats } = useTransaksiHariIni();
+  const { data: combinedStats } = usePOSReportsToday();
 
-  // Combine data from both POS and regular transactions
-  const totalTransactions = (posStats?.totalTransactions || 0) + (transaksiStats?.totalTransaksi || 0);
-  const totalAmount = (posStats?.totalAmount || 0) + (transaksiStats?.totalPendapatan || 0);
+  // Use combined stats for more accurate data
+  const totalTransactions = combinedStats?.totalTransactions || 0;
+  const totalAmount = combinedStats?.grandTotal || 0;
 
   // Mock data for non-transaction metrics - in real app this would come from API
   const summaryData = {
@@ -23,7 +25,6 @@ const DashboardSummary = () => {
   return (
     <div className="bg-gradient-to-r from-red-500 to-pink-600 text-white rounded-lg shadow-lg p-6 mb-6">
       <div className="text-center mb-6">
-        {/* Assunnah Mart Logo Header */}
         <div className="flex items-center justify-center mb-4">
           <div className="bg-white p-3 rounded-lg shadow-md mr-3">
             <img 

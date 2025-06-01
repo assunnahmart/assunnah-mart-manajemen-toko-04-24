@@ -6,7 +6,6 @@ export const usePiutangPelanggan = () => {
   return useQuery({
     queryKey: ['piutang_pelanggan'],
     queryFn: async () => {
-      // Get credit transactions from both POS and regular transactions
       const today = new Date().toISOString().split('T')[0];
       
       // Get POS credit transactions
@@ -14,7 +13,7 @@ export const usePiutangPelanggan = () => {
         .from('pos_transactions')
         .select('*')
         .eq('payment_method', 'credit')
-        .eq('status', 'credit');
+        .in('status', ['credit', 'completed']);
       
       if (posError) throw posError;
       
@@ -27,7 +26,7 @@ export const usePiutangPelanggan = () => {
           pelanggan_perorangan(nama, sisa_piutang)
         `)
         .eq('jenis_pembayaran', 'credit')
-        .eq('status', 'kredit');
+        .in('status', ['kredit', 'selesai']);
       
       if (regularError) throw regularError;
       
@@ -49,12 +48,18 @@ export const usePiutangPelanggan = () => {
       
       if (peroranganError) throw peroranganError;
       
-      // Calculate totals
+      // Calculate totals including POS transactions
       const totalPiutangUnit = pelangganUnit.reduce((sum, p) => sum + (p.total_tagihan || 0), 0);
       const totalPiutangPerorangan = pelangganPerorangan.reduce((sum, p) => sum + (p.sisa_piutang || 0), 0);
-      const totalPiutang = totalPiutangUnit + totalPiutangPerorangan;
       
-      // Calculate today's credit sales
+      // Add credit from POS transactions that might not be reflected in pelanggan tables yet
+      const additionalPOSCredit = posCredit
+        .filter(t => new Date(t.created_at).toDateString() === new Date().toDateString())
+        .reduce((sum, t) => sum + t.total_amount, 0);
+      
+      const totalPiutang = totalPiutangUnit + totalPiutangPerorangan + additionalPOSCredit;
+      
+      // Calculate today's credit sales from both sources
       const todayPosCredit = posCredit.filter(t => 
         new Date(t.created_at).toDateString() === new Date().toDateString()
       );
@@ -75,7 +80,9 @@ export const usePiutangPelanggan = () => {
         totalPiutang,
         todayCreditAmount,
         totalCreditCustomers: pelangganUnit.length + pelangganPerorangan.length,
-        recentCreditTransactions: [...todayPosCredit, ...todayRegularCredit]
+        recentCreditTransactions: [...todayPosCredit, ...todayRegularCredit],
+        posCredit,
+        regularCredit
       };
     },
   });

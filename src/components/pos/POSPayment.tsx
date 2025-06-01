@@ -63,7 +63,7 @@ const POSPayment = ({
     switch (method) {
       case 'cash': return 'cash';
       case 'credit': return 'credit';
-      default: return 'cash'; // Default fallback
+      default: return 'cash';
     }
   };
 
@@ -77,7 +77,6 @@ const POSPayment = ({
   const handlePayment = async () => {
     const paid = parseFloat(amountPaid) || 0;
     
-    // For credit payment, amount paid can be 0 or partial
     if (selectedPaymentMethod === 'cash' && paid < totalAmount) {
       toast({
         title: "Jumlah bayar kurang",
@@ -87,7 +86,6 @@ const POSPayment = ({
       return;
     }
 
-    // For credit payment, require customer selection
     if (selectedPaymentMethod === 'credit' && !selectedCustomer) {
       toast({
         title: "Pilih pelanggan",
@@ -102,7 +100,6 @@ const POSPayment = ({
     try {
       let transactionNumber;
       
-      // Try to generate transaction number using database function
       try {
         const { data, error } = await supabase.rpc('generate_transaction_number');
         
@@ -124,7 +121,6 @@ const POSPayment = ({
       const receiptNote = printReceipt ? 'Cetak struk' : 'Tanpa struk';
       const notes = [customerNote, creditNote, receiptNote].filter(Boolean).join(' - ');
       
-      // For credit payment, calculate remaining debt
       const remainingDebt = selectedPaymentMethod === 'credit' ? totalAmount - paid : 0;
       const paymentStatus = selectedPaymentMethod === 'credit' && remainingDebt > 0 ? 'kredit' : 'selesai';
 
@@ -139,51 +135,83 @@ const POSPayment = ({
         catatan: notes
       });
 
-      const result = await createTransaksi.mutateAsync({
-        transaksi: {
-          nomor_transaksi: transactionNumber,
-          jenis_pembayaran: getPaymentMethodText(selectedPaymentMethod),
-          subtotal: totalAmount,
-          total: totalAmount,
-          bayar: paid,
-          kembalian: selectedPaymentMethod === 'cash' ? calculateChange() : 0,
-          status: paymentStatus,
-          catatan: notes
-        },
-        detail: cartItems.map(item => ({
-          barang_id: item.id,
-          nama_barang: item.nama,
-          harga_satuan: item.harga_jual,
-          jumlah: item.quantity,
-          subtotal: item.harga_jual * item.quantity
-        }))
-      });
+      // Create transaction in both systems for data consistency
+      const [transaksiResult, posResult] = await Promise.all([
+        // Save to regular transaction system
+        createTransaksi.mutateAsync({
+          transaksi: {
+            nomor_transaksi: transactionNumber,
+            jenis_pembayaran: getPaymentMethodText(selectedPaymentMethod),
+            subtotal: totalAmount,
+            total: totalAmount,
+            bayar: paid,
+            kembalian: selectedPaymentMethod === 'cash' ? calculateChange() : 0,
+            status: paymentStatus,
+            catatan: notes
+          },
+          detail: cartItems.map(item => ({
+            barang_id: item.id,
+            nama_barang: item.nama,
+            harga_satuan: item.harga_jual,
+            jumlah: item.quantity,
+            subtotal: item.harga_jual * item.quantity
+          }))
+        }),
+        
+        // Save to POS system for compatibility
+        createPOSTransaction.mutateAsync({
+          transaction: {
+            kasir_username: user?.username || 'unknown',
+            kasir_name: user?.full_name || 'Unknown',
+            total_amount: totalAmount,
+            payment_method: selectedPaymentMethod,
+            amount_paid: paid,
+            change_amount: selectedPaymentMethod === 'cash' ? calculateChange() : 0,
+            items_count: cartItems.length,
+            status: paymentStatus === 'kredit' ? 'credit' as const : 'completed' as const,
+            notes: notes
+          },
+          items: cartItems.map(item => ({
+            product_id: item.id,
+            product_name: item.nama,
+            unit_price: item.harga_jual,
+            quantity: item.quantity,
+            subtotal: item.harga_jual * item.quantity,
+            unit: item.satuan || 'pcs'
+          }))
+        })
+      ]);
 
-      // Also save to POS transactions for compatibility
-      await createPOSTransaction.mutateAsync({
-        transaction: {
-          kasir_username: user?.username || 'unknown',
-          kasir_name: user?.full_name || 'Unknown',
-          total_amount: totalAmount,
-          payment_method: selectedPaymentMethod,
-          amount_paid: paid,
-          change_amount: selectedPaymentMethod === 'cash' ? calculateChange() : 0,
-          items_count: cartItems.length,
-          status: paymentStatus === 'kredit' ? 'credit' as const : 'completed' as const,
-          notes: notes
-        },
-        items: cartItems.map(item => ({
-          product_id: item.id, // Keep as UUID string, don't convert to number
-          product_name: item.nama,
-          unit_price: item.harga_jual,
-          quantity: item.quantity,
-          subtotal: item.harga_jual * item.quantity,
-          unit: item.satuan || 'pcs'
-        }))
-      });
+      // Update customer debt if credit payment
+      if (selectedPaymentMethod === 'credit' && selectedCustomer && remainingDebt > 0) {
+        if (selectedCustomer.type === 'unit') {
+          await supabase
+            .from('pelanggan_unit')
+            .update({
+              total_tagihan: supabase.sql`total_tagihan + ${remainingDebt}`
+            })
+            .eq('id', selectedCustomer.id);
+        } else if (selectedCustomer.type === 'perorangan') {
+          await supabase
+            .from('pelanggan_perorangan')
+            .update({
+              sisa_piutang: supabase.sql`sisa_piutang + ${remainingDebt}`
+            })
+            .eq('id', selectedCustomer.id);
+        }
+      }
 
       if (printReceipt) {
-        console.log('Printing receipt...');
+        // Print receipt with complete transaction data
+        const receiptContent = generateReceiptContent(transactionNumber, paid, calculateChange());
+        const printWindow = window.open('', '_blank');
+        if (printWindow) {
+          printWindow.document.write(receiptContent);
+          printWindow.document.close();
+          printWindow.focus();
+          printWindow.print();
+          printWindow.close();
+        }
       }
 
       const successMessage = selectedPaymentMethod === 'credit' 
@@ -192,7 +220,7 @@ const POSPayment = ({
 
       toast({
         title: successMessage,
-        description: "Transaksi telah disimpan dan terintegrasi dengan laporan rekap penjualan"
+        description: "Transaksi telah disimpan dan sinkron dengan laporan rekap penjualan"
       });
       
       onSuccess();
@@ -206,6 +234,104 @@ const POSPayment = ({
     } finally {
       setProcessing(false);
     }
+  };
+
+  const generateReceiptContent = (transactionNumber: string, amountPaid: number, changeAmount: number) => {
+    const now = new Date();
+    const date = now.toLocaleDateString('id-ID');
+    const time = now.toLocaleTimeString('id-ID');
+
+    return `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Struk Belanja</title>
+        <style>
+          @media print {
+            body { margin: 0; padding: 10px; }
+            .receipt { width: 58mm; font-family: monospace; font-size: 12px; }
+          }
+          body { font-family: monospace; font-size: 12px; }
+          .receipt { max-width: 300px; margin: 0 auto; }
+          .center { text-align: center; }
+          .line { border-bottom: 1px dashed #000; margin: 5px 0; }
+          .row { display: flex; justify-content: space-between; margin: 2px 0; }
+          .bold { font-weight: bold; }
+          .logo { width: 80px; height: 80px; margin: 0 auto 10px; border-radius: 8px; }
+        </style>
+      </head>
+      <body>
+        <div class="receipt">
+          <div class="center">
+            <img src="/lovable-uploads/a2af9547-58f3-45de-b565-8283573a9b0e.png" 
+                 alt="Logo Assunnah Mart" class="logo" />
+          </div>
+          <div class="center bold">ASSUNNAH MART</div>
+          <div class="center">
+            Jl. Kalitanjung No. 52B<br>
+            Kec. Kesambi, Cirebon<br>
+            Telp: +62 896-0335-0353<br>
+            Email: info@assunnahmart.com
+          </div>
+          <div class="line"></div>
+          
+          <div class="row">
+            <span>Tanggal:</span>
+            <span>${date}</span>
+          </div>
+          <div class="row">
+            <span>Waktu:</span>
+            <span>${time}</span>
+          </div>
+          <div class="row">
+            <span>Kasir:</span>
+            <span>${user?.full_name || 'Unknown'}</span>
+          </div>
+          <div class="row">
+            <span>No. Transaksi:</span>
+            <span>${transactionNumber}</span>
+          </div>
+          <div class="line"></div>
+          
+          ${cartItems.map(item => `
+          <div class="row">
+            <span>${item.nama}</span>
+          </div>
+          <div class="row">
+            <span>${item.quantity} x Rp ${item.harga_jual.toLocaleString('id-ID')}</span>
+            <span>Rp ${(item.quantity * item.harga_jual).toLocaleString('id-ID')}</span>
+          </div>
+          `).join('')}
+          
+          <div class="line"></div>
+          <div class="row bold">
+            <span>TOTAL:</span>
+            <span>Rp ${totalAmount.toLocaleString('id-ID')}</span>
+          </div>
+          <div class="row">
+            <span>Bayar:</span>
+            <span>Rp ${amountPaid.toLocaleString('id-ID')}</span>
+          </div>
+          <div class="row">
+            <span>Kembali:</span>
+            <span>Rp ${changeAmount.toLocaleString('id-ID')}</span>
+          </div>
+          
+          <div class="line"></div>
+          <div class="center">
+            Terima kasih atas kunjungan Anda<br>
+            Semoga berkah dan barokah<br><br>
+            Barang yang sudah dibeli<br>
+            tidak dapat dikembalikan<br>
+            kecuali ada kesepakatan
+          </div>
+          <div class="center" style="margin-top: 10px; font-size: 10px;">
+            www.assunnahmart.com
+          </div>
+        </div>
+      </body>
+      </html>
+    `;
   };
 
   const quickAmountButtons = [
@@ -228,7 +354,6 @@ const POSPayment = ({
         </DialogHeader>
 
         <div className="space-y-4">
-          {/* Customer Info */}
           {selectedCustomer && (
             <div className="bg-blue-50 p-3 rounded-lg">
               <div className="flex items-center justify-between">
@@ -243,7 +368,6 @@ const POSPayment = ({
             </div>
           )}
 
-          {/* Payment Method Info */}
           <div className={`p-3 rounded-lg ${isCreditPayment ? 'bg-orange-50' : 'bg-green-50'}`}>
             <div className="flex items-center justify-between">
               <span className="font-medium">Metode Pembayaran:</span>
@@ -253,14 +377,12 @@ const POSPayment = ({
             </div>
           </div>
 
-          {/* Credit Payment Warning */}
           {isCreditPayment && !selectedCustomer && (
             <div className="bg-red-50 p-3 rounded-lg border border-red-200">
               <p className="text-red-700 text-sm">⚠️ Pembayaran kredit memerlukan pemilihan pelanggan</p>
             </div>
           )}
 
-          {/* Order Summary */}
           <div className="bg-gray-50 p-4 rounded-lg">
             <h3 className="font-medium mb-2">Ringkasan Pesanan</h3>
             <div className="space-y-1 text-sm">
@@ -279,7 +401,6 @@ const POSPayment = ({
             </div>
           </div>
 
-          {/* Amount Paid */}
           <div>
             <Label>
               {isCreditPayment ? 'Jumlah Bayar (opsional - bisa 0 untuk hutang penuh)' : 'Jumlah Bayar'}
@@ -292,7 +413,6 @@ const POSPayment = ({
               className="text-lg"
             />
             
-            {/* Quick Amount Buttons - only for cash */}
             {!isCreditPayment && (
               <div className="grid grid-cols-4 gap-2 mt-2">
                 {quickAmountButtons.map((btn) => (
@@ -309,7 +429,6 @@ const POSPayment = ({
             )}
           </div>
 
-          {/* Credit Notes */}
           {isCreditPayment && (
             <div>
               <Label>Catatan Kredit</Label>
@@ -322,7 +441,6 @@ const POSPayment = ({
             </div>
           )}
 
-          {/* Change/Debt Info */}
           {amountPaid && (
             <div className={`p-3 rounded-lg ${isCreditPayment ? 'bg-orange-50' : 'bg-green-50'}`}>
               {isCreditPayment ? (
@@ -351,7 +469,6 @@ const POSPayment = ({
             </div>
           )}
 
-          {/* Print Option */}
           <div className="flex items-center gap-2">
             <input
               type="checkbox"
@@ -365,7 +482,6 @@ const POSPayment = ({
             </Label>
           </div>
 
-          {/* Action Buttons */}
           <div className="flex gap-2 pt-4">
             <Button
               variant="outline"

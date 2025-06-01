@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -23,7 +22,7 @@ interface KonsinyasiItem {
 const KonsinyasiForm = () => {
   const { toast } = useToast();
   const { data: suppliers } = useSupplier();
-  const { data: konsinyasiBarang } = useBarangKonsinyasi('all');
+  const { data: konsinyasiBarang } = useBarangKonsinyasi();
   const createLaporan = useCreateKonsinyasiLaporan();
 
   const [selectedSupplier, setSelectedSupplier] = useState<string>('');

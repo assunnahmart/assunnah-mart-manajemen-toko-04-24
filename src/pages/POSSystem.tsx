@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Search, ShoppingCart, Save, CreditCard, History, Receipt, Camera } from 'lucide-react';
+import { Search, ShoppingCart, Save, CreditCard, History, Receipt, Camera, DollarSign } from 'lucide-react';
 import { useSimpleAuth } from '@/hooks/useSimpleAuth';
 import { useCreatePOSTransaction } from '@/hooks/usePOSTransactions';
 import { useToast } from '@/hooks/use-toast';
@@ -165,8 +165,32 @@ const POSSystem = () => {
         <NewNavbar />
         
         <div className="container mx-auto p-4 max-w-7xl">
-          {/* Header with Transaction Count at Top */}
+          {/* Enhanced Header with Total Shopping Amount */}
           <div className="mb-6">
+            {/* Total Shopping Display - Prominent at Top */}
+            <div className="bg-gradient-to-r from-blue-600 to-blue-700 rounded-xl p-6 mb-6 shadow-lg">
+              <div className="flex items-center justify-between text-white">
+                <div className="flex items-center gap-4">
+                  <div className="bg-white/20 p-3 rounded-lg">
+                    <DollarSign className="h-8 w-8" />
+                  </div>
+                  <div>
+                    <p className="text-blue-100 text-sm font-medium mb-1">Total Belanja Saat Ini</p>
+                    <p className="text-3xl font-bold">
+                      Rp {getTotalAmount().toLocaleString('id-ID')}
+                    </p>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <Badge variant="secondary" className="text-lg px-4 py-2 bg-white/20 text-white border-white/30">
+                    <ShoppingCart className="h-4 w-4 mr-2" />
+                    {cartItems.length} Item{cartItems.length !== 1 ? 's' : ''}
+                  </Badge>
+                </div>
+              </div>
+            </div>
+
+            {/* Header Info */}
             <div className="flex items-center justify-between mb-4">
               <div>
                 <h1 className="text-3xl font-bold text-gray-900 mb-2">POS System</h1>
@@ -179,11 +203,6 @@ const POSSystem = () => {
                       month: 'long', 
                       day: 'numeric' 
                     })}
-                  </Badge>
-                  {/* Transaction Count Badge - Moved to top */}
-                  <Badge variant="default" className="text-lg px-4 py-2 bg-blue-600">
-                    <ShoppingCart className="h-4 w-4 mr-2" />
-                    {cartItems.length} Item{cartItems.length !== 1 ? 's' : ''}
                   </Badge>
                 </div>
               </div>
@@ -207,7 +226,7 @@ const POSSystem = () => {
               {showHistory ? (
                 <POSTransactionHistory />
               ) : (
-                <Card className="h-[calc(100vh-280px)]">
+                <Card className="h-[calc(100vh-350px)]">
                   <CardHeader className="pb-4">
                     <CardTitle className="flex items-center gap-2">
                       <Search className="h-5 w-5" />
@@ -268,7 +287,7 @@ const POSSystem = () => {
               )}
 
               {/* Cart */}
-              <Card className="h-[400px]">
+              <Card className="h-[350px]">
                 <CardHeader className="pb-4">
                   <CardTitle className="flex items-center justify-between">
                     <span className="flex items-center gap-2">
@@ -298,39 +317,30 @@ const POSSystem = () => {
                 </CardContent>
               </Card>
 
-              {/* Total & Actions */}
+              {/* Actions */}
               <Card>
                 <CardContent className="pt-6">
-                  <div className="space-y-4">
-                    <div className="text-center bg-gray-50 rounded-lg p-4">
-                      <p className="text-sm text-gray-600 mb-1">Total Belanja</p>
-                      <p className="text-3xl font-bold text-blue-600">
-                        Rp {getTotalAmount().toLocaleString('id-ID')}
-                      </p>
-                    </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {/* Quick Save Button */}
+                    <Button
+                      onClick={handleQuickSave}
+                      disabled={cartItems.length === 0 || createTransaction.isPending}
+                      className="bg-green-600 hover:bg-green-700"
+                      size="lg"
+                    >
+                      <Save className="h-4 w-4 mr-2" />
+                      {createTransaction.isPending ? 'Menyimpan...' : 'Simpan ke Database'}
+                    </Button>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      {/* Quick Save Button */}
-                      <Button
-                        onClick={handleQuickSave}
-                        disabled={cartItems.length === 0 || createTransaction.isPending}
-                        className="bg-green-600 hover:bg-green-700"
-                        size="lg"
-                      >
-                        <Save className="h-4 w-4 mr-2" />
-                        {createTransaction.isPending ? 'Menyimpan...' : 'Simpan ke Database'}
-                      </Button>
-
-                      {/* Regular Payment Button */}
-                      <Button
-                        onClick={handleRegularPayment}
-                        disabled={cartItems.length === 0 || (selectedPaymentMethod === 'credit' && !selectedCustomer)}
-                        size="lg"
-                      >
-                        {selectedPaymentMethod === 'credit' ? <Receipt className="h-4 w-4 mr-2" /> : <CreditCard className="h-4 w-4 mr-2" />}
-                        {selectedPaymentMethod === 'credit' ? 'Proses Kredit' : 'Bayar & Cetak'}
-                      </Button>
-                    </div>
+                    {/* Regular Payment Button */}
+                    <Button
+                      onClick={handleRegularPayment}
+                      disabled={cartItems.length === 0 || (selectedPaymentMethod === 'credit' && !selectedCustomer)}
+                      size="lg"
+                    >
+                      {selectedPaymentMethod === 'credit' ? <Receipt className="h-4 w-4 mr-2" /> : <CreditCard className="h-4 w-4 mr-2" />}
+                      {selectedPaymentMethod === 'credit' ? 'Proses Kredit' : 'Bayar & Cetak'}
+                    </Button>
                   </div>
                 </CardContent>
               </Card>

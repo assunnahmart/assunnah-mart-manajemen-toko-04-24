@@ -35,7 +35,7 @@ const POSSystem = () => {
   const [showScanner, setShowScanner] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
-  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState('cash'); // Default to cash
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState('cash');
   
   const createTransaction = useCreatePOSTransaction();
 
@@ -82,10 +82,10 @@ const POSSystem = () => {
         kasir_name: user?.full_name || 'Unknown',
         total_amount: getTotalAmount(),
         payment_method: selectedPaymentMethod,
-        amount_paid: getTotalAmount(), // Set amount paid to total amount for completed transaction
-        change_amount: 0, // No change for quick save
+        amount_paid: getTotalAmount(),
+        change_amount: 0,
         items_count: cartItems.length,
-        status: 'completed' as const, // Changed from 'saved' to 'completed'
+        status: 'completed' as const,
         notes: `Quick save - ${selectedCustomer ? `Pelanggan: ${selectedCustomer.name}` : 'Tanpa pelanggan'} - Metode: ${selectedPaymentMethod === 'cash' ? 'Tunai' : 'Kredit'} - Transaksi selesai otomatis`
       };
 
@@ -131,7 +131,6 @@ const POSSystem = () => {
       return;
     }
 
-    // For credit payment, require customer selection
     if (selectedPaymentMethod === 'credit' && !selectedCustomer) {
       toast({
         title: "Pilih pelanggan",
@@ -152,11 +151,8 @@ const POSSystem = () => {
   const handleBarcodeScanned = (barcode: string) => {
     console.log('Barcode scanned in POS:', barcode);
     
-    // Set search query to the scanned barcode
     setSearchQuery(barcode);
     
-    // Try to find product by barcode and add to cart automatically
-    // This will be handled by POSProductSearch component
     toast({
       title: "Mencari produk",
       description: `Mencari produk dengan barcode: ${barcode}`
@@ -168,12 +164,13 @@ const POSSystem = () => {
       <div className="min-h-screen bg-gray-50">
         <NewNavbar />
         
-        <div className="container mx-auto p-4">
+        <div className="container mx-auto p-4 max-w-7xl">
+          {/* Header with Transaction Count at Top */}
           <div className="mb-6">
             <div className="flex items-center justify-between mb-4">
               <div>
                 <h1 className="text-3xl font-bold text-gray-900 mb-2">POS System</h1>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-4 flex-wrap">
                   <Badge variant="outline">Kasir: {user?.full_name}</Badge>
                   <Badge variant="secondary">
                     {new Date().toLocaleDateString('id-ID', { 
@@ -182,6 +179,11 @@ const POSSystem = () => {
                       month: 'long', 
                       day: 'numeric' 
                     })}
+                  </Badge>
+                  {/* Transaction Count Badge - Moved to top */}
+                  <Badge variant="default" className="text-lg px-4 py-2 bg-blue-600">
+                    <ShoppingCart className="h-4 w-4 mr-2" />
+                    {cartItems.length} Item{cartItems.length !== 1 ? 's' : ''}
                   </Badge>
                 </div>
               </div>
@@ -198,14 +200,15 @@ const POSSystem = () => {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Product Search & List */}
-            <div className="lg:col-span-2">
+          {/* Landscape Layout - Optimized for Desktop */}
+          <div className="grid grid-cols-1 xl:grid-cols-4 gap-6">
+            {/* Left Section - Product Search (60% width on desktop) */}
+            <div className="xl:col-span-2">
               {showHistory ? (
                 <POSTransactionHistory />
               ) : (
-                <Card>
-                  <CardHeader>
+                <Card className="h-[calc(100vh-280px)]">
+                  <CardHeader className="pb-4">
                     <CardTitle className="flex items-center gap-2">
                       <Search className="h-5 w-5" />
                       Cari Produk
@@ -230,7 +233,7 @@ const POSSystem = () => {
                       </Button>
                     </div>
                   </CardHeader>
-                  <CardContent>
+                  <CardContent className="h-[calc(100%-120px)] overflow-hidden">
                     <POSProductSearch 
                       searchQuery={searchQuery}
                       onAddToCart={addToCart}
@@ -240,19 +243,19 @@ const POSSystem = () => {
               )}
             </div>
 
-            {/* Right Sidebar */}
-            <div className="space-y-4">
-              {/* Customer Selection */}
-              <POSCustomerSelect
-                selectedCustomer={selectedCustomer}
-                onCustomerSelect={setSelectedCustomer}
-              />
-
-              {/* Payment Method */}
-              <POSPaymentMethod
-                selectedMethod={selectedPaymentMethod}
-                onMethodSelect={setSelectedPaymentMethod}
-              />
+            {/* Right Section - Controls & Cart (40% width on desktop) */}
+            <div className="xl:col-span-2 space-y-4">
+              {/* Customer & Payment Method Row */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                <POSCustomerSelect
+                  selectedCustomer={selectedCustomer}
+                  onCustomerSelect={setSelectedCustomer}
+                />
+                <POSPaymentMethod
+                  selectedMethod={selectedPaymentMethod}
+                  onMethodSelect={setSelectedPaymentMethod}
+                />
+              </div>
 
               {/* Credit Payment Warning */}
               {selectedPaymentMethod === 'credit' && !selectedCustomer && (
@@ -265,12 +268,11 @@ const POSSystem = () => {
               )}
 
               {/* Cart */}
-              <Card>
-                <CardHeader>
+              <Card className="h-[400px]">
+                <CardHeader className="pb-4">
                   <CardTitle className="flex items-center justify-between">
                     <span className="flex items-center gap-2">
-                      <ShoppingCart className="h-5 w-5" />
-                      Keranjang ({cartItems.length})
+                      Keranjang Belanja
                     </span>
                     <div className="flex gap-2">
                       <POSReceiptPrint 
@@ -288,7 +290,7 @@ const POSSystem = () => {
                     </div>
                   </CardTitle>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="h-[calc(100%-80px)] overflow-hidden">
                   <POSCart 
                     items={cartItems}
                     onUpdateQuantity={updateCartQuantity}
@@ -300,19 +302,19 @@ const POSSystem = () => {
               <Card>
                 <CardContent className="pt-6">
                   <div className="space-y-4">
-                    <div className="text-right">
-                      <p className="text-sm text-gray-600">Total</p>
-                      <p className="text-2xl font-bold">
+                    <div className="text-center bg-gray-50 rounded-lg p-4">
+                      <p className="text-sm text-gray-600 mb-1">Total Belanja</p>
+                      <p className="text-3xl font-bold text-blue-600">
                         Rp {getTotalAmount().toLocaleString('id-ID')}
                       </p>
                     </div>
 
-                    <div className="space-y-2">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       {/* Quick Save Button */}
                       <Button
                         onClick={handleQuickSave}
                         disabled={cartItems.length === 0 || createTransaction.isPending}
-                        className="w-full bg-green-600 hover:bg-green-700"
+                        className="bg-green-600 hover:bg-green-700"
                         size="lg"
                       >
                         <Save className="h-4 w-4 mr-2" />
@@ -323,7 +325,6 @@ const POSSystem = () => {
                       <Button
                         onClick={handleRegularPayment}
                         disabled={cartItems.length === 0 || (selectedPaymentMethod === 'credit' && !selectedCustomer)}
-                        className="w-full"
                         size="lg"
                       >
                         {selectedPaymentMethod === 'credit' ? <Receipt className="h-4 w-4 mr-2" /> : <CreditCard className="h-4 w-4 mr-2" />}

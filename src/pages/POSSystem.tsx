@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import NewProtectedRoute from '@/components/NewProtectedRoute';
 import NewNavbar from '@/components/NewNavbar';
@@ -80,11 +81,11 @@ const POSSystem = () => {
         kasir_name: user?.full_name || 'Unknown',
         total_amount: getTotalAmount(),
         payment_method: selectedPaymentMethod,
-        amount_paid: 0,
-        change_amount: 0,
+        amount_paid: getTotalAmount(), // Set amount paid to total amount for completed transaction
+        change_amount: 0, // No change for quick save
         items_count: cartItems.length,
-        status: 'saved' as const,
-        notes: `Quick save - ${selectedCustomer ? `Pelanggan: ${selectedCustomer.name}` : 'Tanpa pelanggan'} - Metode: ${selectedPaymentMethod === 'cash' ? 'Tunai' : 'Kredit'}`
+        status: 'completed' as const, // Changed from 'saved' to 'completed'
+        notes: `Quick save - ${selectedCustomer ? `Pelanggan: ${selectedCustomer.name}` : 'Tanpa pelanggan'} - Metode: ${selectedPaymentMethod === 'cash' ? 'Tunai' : 'Kredit'} - Transaksi selesai otomatis`
       };
 
       const itemsData = cartItems.map(item => ({
@@ -106,8 +107,8 @@ const POSSystem = () => {
       setCartItems([]);
       setSelectedCustomer(null);
       toast({
-        title: "Transaksi berhasil disimpan",
-        description: "Transaksi telah disimpan dan terintegrasi dengan laporan rekap penjualan kasir"
+        title: "Transaksi berhasil diselesaikan",
+        description: "Transaksi telah disimpan dengan status selesai dan terintegrasi dengan laporan rekap penjualan kasir"
       });
     } catch (error) {
       console.error('Error saving transaction:', error);

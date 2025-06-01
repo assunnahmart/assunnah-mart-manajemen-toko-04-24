@@ -169,7 +169,7 @@ export const useLowStockProducts = () => {
           *,
           supplier(nama)
         `)
-        .filter('stok_saat_ini', 'lte', 'stok_minimal')
+        .lte('stok_saat_ini', 'stok_minimal')
         .order('stok_saat_ini', { ascending: true });
       
       if (error) throw error;

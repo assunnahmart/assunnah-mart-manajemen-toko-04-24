@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useSimpleAuth } from '@/hooks/useSimpleAuth';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -194,9 +195,22 @@ const NewLoginForm = () => {
                   >
                     Yadi / kasir7
                   </button>
+                  <button
+                    type="button"
+                    onClick={() => handleDemoLogin('Nurohman', 'kasir12')}
+                    className="block w-full text-left p-1 hover:bg-gray-100 rounded text-xs"
+                  >
+                    Nurohman / kasir12
+                  </button>
                 </div>
               </div>
             </div>
+          </div>
+          
+          <div className="text-center">
+            <p className="text-xs text-gray-500">
+              Copyright © 2025 Program by Junaedi Abu Mughiroh
+            </p>
           </div>
         </CardContent>
       </Card>

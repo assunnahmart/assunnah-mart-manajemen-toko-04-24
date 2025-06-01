@@ -14,7 +14,7 @@ const Layout = ({ children }: LayoutProps) => {
       <footer className="bg-gray-800 text-white py-4 mt-auto">
         <div className="container mx-auto px-4 text-center">
           <p className="text-sm">
-            Copyright © 2025 Program by Junaedi Abu Mughiroh
+            Assunnah Mart - Sistem Manajemen Toko
           </p>
         </div>
       </footer>

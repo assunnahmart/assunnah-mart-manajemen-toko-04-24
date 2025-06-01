@@ -43,12 +43,14 @@ const Login = () => {
         <div className="w-full max-w-md">
           <div className="text-center mb-8">
             <div className="flex items-center justify-center mb-4">
-              <div className="bg-blue-600 p-3 rounded-full">
-                <ShoppingCart className="h-8 w-8 text-white" />
-              </div>
+              <img 
+                src="/lovable-uploads/a2af9547-58f3-45de-b565-8283573a9b0e.png" 
+                alt="Assunnah Mart Logo" 
+                className="h-20 w-auto"
+              />
             </div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Kasir Pro</h1>
-            <p className="text-gray-600">Sistem Kasir Professional</p>
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">Assunnah Mart</h1>
+            <p className="text-gray-600">Sistem Manajemen Toko</p>
           </div>
 
           <Card className="shadow-lg">
@@ -114,8 +116,8 @@ const Login = () => {
           </Card>
 
           <div className="text-center mt-6">
-            <p className="text-sm text-gray-500">
-              Kesulitan login? Hubungi administrator
+            <p className="text-xs text-gray-500">
+              Copyright © 2025 Program by Junaedi Abu Mughiroh
             </p>
           </div>
         </div>

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 
 interface UserProfile {
@@ -19,7 +18,8 @@ const DEMO_USERS = [
   { username: 'Jamhur', password: 'admin1', full_name: 'Jamhur', role: 'admin' as const },
   { username: 'Jamhur2', password: 'kasir1', full_name: 'Jamhur2', role: 'kasir' as const },
   { username: 'Agus', password: 'kasir4', full_name: 'Agus', role: 'kasir' as const },
-  { username: 'Yadi', password: 'kasir7', full_name: 'Yadi', role: 'kasir' as const }
+  { username: 'Yadi', password: 'kasir7', full_name: 'Yadi', role: 'kasir' as const },
+  { username: 'Nurohman', password: 'kasir12', full_name: 'Nurohman', role: 'kasir' as const }
 ];
 
 export const useSimpleAuth = () => {

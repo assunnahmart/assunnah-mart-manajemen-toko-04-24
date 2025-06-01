@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -12,6 +12,7 @@ import { useCreatePurchaseTransaction } from '@/hooks/usePurchaseTransactions';
 import { useBarang } from '@/hooks/useBarang';
 import { useSimpleAuth } from '@/hooks/useSimpleAuth';
 import { useKasir } from '@/hooks/useKasir';
+import { useCreateKasTransaction } from '@/hooks/useKasUmum';
 import { useToast } from '@/hooks/use-toast';
 
 interface PurchaseItem {
@@ -35,14 +36,39 @@ const PurchaseForm = ({ suppliers }: PurchaseFormProps) => {
   const [selectedProduct, setSelectedProduct] = useState('');
   const [quantity, setQuantity] = useState(1);
   const [unitPrice, setUnitPrice] = useState(0);
+  const [filteredProducts, setFilteredProducts] = useState<any[]>([]);
 
   const { data: products } = useBarang();
   const { data: kasirData } = useKasir();
   const { user } = useSimpleAuth();
   const createPurchase = useCreatePurchaseTransaction();
+  const createKasTransaction = useCreateKasTransaction();
   const { toast } = useToast();
 
   const userKasir = kasirData?.find(k => k.nama === user?.full_name);
+
+  // Filter products based on selected supplier
+  useEffect(() => {
+    if (supplierId && products) {
+      const supplierProducts = products.filter(product => product.supplier_id === supplierId);
+      setFilteredProducts(supplierProducts);
+    } else {
+      setFilteredProducts(products || []);
+    }
+    // Reset selected product when supplier changes
+    setSelectedProduct('');
+    setUnitPrice(0);
+  }, [supplierId, products]);
+
+  // Auto-fill product price when product is selected
+  useEffect(() => {
+    if (selectedProduct && products) {
+      const product = products.find(p => p.id === selectedProduct);
+      if (product) {
+        setUnitPrice(product.harga_jual || 0);
+      }
+    }
+  }, [selectedProduct, products]);
 
   const addItem = () => {
     if (!selectedProduct || quantity <= 0 || unitPrice <= 0) return;
@@ -105,7 +131,7 @@ const PurchaseForm = ({ suppliers }: PurchaseFormProps) => {
     }
 
     try {
-      await createPurchase.mutateAsync({
+      const purchaseResult = await createPurchase.mutateAsync({
         transaction: {
           supplier_id: supplierId,
           subtotal: totalAmount,
@@ -125,9 +151,26 @@ const PurchaseForm = ({ suppliers }: PurchaseFormProps) => {
         }))
       });
 
+      // Jika transaksi tunai, otomatis buat entri kas keluar
+      if (jenisTransaksi === 'cash') {
+        await createKasTransaction.mutateAsync({
+          tanggal_transaksi: new Date().toISOString().split('T')[0],
+          jenis_transaksi: 'keluar',
+          akun_id: '00000000-0000-0000-0000-000000000001', // Akun kas
+          jumlah: totalAmount,
+          keterangan: `Pengeluaran kas untuk pembelian - ${purchaseResult.transaction.nomor_transaksi}`,
+          referensi_tipe: 'purchase_transaction',
+          referensi_id: purchaseResult.transaction.id,
+          kasir_username: user?.username || '',
+          kasir_name: user?.full_name || ''
+        });
+      }
+
       toast({
         title: "Transaksi pembelian berhasil",
-        description: "Data pembelian telah disimpan dan terintegrasi dengan kas umum serta kartu hutang"
+        description: jenisTransaksi === 'cash' 
+          ? "Data pembelian telah disimpan dan terintegrasi dengan kas umum"
+          : "Data pembelian telah disimpan dan terintegrasi dengan kartu hutang"
       });
 
       // Reset form
@@ -216,10 +259,10 @@ const PurchaseForm = ({ suppliers }: PurchaseFormProps) => {
               <Label>Produk</Label>
               <Select value={selectedProduct} onValueChange={setSelectedProduct}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Pilih produk..." />
+                  <SelectValue placeholder={supplierId ? "Pilih produk..." : "Pilih supplier dulu..."} />
                 </SelectTrigger>
                 <SelectContent>
-                  {products?.map((product) => (
+                  {filteredProducts?.map((product) => (
                     <SelectItem key={product.id} value={product.id}>
                       {product.nama}
                     </SelectItem>
@@ -243,6 +286,7 @@ const PurchaseForm = ({ suppliers }: PurchaseFormProps) => {
                 value={unitPrice}
                 onChange={(e) => setUnitPrice(Number(e.target.value))}
                 min="0"
+                placeholder="Harga akan terisi otomatis"
               />
             </div>
             <div className="flex items-end">

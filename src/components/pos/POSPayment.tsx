@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -73,13 +72,13 @@ const POSPayment = ({
         items: itemsData
       });
 
-      // Update customer debt if credit payment using database functions
+      // Update customer debt if credit payment
       if (selectedPaymentMethod === 'credit' && selectedCustomer) {
         if (selectedCustomer.type === 'unit') {
           const { error } = await supabase
             .from('pelanggan_unit')
             .update({ 
-              total_tagihan: supabase.sql`COALESCE(total_tagihan, 0) + ${totalAmount}`,
+              total_tagihan: selectedCustomer.total_tagihan + totalAmount,
               updated_at: new Date().toISOString()
             })
             .eq('id', selectedCustomer.id);
@@ -89,7 +88,7 @@ const POSPayment = ({
           const { error } = await supabase
             .from('pelanggan_perorangan')
             .update({ 
-              sisa_piutang: supabase.sql`COALESCE(sisa_piutang, 0) + ${totalAmount}`,
+              sisa_piutang: selectedCustomer.sisa_piutang + totalAmount,
               updated_at: new Date().toISOString()
             })
             .eq('id', selectedCustomer.id);

@@ -19,13 +19,13 @@ import {
 import { useSimpleAuth } from '@/hooks/useSimpleAuth';
 
 const NewNavbar = () => {
-  const { user, logout } = useSimpleAuth();
+  const { user, signOut } = useSimpleAuth();
   const location = useLocation();
   const navigate = useNavigate();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const handleLogout = () => {
-    logout();
+    signOut();
     navigate('/');
   };
 

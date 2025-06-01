@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useSimpleAuth } from '@/hooks/useSimpleAuth';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -20,11 +19,20 @@ const NewLoginForm = () => {
 
   // Auto redirect when authenticated (but not if showing welcome screen)
   useEffect(() => {
-    if (isAuthenticated && !showWelcome) {
-      console.log('NewLoginForm: User is authenticated, redirecting to dashboard');
-      navigate('/', { replace: true });
+    if (isAuthenticated && !showWelcome && user) {
+      console.log('NewLoginForm: User is authenticated, redirecting based on role:', user.role);
+      
+      // Redirect based on user role
+      if (user.role === 'kasir') {
+        navigate('/pos', { replace: true });
+      } else if (user.role === 'admin') {
+        navigate('/dashboard', { replace: true });
+      } else {
+        // Default fallback
+        navigate('/', { replace: true });
+      }
     }
-  }, [isAuthenticated, navigate, showWelcome]);
+  }, [isAuthenticated, navigate, showWelcome, user]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -63,7 +71,7 @@ const NewLoginForm = () => {
 
   const handleWelcomeComplete = () => {
     setShowWelcome(false);
-    // Navigation will happen automatically via useEffect
+    // Navigation will happen automatically via useEffect based on role
   };
 
   const handleDemoLogin = (demoUsername: string, demoPassword: string) => {

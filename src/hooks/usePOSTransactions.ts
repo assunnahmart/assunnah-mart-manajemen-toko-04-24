@@ -94,12 +94,22 @@ export const useCreatePOSTransaction = () => {
       }
       
       console.log('Items inserted successfully:', itemsData);
+
+      // Dispatch custom event for transaction completion
+      const event = new CustomEvent('pos-transaction-complete', {
+        detail: {
+          transaction: insertedTransaction,
+          items: itemsData
+        }
+      });
+      window.dispatchEvent(event);
       
       return { transaction: insertedTransaction, items: itemsData };
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['pos_transactions'] });
       queryClient.invalidateQueries({ queryKey: ['pos_transactions_today'] });
+      queryClient.invalidateQueries({ queryKey: ['barang'] });
     },
   });
 };

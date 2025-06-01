@@ -18,7 +18,8 @@ import {
   Home,
   ClipboardList,
   DollarSign,
-  ShoppingBag
+  ShoppingBag,
+  Truck
 } from 'lucide-react';
 import { useSimpleAuth } from '@/hooks/useSimpleAuth';
 
@@ -26,10 +27,10 @@ const NewNavbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
-  const { user, logout } = useSimpleAuth();
+  const { user, signOut } = useSimpleAuth();
 
   const handleLogout = () => {
-    logout();
+    signOut();
     navigate('/');
   };
 
@@ -40,6 +41,7 @@ const NewNavbar = () => {
     { to: '/purchase', icon: ShoppingBag, label: 'Pembelian' },
     { to: '/stock', icon: ClipboardList, label: 'Stok Management' },
     { to: '/kas-umum', icon: DollarSign, label: 'Kas Umum' },
+    { to: '/konsinyasi', icon: Truck, label: 'Konsinyasi' },
     { to: '/penjualan-kredit', icon: CreditCard, label: 'Penjualan Kredit' },
     { to: '/kasir', icon: Users, label: 'Kasir Management' },
     { to: '/admin', icon: Settings, label: 'Admin Panel', adminOnly: true },

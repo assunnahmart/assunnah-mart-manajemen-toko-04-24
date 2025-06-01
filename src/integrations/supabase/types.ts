@@ -423,6 +423,98 @@ export type Database = {
         }
         Relationships: []
       }
+      konsinyasi_detail: {
+        Row: {
+          barang_id: string | null
+          created_at: string | null
+          harga_beli: number
+          id: string
+          jumlah_terjual: number
+          laporan_id: string | null
+          nama_barang: string
+          total_nilai: number
+        }
+        Insert: {
+          barang_id?: string | null
+          created_at?: string | null
+          harga_beli: number
+          id?: string
+          jumlah_terjual: number
+          laporan_id?: string | null
+          nama_barang: string
+          total_nilai: number
+        }
+        Update: {
+          barang_id?: string | null
+          created_at?: string | null
+          harga_beli?: number
+          id?: string
+          jumlah_terjual?: number
+          laporan_id?: string | null
+          nama_barang?: string
+          total_nilai?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "konsinyasi_detail_barang_id_fkey"
+            columns: ["barang_id"]
+            isOneToOne: false
+            referencedRelation: "barang_konsinyasi"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "konsinyasi_detail_laporan_id_fkey"
+            columns: ["laporan_id"]
+            isOneToOne: false
+            referencedRelation: "konsinyasi_laporan"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      konsinyasi_laporan: {
+        Row: {
+          created_at: string | null
+          id: string
+          periode_mulai: string
+          periode_selesai: string
+          status: string | null
+          supplier_id: string | null
+          total_komisi: number | null
+          total_penjualan: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          periode_mulai: string
+          periode_selesai: string
+          status?: string | null
+          supplier_id?: string | null
+          total_komisi?: number | null
+          total_penjualan?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          periode_mulai?: string
+          periode_selesai?: string
+          status?: string | null
+          supplier_id?: string | null
+          total_komisi?: number | null
+          total_penjualan?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "konsinyasi_laporan_supplier_id_fkey"
+            columns: ["supplier_id"]
+            isOneToOne: false
+            referencedRelation: "supplier"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       mutasi_stok: {
         Row: {
           barang_id: string | null

@@ -1,75 +1,116 @@
 
-import { Card, CardContent } from '@/components/ui/card';
-import { useSimpleAuth } from '@/hooks/useSimpleAuth';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { TrendingUp, TrendingDown, DollarSign, Package, Users, ShoppingCart } from 'lucide-react';
 import { usePOSTransactionsToday } from '@/hooks/usePOSTransactions';
-import { useTransaksiHariIni } from '@/hooks/useTransaksi';
-import { usePOSReportsToday } from '@/hooks/usePOSReports';
-import { ShoppingCart, DollarSign, Package, Users } from 'lucide-react';
+import { useKasUmumSummary } from '@/hooks/useKasUmum';
+import { useBarang } from '@/hooks/useBarang';
+import { useSupplier } from '@/hooks/useSupplier';
 
 const DashboardSummary = () => {
-  const { user } = useSimpleAuth();
-  const { data: posStats } = usePOSTransactionsToday();
-  const { data: transaksiStats } = useTransaksiHariIni();
-  const { data: combinedStats } = usePOSReportsToday();
+  const { data: todayPOS, isLoading: posLoading } = usePOSTransactionsToday();
+  const { data: kasSummary, isLoading: kasLoading } = useKasUmumSummary();
+  const { data: barangList, isLoading: barangLoading } = useBarang();
+  const { data: suppliers, isLoading: supplierLoading } = useSupplier();
 
-  // Use combined stats for more accurate data
-  const totalTransactions = combinedStats?.totalTransactions || 0;
-  const totalAmount = combinedStats?.grandTotal || 0;
+  const isLoading = posLoading || kasLoading || barangLoading || supplierLoading;
 
-  // Mock data for non-transaction metrics - in real app this would come from API
-  const summaryData = {
-    totalProduk: 1234,
-    totalPelanggan: 89
-  };
+  if (isLoading) {
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+        {[1, 2, 3, 4].map((i) => (
+          <Card key={i} className="animate-pulse">
+            <CardContent className="p-6">
+              <div className="h-20 bg-gray-200 rounded"></div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    );
+  }
+
+  const lowStockItems = barangList?.filter(item => 
+    (item.stok_saat_ini || 0) <= (item.stok_minimal || 0)
+  ).length || 0;
+
+  const summaryCards = [
+    {
+      title: 'Penjualan Hari Ini',
+      value: `Rp ${(todayPOS?.totalAmount || 0).toLocaleString('id-ID')}`,
+      subtitle: `${todayPOS?.totalTransactions || 0} transaksi`,
+      icon: ShoppingCart,
+      trend: 'up',
+      color: 'text-green-600'
+    },
+    {
+      title: 'Saldo Kas',
+      value: `Rp ${(kasSummary?.saldo || 0).toLocaleString('id-ID')}`,
+      subtitle: `Masuk: Rp ${(kasSummary?.totalMasuk || 0).toLocaleString('id-ID')}`,
+      icon: DollarSign,
+      trend: kasSummary?.saldo && kasSummary.saldo > 0 ? 'up' : 'down',
+      color: kasSummary?.saldo && kasSummary.saldo > 0 ? 'text-green-600' : 'text-red-600'
+    },
+    {
+      title: 'Total Produk',
+      value: barangList?.length || 0,
+      subtitle: lowStockItems > 0 ? `${lowStockItems} stok rendah` : 'Stok normal',
+      icon: Package,
+      trend: lowStockItems > 0 ? 'down' : 'up',
+      color: lowStockItems > 0 ? 'text-orange-600' : 'text-green-600'
+    },
+    {
+      title: 'Total Supplier',
+      value: suppliers?.length || 0,
+      subtitle: 'Supplier aktif',
+      icon: Users,
+      trend: 'up',
+      color: 'text-blue-600'
+    }
+  ];
 
   return (
-    <div className="bg-gradient-to-r from-red-500 to-pink-600 text-white rounded-lg shadow-lg p-6 mb-6">
-      <div className="text-center mb-6">
-        <div className="flex items-center justify-center mb-4">
-          <div className="bg-white p-3 rounded-lg shadow-md mr-3">
-            <img 
-              src="/lovable-uploads/163a7d14-7869-47b2-b33b-40be703e48e1.png" 
-              alt="Assunnah Mart Logo" 
-              className="w-12 h-12 object-contain"
-            />
-          </div>
-          <div>
-            <h1 className="text-2xl font-bold">Assunnah Mart</h1>
-            <p className="text-pink-100 text-sm">Sistem Manajemen Toko</p>
-            <p className="text-pink-200 text-xs">belanja hemat, berkah, nikmat</p>
-          </div>
-        </div>
-        
-        <h2 className="text-4xl font-bold mb-2">
-          {totalTransactions}
-        </h2>
-        <p className="text-xl opacity-90">Total Transaksi Hari Ini</p>
-        <p className="text-sm opacity-75 mt-1">
-          Operator: {user?.full_name} ({user?.role === 'admin' ? 'Administrator' : 'Kasir'})
-        </p>
-      </div>
-
-      <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
-        <div className="bg-white/10 rounded-lg p-4 text-center backdrop-blur-sm">
-          <DollarSign className="h-8 w-8 mx-auto mb-2 opacity-80" />
-          <p className="text-2xl font-bold">
-            Rp {totalAmount.toLocaleString('id-ID')}
-          </p>
-          <p className="text-sm opacity-75">Total Penjualan</p>
-        </div>
-
-        <div className="bg-white/10 rounded-lg p-4 text-center backdrop-blur-sm">
-          <Package className="h-8 w-8 mx-auto mb-2 opacity-80" />
-          <p className="text-2xl font-bold">{summaryData.totalProduk}</p>
-          <p className="text-sm opacity-75">Produk Aktif</p>
-        </div>
-
-        <div className="bg-white/10 rounded-lg p-4 text-center col-span-2 lg:col-span-1 backdrop-blur-sm">
-          <Users className="h-8 w-8 mx-auto mb-2 opacity-80" />
-          <p className="text-2xl font-bold">{summaryData.totalPelanggan}</p>
-          <p className="text-sm opacity-75">Pelanggan</p>
-        </div>
-      </div>
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+      {summaryCards.map((card, index) => (
+        <Card key={index}>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">{card.title}</CardTitle>
+            <card.icon className={`h-4 w-4 ${card.color}`} />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{card.value}</div>
+            <div className="flex items-center text-xs text-muted-foreground">
+              {card.trend === 'up' ? (
+                <TrendingUp className="h-3 w-3 text-green-500 mr-1" />
+              ) : (
+                <TrendingDown className="h-3 w-3 text-red-500 mr-1" />
+              )}
+              {card.subtitle}
+            </div>
+          </CardContent>
+        </Card>
+      ))}
+      
+      {lowStockItems > 0 && (
+        <Card className="md:col-span-2 lg:col-span-4">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Package className="h-5 w-5 text-orange-500" />
+              Peringatan Stok Rendah
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center gap-2">
+              <Badge variant="destructive">{lowStockItems}</Badge>
+              <span className="text-sm text-gray-600">
+                produk memiliki stok di bawah batas minimal
+              </span>
+            </div>
+            <div className="mt-2 text-xs text-gray-500">
+              Silakan lakukan restok atau pembelian untuk produk dengan stok rendah
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 };

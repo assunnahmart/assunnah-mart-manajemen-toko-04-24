@@ -1,109 +1,71 @@
 
 import { useState, useRef } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Scan, Camera } from 'lucide-react';
+import { QrCode, X } from 'lucide-react';
 
 interface POSBarcodeScannerProps {
   onScan: (barcode: string) => void;
-  children?: React.ReactNode;
+  onClose: () => void;
 }
 
-const POSBarcodeScanner = ({ onScan, children }: POSBarcodeScannerProps) => {
-  const [isOpen, setIsOpen] = useState(false);
+const POSBarcodeScanner = ({ onScan, onClose }: POSBarcodeScannerProps) => {
   const [manualBarcode, setManualBarcode] = useState('');
-  const [isScanning, setIsScanning] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
 
-  const handleManualSubmit = () => {
+  const handleManualSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
     if (manualBarcode.trim()) {
       onScan(manualBarcode.trim());
       setManualBarcode('');
-      setIsOpen(false);
-    }
-  };
-
-  const startCamera = async () => {
-    setIsScanning(true);
-    try {
-      // In a real implementation, you would use a barcode scanning library like QuaggaJS or ZXing
-      // For now, we'll show a placeholder message
-      console.log('Camera scanning would be implemented here');
-    } catch (error) {
-      console.error('Camera access error:', error);
+      onClose();
     }
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogTrigger asChild>
-        {children || (
-          <Button variant="outline" size="sm">
-            <Scan className="h-4 w-4 mr-2" />
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <Card className="w-full max-w-md mx-4">
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
+          <CardTitle className="flex items-center gap-2">
+            <QrCode className="h-5 w-5" />
             Scan Barcode
+          </CardTitle>
+          <Button variant="ghost" size="sm" onClick={onClose}>
+            <X className="h-4 w-4" />
           </Button>
-        )}
-      </DialogTrigger>
-      <DialogContent className="max-w-md">
-        <DialogHeader>
-          <DialogTitle>Scan Barcode Produk</DialogTitle>
-        </DialogHeader>
-        
-        <div className="space-y-4">
-          {/* Manual Input */}
-          <div>
-            <Label htmlFor="barcode">Input Manual Barcode</Label>
-            <div className="flex gap-2">
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="text-center">
+            <p className="text-sm text-gray-600 mb-4">
+              Scan barcode produk atau input manual
+            </p>
+          </div>
+          
+          <form onSubmit={handleManualSubmit} className="space-y-4">
+            <div>
+              <label className="text-sm font-medium">Input Manual</label>
               <Input
-                id="barcode"
-                placeholder="Masukkan barcode..."
+                ref={inputRef}
+                type="text"
+                placeholder="Masukkan kode barcode"
                 value={manualBarcode}
                 onChange={(e) => setManualBarcode(e.target.value)}
-                onKeyPress={(e) => {
-                  if (e.key === 'Enter') {
-                    handleManualSubmit();
-                  }
-                }}
+                autoFocus
               />
-              <Button onClick={handleManualSubmit} disabled={!manualBarcode.trim()}>
-                OK
+            </div>
+            <div className="flex gap-2">
+              <Button type="submit" className="flex-1" disabled={!manualBarcode.trim()}>
+                Scan
+              </Button>
+              <Button type="button" variant="outline" onClick={onClose}>
+                Batal
               </Button>
             </div>
-          </div>
-
-          {/* Camera Scanner */}
-          <div className="text-center">
-            <p className="text-sm text-gray-600 mb-2">Atau gunakan kamera untuk scan</p>
-            <Button
-              variant="outline"
-              onClick={startCamera}
-              disabled={isScanning}
-              className="w-full"
-            >
-              <Camera className="h-4 w-4 mr-2" />
-              {isScanning ? 'Scanning...' : 'Buka Kamera'}
-            </Button>
-            {isScanning && (
-              <div className="mt-4 p-4 border rounded-lg bg-gray-50">
-                <p className="text-sm text-gray-600">
-                  Fitur kamera scanning akan diimplementasikan dengan library khusus barcode scanner.
-                  Untuk sementara, gunakan input manual di atas.
-                </p>
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={() => setIsScanning(false)}
-                  className="mt-2"
-                >
-                  Tutup
-                </Button>
-              </div>
-            )}
-          </div>
-        </div>
-      </DialogContent>
-    </Dialog>
+          </form>
+        </CardContent>
+      </Card>
+    </div>
   );
 };
 

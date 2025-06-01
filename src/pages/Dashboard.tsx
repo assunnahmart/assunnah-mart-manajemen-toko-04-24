@@ -2,11 +2,12 @@
 import NewProtectedRoute from '@/components/NewProtectedRoute';
 import NewNavbar from '@/components/NewNavbar';
 import DashboardSummary from '@/components/DashboardSummary';
+import PiutangCard from '@/components/PiutangCard';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { CalendarDays, TrendingUp, Users, Package, Eye, FileText } from 'lucide-react';
+import { CalendarDays, TrendingUp, Users, Package, Eye, FileText, CreditCard } from 'lucide-react';
 import { useSimpleAuth } from '@/hooks/useSimpleAuth';
 import { usePOSTransactionsToday } from '@/hooks/usePOSTransactions';
 import { useTransaksiHariIni } from '@/hooks/useTransaksi';
@@ -51,10 +52,14 @@ const Dashboard = () => {
           </div>
 
           <Tabs defaultValue="overview" className="space-y-6">
-            <TabsList className="grid w-full grid-cols-3">
+            <TabsList className="grid w-full grid-cols-4">
               <TabsTrigger value="overview" className="flex items-center gap-2">
                 <TrendingUp className="h-4 w-4" />
                 Overview
+              </TabsTrigger>
+              <TabsTrigger value="piutang" className="flex items-center gap-2">
+                <CreditCard className="h-4 w-4" />
+                Piutang
               </TabsTrigger>
               <TabsTrigger value="reports" className="flex items-center gap-2">
                 <FileText className="h-4 w-4" />
@@ -68,6 +73,10 @@ const Dashboard = () => {
 
             <TabsContent value="overview">
               <DashboardSummary />
+            </TabsContent>
+
+            <TabsContent value="piutang">
+              <PiutangCard />
             </TabsContent>
 
             <TabsContent value="reports">

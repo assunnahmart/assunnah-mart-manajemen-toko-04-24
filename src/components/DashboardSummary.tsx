@@ -21,8 +21,21 @@ const DashboardSummary = () => {
   };
 
   return (
-    <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg shadow-lg p-6 mb-6">
+    <div className="bg-gradient-to-r from-green-600 to-green-700 text-white rounded-lg shadow-lg p-6 mb-6">
       <div className="text-center mb-6">
+        {/* Assunnah Mart Logo Header */}
+        <div className="flex items-center justify-center mb-4">
+          <div className="bg-white p-3 rounded-lg shadow-md mr-3">
+            <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-green-600 rounded-md flex items-center justify-center">
+              <span className="text-white font-bold text-xl">A</span>
+            </div>
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold">Assunnah Mart</h1>
+            <p className="text-green-100 text-sm">Sistem Manajemen Toko</p>
+          </div>
+        </div>
+        
         <h2 className="text-4xl font-bold mb-2">
           {totalTransactions}
         </h2>
@@ -33,7 +46,7 @@ const DashboardSummary = () => {
       </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
-        <div className="bg-white/10 rounded-lg p-4 text-center">
+        <div className="bg-white/10 rounded-lg p-4 text-center backdrop-blur-sm">
           <DollarSign className="h-8 w-8 mx-auto mb-2 opacity-80" />
           <p className="text-2xl font-bold">
             Rp {totalAmount.toLocaleString('id-ID')}
@@ -41,13 +54,13 @@ const DashboardSummary = () => {
           <p className="text-sm opacity-75">Total Penjualan</p>
         </div>
 
-        <div className="bg-white/10 rounded-lg p-4 text-center">
+        <div className="bg-white/10 rounded-lg p-4 text-center backdrop-blur-sm">
           <Package className="h-8 w-8 mx-auto mb-2 opacity-80" />
           <p className="text-2xl font-bold">{summaryData.totalProduk}</p>
           <p className="text-sm opacity-75">Produk Aktif</p>
         </div>
 
-        <div className="bg-white/10 rounded-lg p-4 text-center col-span-2 lg:col-span-1">
+        <div className="bg-white/10 rounded-lg p-4 text-center col-span-2 lg:col-span-1 backdrop-blur-sm">
           <Users className="h-8 w-8 mx-auto mb-2 opacity-80" />
           <p className="text-2xl font-bold">{summaryData.totalPelanggan}</p>
           <p className="text-sm opacity-75">Pelanggan</p>

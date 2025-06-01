@@ -3,31 +3,20 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Tables, TablesInsert } from '@/integrations/supabase/types';
 
-type KasUmumTransaction = Tables<'kas_umum_transactions'>;
-type KasUmumTransactionInsert = TablesInsert<'kas_umum_transactions'>;
+type KasTransaction = Tables<'kas_umum_transactions'>;
+type KasTransactionInsert = TablesInsert<'kas_umum_transactions'>;
 
-export const useKasUmumTransactions = (limit?: number) => {
+export const useKasUmumTransactions = () => {
   return useQuery({
-    queryKey: ['kas_umum_transactions', limit],
+    queryKey: ['kas_umum_transactions'],
     queryFn: async () => {
-      let query = supabase
+      const { data, error } = await supabase
         .from('kas_umum_transactions')
         .select(`
           *,
-          chart_of_accounts!kas_umum_transactions_akun_id_fkey (
-            kode_akun,
-            nama_akun,
-            jenis_akun,
-            kategori
-          )
+          chart_of_accounts (nama_akun, kode_akun)
         `)
         .order('created_at', { ascending: false });
-      
-      if (limit) {
-        query = query.limit(limit);
-      }
-      
-      const { data, error } = await query;
       
       if (error) throw error;
       return data;
@@ -35,46 +24,29 @@ export const useKasUmumTransactions = (limit?: number) => {
   });
 };
 
-export const useCreateKasUmumTransaction = () => {
+export const useCreateKasTransaction = () => {
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: async (transaction: Omit<KasUmumTransactionInsert, 'transaction_number'>) => {
+    mutationFn: async (transaction: Omit<KasTransactionInsert, 'transaction_number'>) => {
       // Generate transaction number
       const { data: transactionNumber, error: numberError } = await supabase
         .rpc('generate_kas_transaction_number');
       
-      if (numberError) {
-        console.error('Error generating transaction number:', numberError);
-        throw numberError;
-      }
+      if (numberError) throw numberError;
       
-      // Insert transaction with the generated number
-      const transactionData = {
-        ...transaction,
-        transaction_number: transactionNumber as string
-      };
-      
-      const { data: insertedTransaction, error: transactionError } = await supabase
+      // Insert transaction
+      const { data, error } = await supabase
         .from('kas_umum_transactions')
-        .insert(transactionData)
-        .select(`
-          *,
-          chart_of_accounts!kas_umum_transactions_akun_id_fkey (
-            kode_akun,
-            nama_akun,
-            jenis_akun,
-            kategori
-          )
-        `)
+        .insert({
+          ...transaction,
+          transaction_number: transactionNumber as string
+        })
+        .select()
         .single();
       
-      if (transactionError) {
-        console.error('Error inserting transaction:', transactionError);
-        throw transactionError;
-      }
-      
-      return insertedTransaction;
+      if (error) throw error;
+      return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['kas_umum_transactions'] });
@@ -82,44 +54,29 @@ export const useCreateKasUmumTransaction = () => {
   });
 };
 
-export const useKasUmumSummary = (startDate?: string, endDate?: string) => {
+export const useKasUmumSummary = () => {
   return useQuery({
-    queryKey: ['kas_umum_summary', startDate, endDate],
+    queryKey: ['kas_umum_summary'],
     queryFn: async () => {
-      let query = supabase
+      const { data, error } = await supabase
         .from('kas_umum_transactions')
-        .select('jenis_transaksi, jumlah, tanggal_transaksi');
-      
-      if (startDate) {
-        query = query.gte('tanggal_transaksi', startDate);
-      }
-      
-      if (endDate) {
-        query = query.lte('tanggal_transaksi', endDate);
-      }
-      
-      const { data, error } = await query;
+        .select('jenis_transaksi, jumlah');
       
       if (error) throw error;
       
-      const summary = {
-        totalMasuk: 0,
-        totalKeluar: 0,
-        saldo: 0,
-        totalTransaksi: data.length
+      const totalMasuk = data
+        .filter(t => t.jenis_transaksi === 'masuk')
+        .reduce((sum, t) => sum + (t.jumlah || 0), 0);
+      
+      const totalKeluar = data
+        .filter(t => t.jenis_transaksi === 'keluar')
+        .reduce((sum, t) => sum + (t.jumlah || 0), 0);
+      
+      return {
+        totalMasuk,
+        totalKeluar,
+        saldo: totalMasuk - totalKeluar
       };
-      
-      data.forEach(transaction => {
-        if (transaction.jenis_transaksi === 'masuk') {
-          summary.totalMasuk += Number(transaction.jumlah);
-        } else {
-          summary.totalKeluar += Number(transaction.jumlah);
-        }
-      });
-      
-      summary.saldo = summary.totalMasuk - summary.totalKeluar;
-      
-      return summary;
     },
   });
 };

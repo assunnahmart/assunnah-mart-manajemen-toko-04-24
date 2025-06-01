@@ -9,11 +9,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { ClipboardList, Plus, Search, CheckCircle } from 'lucide-react';
+import { ClipboardList, Plus, Search, CheckCircle, Scan } from 'lucide-react';
 import { useStockData, useStockOpname, useCreateStockOpname } from '@/hooks/useStockManagement';
 import { useKasir } from '@/hooks/useKasir';
 import { useSimpleAuth } from '@/hooks/useSimpleAuth';
 import { useToast } from '@/hooks/use-toast';
+import POSBarcodeScanner from '@/components/pos/POSBarcodeScanner';
 
 const StockOpname = () => {
   const [selectedProduct, setSelectedProduct] = useState('');
@@ -36,6 +37,24 @@ const StockOpname = () => {
 
   const selectedProductData = stockData?.find(p => p.id === selectedProduct);
   const userKasir = kasirData?.find(k => k.nama === user?.full_name);
+
+  const handleBarcodeScanned = (barcode: string) => {
+    const product = stockData?.find(p => p.barcode === barcode);
+    if (product) {
+      setSelectedProduct(product.id);
+      setSearchQuery(barcode);
+      toast({
+        title: "Produk ditemukan",
+        description: `${product.nama} berhasil dipilih`
+      });
+    } else {
+      toast({
+        title: "Produk tidak ditemukan",
+        description: `Barcode ${barcode} tidak ditemukan di database`,
+        variant: "destructive"
+      });
+    }
+  };
 
   const handleSubmitOpname = async () => {
     if (!selectedProduct || !userKasir) {
@@ -97,14 +116,21 @@ const StockOpname = () => {
             <div className="space-y-4">
               <div>
                 <Label>Cari Produk</Label>
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                  <Input
-                    placeholder="Cari nama produk atau barcode..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-10"
-                  />
+                <div className="flex gap-2">
+                  <div className="relative flex-1">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                    <Input
+                      placeholder="Cari nama produk atau barcode..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="pl-10"
+                    />
+                  </div>
+                  <POSBarcodeScanner onScan={handleBarcodeScanned}>
+                    <Button variant="outline" size="sm">
+                      <Scan className="h-4 w-4" />
+                    </Button>
+                  </POSBarcodeScanner>
                 </div>
               </div>
               
@@ -118,6 +144,7 @@ const StockOpname = () => {
                     {filteredProducts.map((product) => (
                       <SelectItem key={product.id} value={product.id}>
                         {product.nama} - Stok: {product.stok_saat_ini} {product.satuan}
+                        {product.barcode && ` (${product.barcode})`}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -130,6 +157,9 @@ const StockOpname = () => {
                   <p className="text-lg font-bold text-blue-600">
                     {selectedProductData.stok_saat_ini} {selectedProductData.satuan}
                   </p>
+                  {selectedProductData.barcode && (
+                    <p className="text-xs text-gray-500">Barcode: {selectedProductData.barcode}</p>
+                  )}
                 </div>
               )}
               

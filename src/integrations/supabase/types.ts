@@ -122,6 +122,54 @@ export type Database = {
           },
         ]
       }
+      detail_transaksi_pembelian: {
+        Row: {
+          barang_id: string | null
+          created_at: string | null
+          harga_satuan: number
+          id: string
+          jumlah: number
+          nama_barang: string
+          subtotal: number
+          transaksi_id: string | null
+        }
+        Insert: {
+          barang_id?: string | null
+          created_at?: string | null
+          harga_satuan: number
+          id?: string
+          jumlah: number
+          nama_barang: string
+          subtotal: number
+          transaksi_id?: string | null
+        }
+        Update: {
+          barang_id?: string | null
+          created_at?: string | null
+          harga_satuan?: number
+          id?: string
+          jumlah?: number
+          nama_barang?: string
+          subtotal?: number
+          transaksi_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "detail_transaksi_pembelian_barang_id_fkey"
+            columns: ["barang_id"]
+            isOneToOne: false
+            referencedRelation: "barang_konsinyasi"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "detail_transaksi_pembelian_transaksi_id_fkey"
+            columns: ["transaksi_id"]
+            isOneToOne: false
+            referencedRelation: "transaksi_pembelian"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       detail_transaksi_penjualan: {
         Row: {
           barang_id: string | null
@@ -166,6 +214,57 @@ export type Database = {
             columns: ["transaksi_id"]
             isOneToOne: false
             referencedRelation: "transaksi_penjualan"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      hutang_supplier: {
+        Row: {
+          created_at: string | null
+          id: string
+          jumlah_hutang: number
+          sisa_hutang: number
+          status: string | null
+          supplier_id: string | null
+          tanggal_jatuh_tempo: string | null
+          transaksi_pembelian_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          jumlah_hutang: number
+          sisa_hutang: number
+          status?: string | null
+          supplier_id?: string | null
+          tanggal_jatuh_tempo?: string | null
+          transaksi_pembelian_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          jumlah_hutang?: number
+          sisa_hutang?: number
+          status?: string | null
+          supplier_id?: string | null
+          tanggal_jatuh_tempo?: string | null
+          transaksi_pembelian_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hutang_supplier_supplier_id_fkey"
+            columns: ["supplier_id"]
+            isOneToOne: false
+            referencedRelation: "supplier"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hutang_supplier_transaksi_pembelian_id_fkey"
+            columns: ["transaksi_pembelian_id"]
+            isOneToOne: false
+            referencedRelation: "transaksi_pembelian"
             referencedColumns: ["id"]
           },
         ]
@@ -637,6 +736,75 @@ export type Database = {
         }
         Relationships: []
       }
+      transaksi_pembelian: {
+        Row: {
+          catatan: string | null
+          created_at: string | null
+          diskon: number | null
+          id: string
+          jatuh_tempo: string | null
+          jenis_pembayaran: string
+          kasir_id: string | null
+          nomor_transaksi: string
+          pajak: number | null
+          status: string | null
+          subtotal: number
+          supplier_id: string | null
+          tanggal_pembelian: string
+          total: number
+          updated_at: string | null
+        }
+        Insert: {
+          catatan?: string | null
+          created_at?: string | null
+          diskon?: number | null
+          id?: string
+          jatuh_tempo?: string | null
+          jenis_pembayaran?: string
+          kasir_id?: string | null
+          nomor_transaksi: string
+          pajak?: number | null
+          status?: string | null
+          subtotal?: number
+          supplier_id?: string | null
+          tanggal_pembelian?: string
+          total: number
+          updated_at?: string | null
+        }
+        Update: {
+          catatan?: string | null
+          created_at?: string | null
+          diskon?: number | null
+          id?: string
+          jatuh_tempo?: string | null
+          jenis_pembayaran?: string
+          kasir_id?: string | null
+          nomor_transaksi?: string
+          pajak?: number | null
+          status?: string | null
+          subtotal?: number
+          supplier_id?: string | null
+          tanggal_pembelian?: string
+          total?: number
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "transaksi_pembelian_kasir_id_fkey"
+            columns: ["kasir_id"]
+            isOneToOne: false
+            referencedRelation: "kasir"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transaksi_pembelian_supplier_id_fkey"
+            columns: ["supplier_id"]
+            isOneToOne: false
+            referencedRelation: "supplier"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       transaksi_penjualan: {
         Row: {
           bayar: number | null
@@ -765,11 +933,24 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      create_supplier_debt: {
+        Args: {
+          p_supplier_id: string
+          p_transaksi_id: string
+          p_jumlah: number
+          p_jatuh_tempo: string
+        }
+        Returns: undefined
+      }
       generate_kas_transaction_number: {
         Args: Record<PropertyKey, never>
         Returns: string
       }
       generate_pos_transaction_number: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
+      generate_purchase_transaction_number: {
         Args: Record<PropertyKey, never>
         Returns: string
       }
@@ -796,6 +977,10 @@ export type Database = {
           p_kasir_id: string
           p_keterangan?: string
         }
+        Returns: undefined
+      }
+      update_stok_from_pembelian: {
+        Args: { p_barang_id: string; p_jumlah: number; p_transaksi_id: string }
         Returns: undefined
       }
     }

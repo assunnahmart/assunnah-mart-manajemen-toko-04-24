@@ -6,11 +6,13 @@ import { Input } from '@/components/ui/input';
 import { QrCode, X } from 'lucide-react';
 
 interface POSBarcodeScannerProps {
+  isOpen?: boolean;
   onScan: (barcode: string) => void;
   onClose: () => void;
+  children?: React.ReactNode;
 }
 
-const POSBarcodeScanner = ({ onScan, onClose }: POSBarcodeScannerProps) => {
+const POSBarcodeScanner = ({ isOpen = true, onScan, onClose, children }: POSBarcodeScannerProps) => {
   const [manualBarcode, setManualBarcode] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -22,6 +24,20 @@ const POSBarcodeScanner = ({ onScan, onClose }: POSBarcodeScannerProps) => {
       onClose();
     }
   };
+
+  // If children are provided, render as a button trigger
+  if (children) {
+    return (
+      <div onClick={onClose}>
+        {children}
+      </div>
+    );
+  }
+
+  // If not open, don't render the modal
+  if (!isOpen) {
+    return null;
+  }
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">

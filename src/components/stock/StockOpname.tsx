@@ -22,6 +22,7 @@ const StockOpname = () => {
   const [keterangan, setKeterangan] = useState('');
   const [showDialog, setShowDialog] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [showScanner, setShowScanner] = useState(false);
   
   const { data: stockData } = useStockData();
   const { data: opnameHistory } = useStockOpname();
@@ -43,6 +44,7 @@ const StockOpname = () => {
     if (product) {
       setSelectedProduct(product.id);
       setSearchQuery(barcode);
+      setShowScanner(false);
       toast({
         title: "Produk ditemukan",
         description: `${product.nama} berhasil dipilih`
@@ -126,11 +128,13 @@ const StockOpname = () => {
                       className="pl-10"
                     />
                   </div>
-                  <POSBarcodeScanner onScan={handleBarcodeScanned}>
-                    <Button variant="outline" size="sm">
-                      <Scan className="h-4 w-4" />
-                    </Button>
-                  </POSBarcodeScanner>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => setShowScanner(true)}
+                  >
+                    <Scan className="h-4 w-4" />
+                  </Button>
                 </div>
               </div>
               
@@ -284,6 +288,13 @@ const StockOpname = () => {
           )}
         </CardContent>
       </Card>
+
+      {/* Barcode Scanner Modal */}
+      <POSBarcodeScanner
+        isOpen={showScanner}
+        onScan={handleBarcodeScanned}
+        onClose={() => setShowScanner(false)}
+      />
     </div>
   );
 };

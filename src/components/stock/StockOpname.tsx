@@ -9,12 +9,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { ClipboardList, Plus, Search, CheckCircle, Scan } from 'lucide-react';
+import { ClipboardList, Plus, Search, Scan } from 'lucide-react';
 import { useStockData, useStockOpname, useCreateStockOpname } from '@/hooks/useStockManagement';
 import { useKasir } from '@/hooks/useKasir';
 import { useSimpleAuth } from '@/hooks/useSimpleAuth';
 import { useToast } from '@/hooks/use-toast';
-import POSBarcodeScanner from '@/components/pos/POSBarcodeScanner';
+import CameraBarcodeScanner from './CameraBarcodeScanner';
 
 const StockOpname = () => {
   const [selectedProduct, setSelectedProduct] = useState('');
@@ -55,6 +55,7 @@ const StockOpname = () => {
         description: `Barcode ${barcode} tidak ditemukan di database`,
         variant: "destructive"
       });
+      setShowScanner(false);
     }
   };
 
@@ -132,8 +133,10 @@ const StockOpname = () => {
                     variant="outline" 
                     size="sm"
                     onClick={() => setShowScanner(true)}
+                    className="gap-1"
                   >
                     <Scan className="h-4 w-4" />
+                    Scan
                   </Button>
                 </div>
               </div>
@@ -289,8 +292,8 @@ const StockOpname = () => {
         </CardContent>
       </Card>
 
-      {/* Barcode Scanner Modal */}
-      <POSBarcodeScanner
+      {/* Camera Barcode Scanner */}
+      <CameraBarcodeScanner
         isOpen={showScanner}
         onScan={handleBarcodeScanned}
         onClose={() => setShowScanner(false)}

@@ -8,7 +8,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Trash2, Plus, Receipt } from 'lucide-react';
 import { useSupplier } from '@/hooks/useSupplier';
-import { useKonsinyasiBarang, useCreateKonsinyasiLaporan } from '@/hooks/useKonsinyasi';
+import { useBarangKonsinyasi } from '@/hooks/useBarangKonsinyasi';
+import { useCreateKonsinyasiLaporan } from '@/hooks/useKonsinyasi';
 import { useToast } from '@/hooks/use-toast';
 
 interface KonsinyasiItem {
@@ -22,7 +23,7 @@ interface KonsinyasiItem {
 const KonsinyasiForm = () => {
   const { toast } = useToast();
   const { data: suppliers } = useSupplier();
-  const { data: konsinyasiBarang } = useKonsinyasiBarang();
+  const { data: konsinyasiBarang } = useBarangKonsinyasi('konsinyasi');
   const createLaporan = useCreateKonsinyasiLaporan();
 
   const [selectedSupplier, setSelectedSupplier] = useState<string>('');
@@ -32,6 +33,11 @@ const KonsinyasiForm = () => {
 
   const [selectedBarang, setSelectedBarang] = useState<string>('');
   const [jumlahTerjual, setJumlahTerjual] = useState<number>(0);
+
+  // Filter barang berdasarkan supplier yang dipilih
+  const filteredBarang = konsinyasiBarang?.filter(barang => 
+    selectedSupplier ? barang.supplier_id === selectedSupplier : true
+  ) || [];
 
   const addItem = () => {
     if (!selectedBarang || jumlahTerjual <= 0) {
@@ -239,19 +245,25 @@ const KonsinyasiForm = () => {
             <h3 className="text-lg font-medium">Tambah Barang Konsinyasi</h3>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
-                <Label>Produk</Label>
+                <Label>Produk Konsinyasi</Label>
                 <Select value={selectedBarang} onValueChange={setSelectedBarang}>
                   <SelectTrigger>
                     <SelectValue placeholder="Pilih Produk" />
                   </SelectTrigger>
                   <SelectContent>
-                    {konsinyasiBarang?.filter(b => b.supplier_id === selectedSupplier).map((barang) => (
+                    {filteredBarang.map((barang) => (
                       <SelectItem key={barang.id} value={barang.id}>
                         {barang.nama} - Rp {(barang.harga_beli || 0).toLocaleString('id-ID')}
+                        {barang.supplier && ` (${barang.supplier.nama})`}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
+                {selectedSupplier && filteredBarang.length === 0 && (
+                  <p className="text-sm text-gray-500 mt-1">
+                    Tidak ada produk konsinyasi untuk supplier ini
+                  </p>
+                )}
               </div>
               <div>
                 <Label>Jumlah Terjual</Label>
@@ -260,10 +272,11 @@ const KonsinyasiForm = () => {
                   value={jumlahTerjual}
                   onChange={(e) => setJumlahTerjual(Number(e.target.value))}
                   min="0"
+                  placeholder="Masukkan jumlah..."
                 />
               </div>
               <div className="flex items-end">
-                <Button type="button" onClick={addItem}>
+                <Button type="button" onClick={addItem} disabled={!selectedBarang || jumlahTerjual <= 0}>
                   <Plus className="h-4 w-4 mr-2" />
                   Tambah
                 </Button>

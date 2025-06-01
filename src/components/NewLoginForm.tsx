@@ -75,12 +75,6 @@ const NewLoginForm = () => {
     // Navigation will happen automatically via useEffect based on role
   };
 
-  const handleDemoLogin = (demoUsername: string, demoPassword: string) => {
-    setUsername(demoUsername);
-    setPassword(demoPassword);
-    setError('');
-  };
-
   // Show welcome screen if user just logged in
   if (showWelcome && user) {
     return <WelcomeScreen userName={user.full_name} onComplete={handleWelcomeComplete} />;
@@ -92,7 +86,7 @@ const NewLoginForm = () => {
         <CardHeader className="text-center pb-6">
           <div className="flex justify-center mb-6">
             <img 
-              src="/lovable-uploads/a2af9547-58f3-45de-b565-8283573a9b0e.png" 
+              src="/lovable-uploads/b19ae95c-b38c-40ee-893f-aa5a2366191d.png" 
               alt="Assunnah Mart Logo" 
               className="h-32 w-auto sm:h-36 md:h-40"
             />
@@ -148,64 +142,6 @@ const NewLoginForm = () => {
               {loading ? 'Masuk...' : 'Masuk'}
             </Button>
           </form>
-          
-          <div className="mt-6 p-4 bg-gradient-to-r from-blue-50 to-yellow-50 rounded-lg border border-blue-100">
-            <p className="text-sm font-semibold text-gray-700 mb-3">Akun Demo (Klik untuk isi otomatis):</p>
-            <div className="text-xs space-y-2 mobile-optimized">
-              <div className="bg-white p-2 rounded border border-gray-200">
-                <p className="font-medium text-red-600 mb-2">Admin:</p>
-                <div className="space-y-1">
-                  <button
-                    type="button"
-                    onClick={() => handleDemoLogin('Ginanjar', 'admin')}
-                    className="block w-full text-left p-1 hover:bg-gray-100 rounded text-xs"
-                  >
-                    Ginanjar / admin
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleDemoLogin('Jamhur', 'admin1')}
-                    className="block w-full text-left p-1 hover:bg-gray-100 rounded text-xs"
-                  >
-                    Jamhur / admin1
-                  </button>
-                </div>
-              </div>
-              <div className="bg-white p-2 rounded border border-gray-200">
-                <p className="font-medium text-blue-600 mb-2">Kasir:</p>
-                <div className="space-y-1">
-                  <button
-                    type="button"
-                    onClick={() => handleDemoLogin('Jamhur2', 'kasir1')}
-                    className="block w-full text-left p-1 hover:bg-gray-100 rounded text-xs"
-                  >
-                    Jamhur2 / kasir1
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleDemoLogin('Agus', 'kasir4')}
-                    className="block w-full text-left p-1 hover:bg-gray-100 rounded text-xs"
-                  >
-                    Agus / kasir4
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleDemoLogin('Yadi', 'kasir7')}
-                    className="block w-full text-left p-1 hover:bg-gray-100 rounded text-xs"
-                  >
-                    Yadi / kasir7
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleDemoLogin('Nurohman', 'kasir12')}
-                    className="block w-full text-left p-1 hover:bg-gray-100 rounded text-xs"
-                  >
-                    Nurohman / kasir12
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
           
           <div className="text-center">
             <p className="text-xs text-gray-500">

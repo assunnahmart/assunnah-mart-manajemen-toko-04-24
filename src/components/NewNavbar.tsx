@@ -57,8 +57,12 @@ const NewNavbar = () => {
         <div className="flex justify-between h-16">
           <div className="flex items-center">
             <Link to="/dashboard" className="flex-shrink-0 flex items-center">
-              <ShoppingCart className="h-8 w-8 text-blue-600 mr-2" />
-              <span className="font-bold text-xl text-gray-900">Kasir Pro</span>
+              <img 
+                src="/lovable-uploads/b19ae95c-b38c-40ee-893f-aa5a2366191d.png" 
+                alt="Assunnah Mart Logo" 
+                className="h-8 w-auto mr-2"
+              />
+              <span className="font-bold text-xl text-gray-900">Assunnah Mart</span>
             </Link>
           </div>
 

@@ -44,7 +44,7 @@ const Login = () => {
           <div className="text-center mb-8">
             <div className="flex items-center justify-center mb-4">
               <img 
-                src="/lovable-uploads/a2af9547-58f3-45de-b565-8283573a9b0e.png" 
+                src="/lovable-uploads/b19ae95c-b38c-40ee-893f-aa5a2366191d.png" 
                 alt="Assunnah Mart Logo" 
                 className="h-20 w-auto"
               />

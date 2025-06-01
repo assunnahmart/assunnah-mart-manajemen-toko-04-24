@@ -23,7 +23,7 @@ interface KonsinyasiItem {
 const KonsinyasiForm = () => {
   const { toast } = useToast();
   const { data: suppliers } = useSupplier();
-  const { data: konsinyasiBarang } = useBarangKonsinyasi('konsinyasi');
+  const { data: konsinyasiBarang } = useBarangKonsinyasi('all');
   const createLaporan = useCreateKonsinyasiLaporan();
 
   const [selectedSupplier, setSelectedSupplier] = useState<string>('');

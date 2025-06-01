@@ -73,19 +73,27 @@ const POSPayment = ({
         items: itemsData
       });
 
-      // Update customer debt if credit payment
+      // Update customer debt if credit payment using database functions
       if (selectedPaymentMethod === 'credit' && selectedCustomer) {
         if (selectedCustomer.type === 'unit') {
-          const { error } = await supabase.rpc('increment_unit_debt', {
-            unit_id: selectedCustomer.id,
-            amount: totalAmount
-          });
+          const { error } = await supabase
+            .from('pelanggan_unit')
+            .update({ 
+              total_tagihan: supabase.sql`COALESCE(total_tagihan, 0) + ${totalAmount}`,
+              updated_at: new Date().toISOString()
+            })
+            .eq('id', selectedCustomer.id);
+          
           if (error) console.error('Error updating unit debt:', error);
         } else if (selectedCustomer.type === 'perorangan') {
-          const { error } = await supabase.rpc('increment_personal_debt', {
-            person_id: selectedCustomer.id,
-            amount: totalAmount
-          });
+          const { error } = await supabase
+            .from('pelanggan_perorangan')
+            .update({ 
+              sisa_piutang: supabase.sql`COALESCE(sisa_piutang, 0) + ${totalAmount}`,
+              updated_at: new Date().toISOString()
+            })
+            .eq('id', selectedCustomer.id);
+          
           if (error) console.error('Error updating personal debt:', error);
         }
       }

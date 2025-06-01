@@ -670,8 +670,25 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: string
       }
+      increment_personal_debt: {
+        Args: { person_id: string; amount: number }
+        Returns: undefined
+      }
+      increment_unit_debt: {
+        Args: { unit_id: string; amount: number }
+        Returns: undefined
+      }
       update_stok_barang: {
         Args: { barang_id: string; jumlah_keluar: number }
+        Returns: undefined
+      }
+      update_stok_from_opname: {
+        Args: {
+          p_barang_id: string
+          p_stok_fisik: number
+          p_kasir_id: string
+          p_keterangan?: string
+        }
         Returns: undefined
       }
     }

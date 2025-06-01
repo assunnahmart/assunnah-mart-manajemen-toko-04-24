@@ -2,6 +2,16 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
+interface KasirReport {
+  kasirName: string;
+  cashTransactions: number;
+  cashTotal: number;
+  creditTransactions: number;
+  creditTotal: number;
+  totalTransactions: number;
+  grandTotal: number;
+}
+
 export const usePOSReportsToday = () => {
   return useQuery({
     queryKey: ['pos_reports_today'],
@@ -71,7 +81,7 @@ export const usePOSReportsToday = () => {
 export const usePOSReportsByKasir = (kasirName?: string) => {
   return useQuery({
     queryKey: ['pos_reports_kasir', kasirName],
-    queryFn: async () => {
+    queryFn: async (): Promise<KasirReport[]> => {
       const today = new Date().toISOString().split('T')[0];
       
       // Get POS transactions
@@ -103,7 +113,7 @@ export const usePOSReportsByKasir = (kasirName?: string) => {
       if (regularError) throw regularError;
       
       // Group by kasir for both POS and regular transactions
-      const kasirReports = {};
+      const kasirReports: Record<string, KasirReport> = {};
       
       // Process POS transactions
       posTransactions.forEach(transaction => {

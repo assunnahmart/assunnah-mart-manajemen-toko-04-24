@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -12,6 +11,7 @@ import PenjualanKredit from "./pages/PenjualanKredit";
 import KasirManagement from "./pages/KasirManagement";
 import DaftarProduk from "./pages/DaftarProduk";
 import NotFound from "./pages/NotFound";
+import AdminPanel from "./pages/AdminPanel";
 
 const queryClient = new QueryClient();
 
@@ -29,6 +29,7 @@ const App = () => (
           <Route path="/penjualan-kredit" element={<PenjualanKredit />} />
           <Route path="/kasir-management" element={<KasirManagement />} />
           <Route path="/daftar-produk" element={<DaftarProduk />} />
+          <Route path="/admin" element={<AdminPanel />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

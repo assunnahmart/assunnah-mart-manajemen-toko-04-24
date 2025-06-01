@@ -70,16 +70,7 @@ const POSBarcodeScanner = ({ onScan, onClose, isOpen }: POSBarcodeScannerProps) 
       const config = {
         fps: 10,
         qrbox: { width: 250, height: 250 },
-        aspectRatio: 1.0,
-        formatsToSupport: [
-          Html5Qrcode.SUPPORTED_FORMATS.QR_CODE,
-          Html5Qrcode.SUPPORTED_FORMATS.CODE_128,
-          Html5Qrcode.SUPPORTED_FORMATS.CODE_39,
-          Html5Qrcode.SUPPORTED_FORMATS.EAN_13,
-          Html5Qrcode.SUPPORTED_FORMATS.EAN_8,
-          Html5Qrcode.SUPPORTED_FORMATS.UPC_A,
-          Html5Qrcode.SUPPORTED_FORMATS.UPC_E
-        ]
+        aspectRatio: 1.0
       };
 
       // Use the back camera (environment facing) if available

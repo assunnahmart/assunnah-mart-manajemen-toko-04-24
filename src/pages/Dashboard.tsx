@@ -9,9 +9,18 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Calendar, ShoppingCart, Users, Package, CreditCard, FileText, Calculator, BarChart3, TrendingUp, DollarSign } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { usePOSTransactions } from '@/hooks/usePOSTransactions';
+import { useTransaksiPenjualan } from '@/hooks/useTransaksi';
 
 const Dashboard = () => {
   const { user } = useSimpleAuth();
+  const { data: posTransactions } = usePOSTransactions(5);
+  const { data: transaksiPenjualan } = useTransaksiPenjualan(5);
+
+  // Combine and sort recent transactions
+  const recentTransactions = [...(posTransactions || []), ...(transaksiPenjualan || [])]
+    .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+    .slice(0, 5);
 
   return (
     <NewProtectedRoute>
@@ -168,7 +177,7 @@ const Dashboard = () => {
             )}
           </div>
 
-          {/* Recent Transactions */}
+          {/* Recent Transactions - Now showing real data */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -176,34 +185,46 @@ const Dashboard = () => {
                 Transaksi Terkini
               </CardTitle>
               <CardDescription>
-                5 transaksi terakhir hari ini
+                {recentTransactions.length} transaksi terakhir
               </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
-                {[
-                  { id: "TRX-001", time: "09:45", amount: "Rp 125.000", items: "5 items" },
-                  { id: "TRX-002", time: "09:32", amount: "Rp 89.500", items: "3 items" },
-                  { id: "TRX-003", time: "09:18", amount: "Rp 256.000", items: "8 items" },
-                  { id: "TRX-004", time: "08:55", amount: "Rp 45.000", items: "2 items" },
-                  { id: "TRX-005", time: "08:42", amount: "Rp 178.500", items: "6 items" },
-                ].map((transaction) => (
-                  <div key={transaction.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
-                        <ShoppingCart className="h-4 w-4 text-primary" />
+                {recentTransactions.length > 0 ? (
+                  recentTransactions.map((transaction) => (
+                    <div key={transaction.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
+                          <ShoppingCart className="h-4 w-4 text-primary" />
+                        </div>
+                        <div>
+                          <p className="font-medium text-sm">
+                            {transaction.transaction_number || transaction.nomor_transaksi}
+                          </p>
+                          <p className="text-xs text-gray-600">
+                            {transaction.items_count ? `${transaction.items_count} items` : 'Transaksi'}
+                          </p>
+                        </div>
                       </div>
-                      <div>
-                        <p className="font-medium text-sm">{transaction.id}</p>
-                        <p className="text-xs text-gray-600">{transaction.items}</p>
+                      <div className="text-right">
+                        <p className="font-medium text-sm">
+                          Rp {(transaction.total_amount || transaction.total || 0).toLocaleString('id-ID')}
+                        </p>
+                        <p className="text-xs text-gray-600">
+                          {new Date(transaction.created_at).toLocaleTimeString('id-ID', { 
+                            hour: '2-digit', 
+                            minute: '2-digit' 
+                          })}
+                        </p>
                       </div>
                     </div>
-                    <div className="text-right">
-                      <p className="font-medium text-sm">{transaction.amount}</p>
-                      <p className="text-xs text-gray-600">{transaction.time}</p>
-                    </div>
+                  ))
+                ) : (
+                  <div className="text-center py-8 text-gray-500">
+                    <ShoppingCart className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+                    <p>Belum ada transaksi hari ini</p>
                   </div>
-                ))}
+                )}
               </div>
             </CardContent>
           </Card>

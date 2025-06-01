@@ -2,13 +2,19 @@
 import { Card, CardContent } from '@/components/ui/card';
 import { useSimpleAuth } from '@/hooks/useSimpleAuth';
 import { usePOSTransactionsToday } from '@/hooks/usePOSTransactions';
+import { useTransaksiHariIni } from '@/hooks/useTransaksi';
 import { ShoppingCart, DollarSign, Package, Users } from 'lucide-react';
 
 const DashboardSummary = () => {
   const { user } = useSimpleAuth();
   const { data: posStats } = usePOSTransactionsToday();
+  const { data: transaksiStats } = useTransaksiHariIni();
 
-  // Mock data for non-POS metrics - in real app this would come from API
+  // Combine data from both POS and regular transactions
+  const totalTransactions = (posStats?.totalTransactions || 0) + (transaksiStats?.totalTransaksi || 0);
+  const totalAmount = (posStats?.totalAmount || 0) + (transaksiStats?.totalPendapatan || 0);
+
+  // Mock data for non-transaction metrics - in real app this would come from API
   const summaryData = {
     totalProduk: 1234,
     totalPelanggan: 89
@@ -18,7 +24,7 @@ const DashboardSummary = () => {
     <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg shadow-lg p-6 mb-6">
       <div className="text-center mb-6">
         <h2 className="text-4xl font-bold mb-2">
-          {posStats?.totalTransactions || 0}
+          {totalTransactions}
         </h2>
         <p className="text-xl opacity-90">Total Transaksi Hari Ini</p>
         <p className="text-sm opacity-75 mt-1">
@@ -30,9 +36,9 @@ const DashboardSummary = () => {
         <div className="bg-white/10 rounded-lg p-4 text-center">
           <DollarSign className="h-8 w-8 mx-auto mb-2 opacity-80" />
           <p className="text-2xl font-bold">
-            Rp {(posStats?.totalAmount || 0).toLocaleString('id-ID')}
+            Rp {totalAmount.toLocaleString('id-ID')}
           </p>
-          <p className="text-sm opacity-75">Penjualan POS</p>
+          <p className="text-sm opacity-75">Total Penjualan</p>
         </div>
 
         <div className="bg-white/10 rounded-lg p-4 text-center">

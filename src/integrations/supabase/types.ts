@@ -75,6 +75,53 @@ export type Database = {
           },
         ]
       }
+      chart_of_accounts: {
+        Row: {
+          created_at: string | null
+          id: string
+          is_active: boolean | null
+          jenis_akun: string
+          kategori: string | null
+          kode_akun: string
+          nama_akun: string
+          parent_id: string | null
+          saldo_normal: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          jenis_akun: string
+          kategori?: string | null
+          kode_akun: string
+          nama_akun: string
+          parent_id?: string | null
+          saldo_normal?: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          jenis_akun?: string
+          kategori?: string | null
+          kode_akun?: string
+          nama_akun?: string
+          parent_id?: string | null
+          saldo_normal?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chart_of_accounts_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "chart_of_accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       detail_transaksi_penjualan: {
         Row: {
           barang_id: string | null
@@ -163,6 +210,62 @@ export type Database = {
             columns: ["kasir_id"]
             isOneToOne: false
             referencedRelation: "kasir"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      kas_umum_transactions: {
+        Row: {
+          akun_id: string | null
+          created_at: string | null
+          id: string
+          jenis_transaksi: string
+          jumlah: number
+          kasir_name: string | null
+          kasir_username: string | null
+          keterangan: string | null
+          referensi_id: string | null
+          referensi_tipe: string | null
+          tanggal_transaksi: string
+          transaction_number: string
+          updated_at: string | null
+        }
+        Insert: {
+          akun_id?: string | null
+          created_at?: string | null
+          id?: string
+          jenis_transaksi: string
+          jumlah: number
+          kasir_name?: string | null
+          kasir_username?: string | null
+          keterangan?: string | null
+          referensi_id?: string | null
+          referensi_tipe?: string | null
+          tanggal_transaksi?: string
+          transaction_number: string
+          updated_at?: string | null
+        }
+        Update: {
+          akun_id?: string | null
+          created_at?: string | null
+          id?: string
+          jenis_transaksi?: string
+          jumlah?: number
+          kasir_name?: string | null
+          kasir_username?: string | null
+          keterangan?: string | null
+          referensi_id?: string | null
+          referensi_tipe?: string | null
+          tanggal_transaksi?: string
+          transaction_number?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "kas_umum_transactions_akun_id_fkey"
+            columns: ["akun_id"]
+            isOneToOne: false
+            referencedRelation: "chart_of_accounts"
             referencedColumns: ["id"]
           },
         ]
@@ -662,6 +765,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      generate_kas_transaction_number: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
       generate_pos_transaction_number: {
         Args: Record<PropertyKey, never>
         Returns: string

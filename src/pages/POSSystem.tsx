@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Search, ShoppingCart, Save, CreditCard, History, Receipt, Camera, DollarSign } from 'lucide-react';
+import { Search, ShoppingCart, Save, CreditCard, History, Receipt, Camera, DollarSign, BarChart } from 'lucide-react';
 import { useSimpleAuth } from '@/hooks/useSimpleAuth';
 import { useCreatePOSTransaction } from '@/hooks/usePOSTransactions';
 import { usePOSTransactionSync } from '@/hooks/usePOSTransactionSync';
@@ -22,6 +22,8 @@ import POSCustomerSelect from '@/components/pos/POSCustomerSelect';
 import POSPaymentMethod from '@/components/pos/POSPaymentMethod';
 import POSBarcodeScanner from '@/components/pos/POSBarcodeScanner';
 import POSTransactionSync from '@/components/pos/POSTransactionSync';
+import POSCashierTransactionHistory from '@/components/pos/POSCashierTransactionHistory';
+import POSTransactionReport from '@/components/pos/POSTransactionReport';
 
 interface Customer {
   id: string;
@@ -36,6 +38,8 @@ const POSSystem = () => {
   const [cartItems, setCartItems] = useState([]);
   const [showPayment, setShowPayment] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
+  const [showCashierHistory, setShowCashierHistory] = useState(false);
+  const [showReport, setShowReport] = useState(false);
   const [showScanner, setShowScanner] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
@@ -222,6 +226,53 @@ const POSSystem = () => {
     }, 1500); // Give time for the toast to show
   };
 
+  // Show different views based on current mode
+  if (showReport) {
+    return (
+      <NewProtectedRoute>
+        <Layout>
+          <div className="min-h-screen bg-gray-50">
+            <NewNavbar />
+            
+            <div className="container mx-auto p-4 max-w-7xl">
+              <div className="mb-6 flex items-center justify-between">
+                <h1 className="text-2xl font-bold text-gray-900">Rekap & Diagram Transaksi Kasir</h1>
+                <Button onClick={() => setShowReport(false)} variant="outline">
+                  Kembali ke POS
+                </Button>
+              </div>
+              
+              <POSTransactionReport />
+            </div>
+          </div>
+        </Layout>
+      </NewProtectedRoute>
+    );
+  }
+
+  if (showCashierHistory) {
+    return (
+      <NewProtectedRoute>
+        <Layout>
+          <div className="min-h-screen bg-gray-50">
+            <NewNavbar />
+            
+            <div className="container mx-auto p-4 max-w-7xl">
+              <div className="mb-6 flex items-center justify-between">
+                <h1 className="text-2xl font-bold text-gray-900">Riwayat Transaksi per Kasir</h1>
+                <Button onClick={() => setShowCashierHistory(false)} variant="outline">
+                  Kembali ke POS
+                </Button>
+              </div>
+              
+              <POSCashierTransactionHistory />
+            </div>
+          </div>
+        </Layout>
+      </NewProtectedRoute>
+    );
+  }
+
   return (
     <NewProtectedRoute>
       <POSTransactionSync onTransactionComplete={handleTransactionSync}>
@@ -238,7 +289,7 @@ const POSSystem = () => {
                   <div className="relative flex items-center justify-between">
                     <div className="flex items-center gap-6">
                       <img 
-                        src="/lovable-uploads/892dcb20-d89a-4b78-a9b8-f0f632fd9ac7.png" 
+                        src="/lovable-uploads/b19ae95c-b38c-40ee-893f-aa5a2366191d.png" 
                         alt="Assunnah Mart Logo" 
                         className="h-16 w-auto bg-white rounded-lg p-2 shadow-md"
                       />
@@ -363,11 +414,27 @@ const POSSystem = () => {
                   <div className="flex gap-2">
                     <Button
                       variant="outline"
+                      onClick={() => setShowReport(true)}
+                      className="border-purple-300 text-purple-700 hover:bg-purple-50"
+                    >
+                      <BarChart className="h-4 w-4 mr-2" />
+                      Rekap & Diagram
+                    </Button>
+                    <Button
+                      variant="outline"
+                      onClick={() => setShowCashierHistory(true)}
+                      className="border-indigo-300 text-indigo-700 hover:bg-indigo-50"
+                    >
+                      <History className="h-4 w-4 mr-2" />
+                      Riwayat Kasir
+                    </Button>
+                    <Button
+                      variant="outline"
                       onClick={() => setShowHistory(!showHistory)}
                       className="border-red-300 text-red-700 hover:bg-red-50"
                     >
                       <History className="h-4 w-4 mr-2" />
-                      Riwayat
+                      Ringkasan
                     </Button>
                     <POSExportImport />
                   </div>

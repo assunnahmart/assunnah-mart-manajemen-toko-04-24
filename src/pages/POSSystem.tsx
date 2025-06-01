@@ -152,6 +152,7 @@ const POSSystem = () => {
   const handleBarcodeScanned = (barcode: string) => {
     console.log('Barcode scanned in POS:', barcode);
     
+    // Set search query to trigger search in POSProductSearch
     setSearchQuery(barcode);
     
     toast({

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -77,6 +76,17 @@ const POSProductSearch = ({ searchQuery, onAddToCart }: POSProductSearchProps) =
           product.barcode?.includes(searchQuery)
         );
         setProducts(filtered);
+        
+        // Auto-add if exact barcode match is found
+        if (searchQuery.length > 5) { // Assume barcode is longer than 5 characters
+          const exactMatch = mockProducts.find(product => 
+            product.barcode === searchQuery
+          );
+          if (exactMatch && filtered.length === 1) {
+            console.log('Auto-adding product from barcode scan:', exactMatch);
+            onAddToCart(exactMatch);
+          }
+        }
       } else {
         setProducts(mockProducts);
       }
@@ -84,7 +94,7 @@ const POSProductSearch = ({ searchQuery, onAddToCart }: POSProductSearchProps) =
     }, 300);
 
     return () => clearTimeout(timer);
-  }, [searchQuery]);
+  }, [searchQuery, onAddToCart]);
 
   if (loading) {
     return (

@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import NewProtectedRoute from '@/components/NewProtectedRoute';
 import NewNavbar from '@/components/NewNavbar';
@@ -6,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Search, ShoppingCart, Save, CreditCard, History, Receipt } from 'lucide-react';
+import { Search, ShoppingCart, Save, CreditCard, History, Receipt, Camera } from 'lucide-react';
 import { useSimpleAuth } from '@/hooks/useSimpleAuth';
 import { useCreatePOSTransaction } from '@/hooks/usePOSTransactions';
 import { useToast } from '@/hooks/use-toast';
@@ -18,6 +17,7 @@ import POSReceiptPrint from '@/components/pos/POSReceiptPrint';
 import POSTransactionHistory from '@/components/pos/POSTransactionHistory';
 import POSCustomerSelect from '@/components/pos/POSCustomerSelect';
 import POSPaymentMethod from '@/components/pos/POSPaymentMethod';
+import POSBarcodeScanner from '@/components/pos/POSBarcodeScanner';
 
 interface Customer {
   id: string;
@@ -32,6 +32,7 @@ const POSSystem = () => {
   const [cartItems, setCartItems] = useState([]);
   const [showPayment, setShowPayment] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
+  const [showScanner, setShowScanner] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState('cash'); // Default to cash
@@ -148,6 +149,20 @@ const POSSystem = () => {
     setSelectedCustomer(null);
   };
 
+  const handleBarcodeScanned = (barcode: string) => {
+    console.log('Barcode scanned in POS:', barcode);
+    
+    // Set search query to the scanned barcode
+    setSearchQuery(barcode);
+    
+    // Try to find product by barcode and add to cart automatically
+    // This will be handled by POSProductSearch component
+    toast({
+      title: "Mencari produk",
+      description: `Mencari produk dengan barcode: ${barcode}`
+    });
+  };
+
   return (
     <NewProtectedRoute>
       <div className="min-h-screen bg-gray-50">
@@ -195,14 +210,24 @@ const POSSystem = () => {
                       <Search className="h-5 w-5" />
                       Cari Produk
                     </CardTitle>
-                    <div className="relative">
-                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                      <Input
-                        placeholder="Cari nama produk atau scan barcode..."
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        className="pl-10"
-                      />
+                    <div className="flex gap-2">
+                      <div className="relative flex-1">
+                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                        <Input
+                          placeholder="Cari nama produk atau scan barcode..."
+                          value={searchQuery}
+                          onChange={(e) => setSearchQuery(e.target.value)}
+                          className="pl-10"
+                        />
+                      </div>
+                      <Button
+                        variant="outline"
+                        onClick={() => setShowScanner(true)}
+                        className="shrink-0"
+                      >
+                        <Camera className="h-4 w-4 mr-2" />
+                        Scan
+                      </Button>
                     </div>
                   </CardHeader>
                   <CardContent>
@@ -327,6 +352,13 @@ const POSSystem = () => {
             }}
           />
         )}
+
+        {/* Barcode Scanner Modal */}
+        <POSBarcodeScanner
+          isOpen={showScanner}
+          onScan={handleBarcodeScanned}
+          onClose={() => setShowScanner(false)}
+        />
       </div>
     </NewProtectedRoute>
   );

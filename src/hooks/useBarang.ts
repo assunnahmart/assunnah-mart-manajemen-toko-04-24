@@ -9,22 +9,24 @@ type BarangKonsinyasiUpdate = TablesUpdate<'barang_konsinyasi'>;
 
 export const useBarang = (searchQuery?: string) => {
   return useQuery({
-    queryKey: ['barang_konsinyasi', searchQuery],
+    queryKey: ['barang', searchQuery],
     queryFn: async () => {
       let query = supabase
         .from('barang_konsinyasi')
-        .select('*')
-        .eq('status', 'aktif')
-        .order('nama', { ascending: true });
+        .select(`
+          *,
+          kategori_barang (nama),
+          supplier (nama)
+        `);
       
       if (searchQuery && searchQuery.trim()) {
-        query = query.or(`nama.ilike.%${searchQuery}%,barcode.eq.${searchQuery}`);
+        query = query.or(`nama.ilike.%${searchQuery}%,barcode.ilike.%${searchQuery}%`);
       }
       
-      const { data, error } = await query;
+      const { data, error } = await query.order('nama');
       
       if (error) throw error;
-      return data as BarangKonsinyasi[];
+      return data;
     },
   });
 };
@@ -44,6 +46,7 @@ export const useCreateBarang = () => {
       return data;
     },
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['barang'] });
       queryClient.invalidateQueries({ queryKey: ['barang_konsinyasi'] });
     },
   });
@@ -53,36 +56,19 @@ export const useUpdateBarang = () => {
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: async ({ id, data }: { id: string; data: BarangKonsinyasiUpdate }) => {
-      const { data: result, error } = await supabase
+    mutationFn: async ({ id, updates }: { id: string; updates: BarangKonsinyasiUpdate }) => {
+      const { data, error } = await supabase
         .from('barang_konsinyasi')
-        .update(data)
+        .update(updates)
         .eq('id', id)
         .select()
         .single();
       
       if (error) throw error;
-      return result;
+      return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['barang_konsinyasi'] });
-    },
-  });
-};
-
-export const useDeleteBarang = () => {
-  const queryClient = useQueryClient();
-  
-  return useMutation({
-    mutationFn: async (id: string) => {
-      const { error } = await supabase
-        .from('barang_konsinyasi')
-        .delete()
-        .eq('id', id);
-      
-      if (error) throw error;
-    },
-    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['barang'] });
       queryClient.invalidateQueries({ queryKey: ['barang_konsinyasi'] });
     },
   });

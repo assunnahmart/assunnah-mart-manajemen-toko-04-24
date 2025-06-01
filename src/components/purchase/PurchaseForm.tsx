@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -89,7 +88,8 @@ const PurchaseForm = ({ suppliers }: PurchaseFormProps) => {
           jenis_pembayaran: jenisTransaksi,
           kasir_id: userKasir.id,
           jatuh_tempo: jenisTransaksi === 'kredit' ? jatuhTempo : null,
-          catatan
+          catatan,
+          status: 'completed' // Otomatis selesai
         },
         items: items.map(item => ({
           barang_id: item.barang_id,
@@ -102,7 +102,7 @@ const PurchaseForm = ({ suppliers }: PurchaseFormProps) => {
 
       toast({
         title: "Transaksi pembelian berhasil",
-        description: "Data pembelian dan stok telah diperbarui"
+        description: "Data pembelian telah disimpan dan terintegrasi dengan kas umum serta kartu hutang"
       });
 
       // Reset form

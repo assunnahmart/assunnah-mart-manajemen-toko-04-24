@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import NewProtectedRoute from '@/components/NewProtectedRoute';
 import NewNavbar from '@/components/NewNavbar';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -39,6 +39,21 @@ const POSSystem = () => {
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState('cash');
   
   const createTransaction = useCreatePOSTransaction();
+
+  // Add keyboard shortcut for F2 to save to database
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'F2') {
+        event.preventDefault();
+        handleQuickSave();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [cartItems, selectedPaymentMethod, selectedCustomer, user, createTransaction]);
 
   const addToCart = (product) => {
     const existingItem = cartItems.find(item => item.id === product.id);
@@ -161,6 +176,13 @@ const POSSystem = () => {
     });
   };
 
+  const handleProductAutoAdded = () => {
+    // Clear search query after product is auto-added from barcode
+    setTimeout(() => {
+      setSearchQuery('');
+    }, 1500); // Give time for the toast to show
+  };
+
   return (
     <NewProtectedRoute>
       <div className="min-h-screen bg-gray-50">
@@ -192,8 +214,8 @@ const POSSystem = () => {
               </div>
             </div>
 
-            {/* Total Shopping Display */}
-            <div className="bg-gradient-to-r from-yellow-400 via-yellow-500 to-orange-400 rounded-xl p-6 mb-6 shadow-lg border-2 border-red-200">
+            {/* Total Shopping Display - Changed to dark yellow */}
+            <div className="bg-gradient-to-r from-yellow-600 via-yellow-700 to-yellow-800 rounded-xl p-6 mb-6 shadow-lg border-2 border-yellow-500">
               <div className="flex items-center justify-between text-white">
                 <div className="flex items-center gap-4">
                   <div className="bg-red-500 p-3 rounded-lg shadow-lg">
@@ -230,6 +252,9 @@ const POSSystem = () => {
                       month: 'long', 
                       day: 'numeric' 
                     })}
+                  </Badge>
+                  <Badge variant="outline" className="border-blue-300 text-blue-700">
+                    F2: Simpan ke Database
                   </Badge>
                 </div>
               </div>
@@ -284,6 +309,7 @@ const POSSystem = () => {
                     <POSProductSearch 
                       searchQuery={searchQuery}
                       onAddToCart={addToCart}
+                      onProductAutoAdded={handleProductAutoAdded}
                     />
                   </CardContent>
                 </Card>
@@ -351,7 +377,7 @@ const POSSystem = () => {
               <Card className="border-blue-200">
                 <CardContent className="pt-6">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    {/* Quick Save Button */}
+                    {/* Quick Save Button with F2 indicator */}
                     <Button
                       onClick={handleQuickSave}
                       disabled={cartItems.length === 0 || createTransaction.isPending}
@@ -359,7 +385,7 @@ const POSSystem = () => {
                       size="lg"
                     >
                       <Save className="h-4 w-4 mr-2" />
-                      {createTransaction.isPending ? 'Menyimpan...' : 'Simpan ke Database'}
+                      {createTransaction.isPending ? 'Menyimpan...' : 'Simpan ke Database (F2)'}
                     </Button>
 
                     {/* Regular Payment Button */}

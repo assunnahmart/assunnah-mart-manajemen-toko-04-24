@@ -18,9 +18,10 @@ interface Product {
 interface POSProductSearchProps {
   searchQuery: string;
   onAddToCart: (product: Product) => void;
+  onProductAutoAdded?: () => void;
 }
 
-const POSProductSearch = ({ searchQuery, onAddToCart }: POSProductSearchProps) => {
+const POSProductSearch = ({ searchQuery, onAddToCart, onProductAutoAdded }: POSProductSearchProps) => {
   const [autoAddProcessed, setAutoAddProcessed] = useState<string>('');
   const { data: products = [], isLoading, error } = useBarang(searchQuery);
 
@@ -42,9 +43,14 @@ const POSProductSearch = ({ searchQuery, onAddToCart }: POSProductSearchProps) =
           barcode: exactMatch.barcode || undefined
         });
         setAutoAddProcessed(searchQuery);
+        
+        // Notify parent component that product was auto-added
+        if (onProductAutoAdded) {
+          onProductAutoAdded();
+        }
       }
     }
-  }, [searchQuery, products, onAddToCart, autoAddProcessed]);
+  }, [searchQuery, products, onAddToCart, autoAddProcessed, onProductAutoAdded]);
 
   // Reset auto-add tracking when search query changes significantly
   useEffect(() => {

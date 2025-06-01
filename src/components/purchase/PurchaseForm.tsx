@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -70,10 +71,34 @@ const PurchaseForm = ({ suppliers }: PurchaseFormProps) => {
   const totalAmount = items.reduce((sum, item) => sum + item.subtotal, 0);
 
   const handleSubmit = async () => {
-    if (!supplierId || items.length === 0 || !userKasir) {
+    console.log('Validating form data...');
+    console.log('Supplier ID:', supplierId);
+    console.log('Items count:', items.length);
+    console.log('User Kasir:', userKasir);
+
+    // Perbaikan validasi - check yang benar
+    if (!supplierId) {
       toast({
-        title: "Data tidak lengkap",
-        description: "Pilih supplier dan tambahkan minimal satu item",
+        title: "Error",
+        description: "Pilih supplier terlebih dahulu",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (items.length === 0) {
+      toast({
+        title: "Error", 
+        description: "Tambahkan minimal satu item",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (!userKasir) {
+      toast({
+        title: "Error",
+        description: "Data kasir tidak ditemukan",
         variant: "destructive"
       });
       return;
@@ -111,10 +136,11 @@ const PurchaseForm = ({ suppliers }: PurchaseFormProps) => {
       setJatuhTempo('');
       setCatatan('');
       setItems([]);
-    } catch (error) {
+    } catch (error: any) {
+      console.error('Purchase transaction error:', error);
       toast({
         title: "Gagal menyimpan transaksi",
-        description: error.message,
+        description: error.message || "Terjadi kesalahan saat menyimpan transaksi",
         variant: "destructive"
       });
     }

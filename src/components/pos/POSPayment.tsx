@@ -173,7 +173,7 @@ const POSPayment = ({
           notes: notes
         },
         items: cartItems.map(item => ({
-          product_id: item.id.toString(),
+          product_id: item.id, // Keep as UUID string, don't convert to number
           product_name: item.nama,
           unit_price: item.harga_jual,
           quantity: item.quantity,

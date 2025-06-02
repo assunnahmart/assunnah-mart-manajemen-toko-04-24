@@ -1,10 +1,17 @@
 
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Plus, Package, Loader2 } from 'lucide-react';
 import { useBarang } from '@/hooks/useBarang';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
 
 interface Product {
   id: string;
@@ -61,16 +68,9 @@ const POSProductSearch = ({ searchQuery, onAddToCart, onProductAutoAdded }: POSP
 
   if (isLoading) {
     return (
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-        {[1, 2, 3, 4].map((i) => (
-          <Card key={i} className="animate-pulse">
-            <CardContent className="p-4">
-              <div className="h-4 bg-gray-200 rounded mb-2"></div>
-              <div className="h-3 bg-gray-200 rounded mb-2 w-2/3"></div>
-              <div className="h-3 bg-gray-200 rounded w-1/3"></div>
-            </CardContent>
-          </Card>
-        ))}
+      <div className="flex items-center justify-center py-8">
+        <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
+        <span className="ml-2 text-gray-600">Memuat produk...</span>
       </div>
     );
   }
@@ -96,49 +96,63 @@ const POSProductSearch = ({ searchQuery, onAddToCart, onProductAutoAdded }: POSP
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-96 overflow-y-auto">
-      {products.map((product) => (
-        <Card key={product.id} className="hover:shadow-md transition-shadow">
-          <CardContent className="p-4">
-            <div className="flex justify-between items-start mb-2">
-              <h3 className="font-medium text-sm flex-1 mr-2">{product.nama}</h3>
-              <Button
-                size="sm"
-                onClick={() => onAddToCart({
-                  id: product.id,
-                  nama: product.nama,
-                  harga_jual: Number(product.harga_jual),
-                  stok_saat_ini: product.stok_saat_ini,
-                  satuan: product.satuan || 'pcs',
-                  barcode: product.barcode || undefined
-                })}
-                disabled={product.stok_saat_ini === 0}
-                className="h-8 w-8 p-0"
-              >
-                <Plus className="h-4 w-4" />
-              </Button>
-            </div>
-            
-            <div className="space-y-1">
-              <p className="text-lg font-bold text-blue-600">
-                Rp {Number(product.harga_jual).toLocaleString('id-ID')}
-              </p>
-              
-              <div className="flex items-center justify-between">
+    <div className="border rounded-lg">
+      <Table>
+        <TableHeader>
+          <TableRow className="bg-gray-50">
+            <TableHead className="font-semibold">Nama Produk</TableHead>
+            <TableHead className="font-semibold">Harga</TableHead>
+            <TableHead className="font-semibold">Stok</TableHead>
+            <TableHead className="font-semibold">Barcode</TableHead>
+            <TableHead className="font-semibold text-center">Aksi</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {products.map((product) => (
+            <TableRow key={product.id} className="hover:bg-gray-50">
+              <TableCell className="font-medium">
+                <div className="flex flex-col">
+                  <span className="font-semibold text-gray-900">{product.nama}</span>
+                  <span className="text-xs text-gray-500">Per {product.satuan}</span>
+                </div>
+              </TableCell>
+              <TableCell>
+                <span className="text-lg font-bold text-blue-600">
+                  Rp {Number(product.harga_jual).toLocaleString('id-ID')}
+                </span>
+              </TableCell>
+              <TableCell>
                 <Badge variant={product.stok_saat_ini > 10 ? "secondary" : "destructive"}>
-                  Stok: {product.stok_saat_ini} {product.satuan}
+                  {product.stok_saat_ini} {product.satuan}
                 </Badge>
-                
-                {product.barcode && (
-                  <span className="text-xs text-gray-500">
-                    {product.barcode}
-                  </span>
-                )}
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      ))}
+              </TableCell>
+              <TableCell>
+                <span className="text-sm text-gray-600">
+                  {product.barcode || '-'}
+                </span>
+              </TableCell>
+              <TableCell className="text-center">
+                <Button
+                  size="sm"
+                  onClick={() => onAddToCart({
+                    id: product.id,
+                    nama: product.nama,
+                    harga_jual: Number(product.harga_jual),
+                    stok_saat_ini: product.stok_saat_ini,
+                    satuan: product.satuan || 'pcs',
+                    barcode: product.barcode || undefined
+                  })}
+                  disabled={product.stok_saat_ini === 0}
+                  className="bg-green-600 hover:bg-green-700"
+                >
+                  <Plus className="h-4 w-4 mr-1" />
+                  Tambah
+                </Button>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
     </div>
   );
 };

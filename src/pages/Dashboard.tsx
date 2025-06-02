@@ -31,6 +31,31 @@ const Dashboard = () => {
   const { data: stockAlerts } = useBarangStokRendah();
   const { data: kasSummary } = useKasUmumSummary();
 
+  // Quick actions for kasir only include POS, Konsinyasi Harian, and Kas
+  const kasirQuickActions = [
+    { 
+      title: 'POS System', 
+      description: 'Kasir dan penjualan', 
+      icon: ShoppingCart, 
+      color: 'bg-blue-500', 
+      path: '/pos' 
+    },
+    { 
+      title: 'Konsinyasi Harian', 
+      description: 'Input konsinyasi harian', 
+      icon: Package, 
+      color: 'bg-green-500', 
+      path: '/konsinyasi-harian' 
+    },
+    { 
+      title: 'Kas Kasir', 
+      description: 'Kelola kas harian kasir', 
+      icon: Wallet, 
+      color: 'bg-orange-500', 
+      path: '/kasir-kas' 
+    }
+  ];
+
   const quickActions = [
     { 
       title: 'POS System', 
@@ -76,9 +101,9 @@ const Dashboard = () => {
     }
   ];
 
-  // Filter quick actions for kasir - only show POS System
+  // Filter quick actions for kasir - show kasir specific menu
   const filteredQuickActions = user?.role === 'kasir' 
-    ? quickActions.filter(action => action.path === '/pos')
+    ? kasirQuickActions
     : quickActions;
 
   return (
@@ -95,13 +120,13 @@ const Dashboard = () => {
               <p className="text-gray-600">
                 Selamat datang, {user?.full_name}! 
                 {user?.role === 'kasir' 
-                  ? ' Anda dapat mengakses sistem POS untuk melakukan transaksi penjualan.'
+                  ? ' Anda dapat mengakses sistem POS, konsinyasi harian, dan kas kasir.'
                   : ' Kelola toko Anda dengan mudah.'
                 }
               </p>
             </div>
 
-            {/* Stats Cards - Hide for kasir except basic stats */}
+            {/* Stats Cards - Show basic stats for kasir */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -166,11 +191,11 @@ const Dashboard = () => {
               </Card>
             </div>
 
-            {/* Quick Actions - Filtered for kasir */}
+            {/* Quick Actions - Show appropriate menu for kasir */}
             <Card>
               <CardHeader>
                 <CardTitle>
-                  {user?.role === 'kasir' ? 'Akses Sistem' : 'Aksi Cepat'}
+                  {user?.role === 'kasir' ? 'Menu Kasir' : 'Aksi Cepat'}
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -242,22 +267,39 @@ const Dashboard = () => {
                   <div className="text-center">
                     <ShoppingCart className="h-12 w-12 text-blue-500 mx-auto mb-3" />
                     <h3 className="text-lg font-semibold text-blue-900 mb-2">
-                      Sistem POS Siap Digunakan
+                      Sistem Kasir Siap Digunakan
                     </h3>
                     <p className="text-blue-700 mb-4">
-                      Klik tombol "POS System" di atas untuk mulai melakukan transaksi penjualan.
+                      Akses POS system untuk transaksi, konsinyasi harian untuk pencatatan titipan, dan kas kasir untuk kelola keuangan harian.
                     </p>
-                    <Button 
-                      onClick={() => navigate('/pos')}
-                      className="bg-blue-600 hover:bg-blue-700"
-                    >
-                      <ShoppingCart className="h-4 w-4 mr-2" />
-                      Buka POS System
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
+                    <div className="flex justify-center gap-3">
+                      <Button 
+                        onClick={() => navigate('/pos')}
+                        className="bg-blue-600 hover:bg-blue-700"
+                      >
+                        <ShoppingCart className="h-4 w-4 mr-2" />
+                        POS System
+                      </Button>
+                      <Button 
+                        onClick={() => navigate('/konsinyasi-harian')}
+                        variant="outline"
+                        className="border-blue-600 text-blue-600 hover:bg-blue-50"
+                      >
+                        <Package className="h-4 w-4 mr-2" />
+                        Konsinyasi
+                      </Button>
+                      <Button 
+                        onClick={() => navigate('/kasir-kas')}
+                        variant="outline"
+                        className="border-blue-600 text-blue-600 hover:bg-blue-50"
+                      >
+                        <Wallet className="h-4 w-4 mr-2" />
+                        Kas Kasir
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
           </div>
         </div>
       </Layout>

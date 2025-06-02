@@ -402,6 +402,68 @@ export type Database = {
         }
         Relationships: []
       }
+      kasir_kas_transactions: {
+        Row: {
+          created_at: string | null
+          id: string
+          jenis_transaksi: string
+          jumlah: number
+          kas_umum_id: string | null
+          kasir_id: string | null
+          kasir_name: string | null
+          kategori: string
+          keterangan: string | null
+          referensi_id: string | null
+          referensi_tipe: string | null
+          sync_to_kas_umum: boolean | null
+          tanggal_transaksi: string
+          transaction_number: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          jenis_transaksi: string
+          jumlah: number
+          kas_umum_id?: string | null
+          kasir_id?: string | null
+          kasir_name?: string | null
+          kategori: string
+          keterangan?: string | null
+          referensi_id?: string | null
+          referensi_tipe?: string | null
+          sync_to_kas_umum?: boolean | null
+          tanggal_transaksi?: string
+          transaction_number: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          jenis_transaksi?: string
+          jumlah?: number
+          kas_umum_id?: string | null
+          kasir_id?: string | null
+          kasir_name?: string | null
+          kategori?: string
+          keterangan?: string | null
+          referensi_id?: string | null
+          referensi_tipe?: string | null
+          sync_to_kas_umum?: boolean | null
+          tanggal_transaksi?: string
+          transaction_number?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "kasir_kas_transactions_kasir_id_fkey"
+            columns: ["kasir_id"]
+            isOneToOne: false
+            referencedRelation: "kasir"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       kategori_barang: {
         Row: {
           created_at: string | null
@@ -467,6 +529,94 @@ export type Database = {
             columns: ["laporan_id"]
             isOneToOne: false
             referencedRelation: "konsinyasi_laporan"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      konsinyasi_harian: {
+        Row: {
+          created_at: string | null
+          harga_beli: number
+          id: string
+          jumlah_real_terjual: number
+          jumlah_terjual_sistem: number
+          jumlah_titipan: number
+          kasir_id: string | null
+          kasir_name: string | null
+          keterangan: string | null
+          product_id: string | null
+          product_name: string
+          selisih_stok: number
+          sisa_stok: number
+          status: string | null
+          supplier_id: string | null
+          supplier_name: string
+          tanggal_konsinyasi: string
+          total_pembayaran: number
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          harga_beli?: number
+          id?: string
+          jumlah_real_terjual?: number
+          jumlah_terjual_sistem?: number
+          jumlah_titipan?: number
+          kasir_id?: string | null
+          kasir_name?: string | null
+          keterangan?: string | null
+          product_id?: string | null
+          product_name: string
+          selisih_stok?: number
+          sisa_stok?: number
+          status?: string | null
+          supplier_id?: string | null
+          supplier_name: string
+          tanggal_konsinyasi?: string
+          total_pembayaran?: number
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          harga_beli?: number
+          id?: string
+          jumlah_real_terjual?: number
+          jumlah_terjual_sistem?: number
+          jumlah_titipan?: number
+          kasir_id?: string | null
+          kasir_name?: string | null
+          keterangan?: string | null
+          product_id?: string | null
+          product_name?: string
+          selisih_stok?: number
+          sisa_stok?: number
+          status?: string | null
+          supplier_id?: string | null
+          supplier_name?: string
+          tanggal_konsinyasi?: string
+          total_pembayaran?: number
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "konsinyasi_harian_kasir_id_fkey"
+            columns: ["kasir_id"]
+            isOneToOne: false
+            referencedRelation: "kasir"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "konsinyasi_harian_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "barang_konsinyasi"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "konsinyasi_harian_supplier_id_fkey"
+            columns: ["supplier_id"]
+            isOneToOne: false
+            referencedRelation: "supplier"
             referencedColumns: ["id"]
           },
         ]
@@ -1035,6 +1185,10 @@ export type Database = {
         Returns: undefined
       }
       generate_kas_transaction_number: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
+      generate_kasir_kas_transaction_number: {
         Args: Record<PropertyKey, never>
         Returns: string
       }

@@ -17,7 +17,8 @@ import {
   AlertTriangle,
   DollarSign,
   ShoppingBag,
-  ClipboardList
+  ClipboardList,
+  Wallet
 } from 'lucide-react';
 import { useSimpleAuth } from '@/hooks/useSimpleAuth';
 import { usePOSTransactionsToday } from '@/hooks/usePOSTransactions';

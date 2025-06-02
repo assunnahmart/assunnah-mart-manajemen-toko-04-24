@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import NewProtectedRoute from '@/components/NewProtectedRoute';
 import NewNavbar from '@/components/NewNavbar';
@@ -220,8 +221,36 @@ const POSSystem = () => {
           <div className="min-h-screen bg-gray-50">
             <NewNavbar />
             
+            {/* Fixed Total Shopping Display at the very top */}
+            <div className="sticky top-16 z-40 bg-gray-50 pb-4">
+              <div className="container mx-auto p-4 max-w-7xl">
+                <div className="bg-gradient-to-r from-yellow-600 via-yellow-700 to-yellow-800 rounded-xl p-6 shadow-lg border-2 border-yellow-500">
+                  <div className="flex items-center justify-between text-white">
+                    <div className="flex items-center gap-4">
+                      <div className="bg-red-500 p-3 rounded-lg shadow-lg">
+                        <DollarSign className="h-8 w-8" />
+                      </div>
+                      <div>
+                        <p className="text-yellow-100 text-sm font-medium mb-1">Total Belanja Saat Ini</p>
+                        <p className="text-3xl font-bold text-white drop-shadow-md">
+                          Rp {getTotalAmount().toLocaleString('id-ID')}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <Badge variant="secondary" className="text-lg px-4 py-2 bg-red-500 text-white border-red-400 shadow-lg">
+                        <ShoppingCart className="h-4 w-4 mr-2" />
+                        {cartItems.length} Item{cartItems.length !== 1 ? 's' : ''}
+                      </Badge>
+                      <p className="text-yellow-100 text-sm mt-2">Program by Abu Mughiroh Junaedi</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
             <div className="container mx-auto p-4 max-w-7xl">
-              {/* Main Content Layout - Product Search and Cart at the top */}
+              {/* Main Content Layout - Product Search and Cart */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
                 {/* Product Search */}
                 <Card className="h-[700px] border-red-200">
@@ -287,39 +316,12 @@ const POSSystem = () => {
                 </Card>
               </div>
 
-              {/* Fixed Total Shopping Display */}
-              <div className="mb-6">
-                <div className="bg-gradient-to-r from-yellow-600 via-yellow-700 to-yellow-800 rounded-xl p-6 shadow-lg border-2 border-yellow-500">
-                  <div className="flex items-center justify-between text-white">
-                    <div className="flex items-center gap-4">
-                      <div className="bg-red-500 p-3 rounded-lg shadow-lg">
-                        <DollarSign className="h-8 w-8" />
-                      </div>
-                      <div>
-                        <p className="text-yellow-100 text-sm font-medium mb-1">Total Belanja Saat Ini</p>
-                        <p className="text-3xl font-bold text-white drop-shadow-md">
-                          Rp {getTotalAmount().toLocaleString('id-ID')}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <Badge variant="secondary" className="text-lg px-4 py-2 bg-red-500 text-white border-red-400 shadow-lg">
-                        <ShoppingCart className="h-4 w-4 mr-2" />
-                        {cartItems.length} Item{cartItems.length !== 1 ? 's' : ''}
-                      </Badge>
-                      <p className="text-yellow-100 text-sm mt-2">Program by Abu Mughiroh Junaedi</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Header Layout */}
+              {/* Header Layout - Removed Assunnah Mart title */}
               <div className="mb-6">
                 <div className="grid grid-cols-3 gap-6 items-start">
-                  {/* Left Section - Title and Action buttons */}
+                  {/* Left Section - Kasir info and Action buttons */}
                   <div className="flex flex-col gap-4">
                     <div>
-                      <h2 className="text-3xl font-bold text-gray-900 mb-2">Assunnah Mart</h2>
                       <Badge variant="outline" className="border-red-300 text-red-700">
                         Kasir: {user?.full_name}
                       </Badge>

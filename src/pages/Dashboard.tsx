@@ -298,9 +298,10 @@ const Dashboard = () => {
                         Kas Kasir
                       </Button>
                     </div>
-                  </CardContent>
-                </Card>
-              )}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
           </div>
         </div>
       </Layout>

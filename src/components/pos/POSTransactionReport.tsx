@@ -1,4 +1,3 @@
-
 import { useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -13,6 +12,24 @@ import { Calendar, Users, Filter, TrendingUp, DollarSign, Receipt, Download, Eye
 import { usePOSTransactions } from '@/hooks/usePOSTransactions';
 import { usePOSReportsToday, usePOSReportsByKasir } from '@/hooks/usePOSReports';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+
+interface DailyData {
+  date: string;
+  amount: number;
+  count: number;
+}
+
+interface PaymentData {
+  name: string;
+  value: number;
+  count: number;
+}
+
+interface KasirData {
+  name: string;
+  amount: number;
+  count: number;
+}
 
 const POSTransactionReport = () => {
   const [selectedTransaction, setSelectedTransaction] = useState(null);
@@ -55,42 +72,42 @@ const POSTransactionReport = () => {
     if (!filteredTransactions.length) return { daily: [], payment: [], kasir: [] };
 
     // Daily sales data
-    const dailyData = filteredTransactions.reduce((acc, transaction) => {
+    const dailyDataMap: Record<string, DailyData> = {};
+    filteredTransactions.forEach(transaction => {
       const date = new Date(transaction.created_at).toISOString().split('T')[0];
-      if (!acc[date]) {
-        acc[date] = { date, amount: 0, count: 0 };
+      if (!dailyDataMap[date]) {
+        dailyDataMap[date] = { date, amount: 0, count: 0 };
       }
-      acc[date].amount += transaction.total_amount;
-      acc[date].count += 1;
-      return acc;
-    }, {});
+      dailyDataMap[date].amount += transaction.total_amount;
+      dailyDataMap[date].count += 1;
+    });
 
     // Payment method data
-    const paymentData = filteredTransactions.reduce((acc, transaction) => {
+    const paymentDataMap: Record<string, PaymentData> = {};
+    filteredTransactions.forEach(transaction => {
       const method = transaction.payment_method === 'cash' ? 'Tunai' : 'Kredit';
-      if (!acc[method]) {
-        acc[method] = { name: method, value: 0, count: 0 };
+      if (!paymentDataMap[method]) {
+        paymentDataMap[method] = { name: method, value: 0, count: 0 };
       }
-      acc[method].value += transaction.total_amount;
-      acc[method].count += 1;
-      return acc;
-    }, {});
+      paymentDataMap[method].value += transaction.total_amount;
+      paymentDataMap[method].count += 1;
+    });
 
     // Kasir performance data
-    const kasirData = filteredTransactions.reduce((acc, transaction) => {
+    const kasirDataMap: Record<string, KasirData> = {};
+    filteredTransactions.forEach(transaction => {
       const kasir = transaction.kasir_name;
-      if (!acc[kasir]) {
-        acc[kasir] = { name: kasir, amount: 0, count: 0 };
+      if (!kasirDataMap[kasir]) {
+        kasirDataMap[kasir] = { name: kasir, amount: 0, count: 0 };
       }
-      acc[kasir].amount += transaction.total_amount;
-      acc[kasir].count += 1;
-      return acc;
-    }, {});
+      kasirDataMap[kasir].amount += transaction.total_amount;
+      kasirDataMap[kasir].count += 1;
+    });
 
     return {
-      daily: Object.values(dailyData).sort((a, b) => a.date.localeCompare(b.date)),
-      payment: Object.values(paymentData),
-      kasir: Object.values(kasirData)
+      daily: Object.values(dailyDataMap).sort((a, b) => a.date.localeCompare(b.date)),
+      payment: Object.values(paymentDataMap),
+      kasir: Object.values(kasirDataMap)
     };
   }, [filteredTransactions]);
 

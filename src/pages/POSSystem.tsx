@@ -36,19 +36,9 @@ const POSSystem = () => {
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState('cash');
   const [isMenuCollapsed, setIsMenuCollapsed] = useState(false);
-  const [currentTime, setCurrentTime] = useState(new Date());
   
   const createTransaction = useCreatePOSTransaction();
   const { syncStock, syncCustomerDebt, isSyncingStock, isSyncingDebt } = usePOSTransactionSync();
-
-  // Update digital clock every second
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentTime(new Date());
-    }, 1000);
-
-    return () => clearInterval(timer);
-  }, []);
 
   // Handle transaction synchronization
   const handleTransactionSync = async (transactionData: any, items: any[]) => {
@@ -282,41 +272,6 @@ const POSSystem = () => {
                     </div>
                   </div>
                 </div>
-                
-                {/* Running Text Animation */}
-                <div className="mt-4 bg-gradient-to-r from-green-600 to-blue-600 rounded-lg overflow-hidden shadow-lg">
-                  <div className="py-3">
-                    <div className="whitespace-nowrap animate-[scroll_15s_linear_infinite]">
-                      <span className="text-white font-bold text-lg px-8">
-                        🛒 Assunnah Mart Belanja Hemat, Berkah, Nikmat 🛒 Assunnah Mart Belanja Hemat, Berkah, Nikmat 🛒 Assunnah Mart Belanja Hemat, Berkah, Nikmat 🛒
-                      </span>
-                    </div>
-                  </div>
-                </div>
-                
-                {/* Digital Clock */}
-                <div className="mt-4">
-                  <Card className="bg-gradient-to-r from-blue-600 to-purple-600 border-blue-400">
-                    <CardContent className="pt-4">
-                      <div className="flex items-center justify-center gap-3 text-white">
-                        <Clock className="h-6 w-6" />
-                        <div className="text-center">
-                          <p className="text-2xl font-bold font-mono">
-                            {currentTime.toLocaleTimeString('id-ID')}
-                          </p>
-                          <p className="text-sm text-blue-100">
-                            {currentTime.toLocaleDateString('id-ID', { 
-                              weekday: 'long', 
-                              year: 'numeric', 
-                              month: 'long', 
-                              day: 'numeric' 
-                            })}
-                          </p>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </div>
               </div>
             </div>
             
@@ -385,6 +340,7 @@ const POSSystem = () => {
                       searchQuery={searchQuery}
                       onAddToCart={addToCart}
                       onProductAutoAdded={handleProductAutoAdded}
+                      enableEnterToAdd={true}
                     />
                   </CardContent>
                 </Card>

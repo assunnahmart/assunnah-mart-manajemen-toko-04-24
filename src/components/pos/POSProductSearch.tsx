@@ -26,9 +26,10 @@ interface POSProductSearchProps {
   searchQuery: string;
   onAddToCart: (product: Product) => void;
   onProductAutoAdded?: () => void;
+  enableEnterToAdd?: boolean;
 }
 
-const POSProductSearch = ({ searchQuery, onAddToCart, onProductAutoAdded }: POSProductSearchProps) => {
+const POSProductSearch = ({ searchQuery, onAddToCart, onProductAutoAdded, enableEnterToAdd = false }: POSProductSearchProps) => {
   const [autoAddProcessed, setAutoAddProcessed] = useState<string>('');
   const { data: products = [], isLoading, error } = useBarang(searchQuery);
 
@@ -66,6 +67,31 @@ const POSProductSearch = ({ searchQuery, onAddToCart, onProductAutoAdded }: POSP
     }
   }, [searchQuery]);
 
+  // Add Enter key functionality to add first product to cart
+  useEffect(() => {
+    if (enableEnterToAdd) {
+      const handleKeyDown = (event: KeyboardEvent) => {
+        if (event.key === 'Enter' && products.length > 0 && products[0].stok_saat_ini > 0) {
+          event.preventDefault();
+          const firstProduct = products[0];
+          onAddToCart({
+            id: firstProduct.id,
+            nama: firstProduct.nama,
+            harga_jual: Number(firstProduct.harga_jual),
+            stok_saat_ini: firstProduct.stok_saat_ini,
+            satuan: firstProduct.satuan || 'pcs',
+            barcode: firstProduct.barcode || undefined
+          });
+        }
+      };
+
+      window.addEventListener('keydown', handleKeyDown);
+      return () => {
+        window.removeEventListener('keydown', handleKeyDown);
+      };
+    }
+  }, [enableEnterToAdd, products, onAddToCart]);
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-8">
@@ -96,63 +122,81 @@ const POSProductSearch = ({ searchQuery, onAddToCart, onProductAutoAdded }: POSP
   }
 
   return (
-    <div className="border rounded-lg">
-      <Table>
-        <TableHeader>
-          <TableRow className="bg-gray-50">
-            <TableHead className="font-semibold">Nama Produk</TableHead>
-            <TableHead className="font-semibold">Harga</TableHead>
-            <TableHead className="font-semibold">Stok</TableHead>
-            <TableHead className="font-semibold">Barcode</TableHead>
-            <TableHead className="font-semibold text-center">Aksi</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {products.map((product) => (
-            <TableRow key={product.id} className="hover:bg-gray-50">
-              <TableCell className="font-medium">
-                <div className="flex flex-col">
-                  <span className="font-semibold text-gray-900">{product.nama}</span>
-                  <span className="text-xs text-gray-500">Per {product.satuan}</span>
-                </div>
-              </TableCell>
-              <TableCell>
-                <span className="text-lg font-bold text-blue-600">
-                  Rp {Number(product.harga_jual).toLocaleString('id-ID')}
-                </span>
-              </TableCell>
-              <TableCell>
-                <Badge variant={product.stok_saat_ini > 10 ? "secondary" : "destructive"}>
-                  {product.stok_saat_ini} {product.satuan}
-                </Badge>
-              </TableCell>
-              <TableCell>
-                <span className="text-sm text-gray-600">
-                  {product.barcode || '-'}
-                </span>
-              </TableCell>
-              <TableCell className="text-center">
-                <Button
-                  size="sm"
-                  onClick={() => onAddToCart({
-                    id: product.id,
-                    nama: product.nama,
-                    harga_jual: Number(product.harga_jual),
-                    stok_saat_ini: product.stok_saat_ini,
-                    satuan: product.satuan || 'pcs',
-                    barcode: product.barcode || undefined
-                  })}
-                  disabled={product.stok_saat_ini === 0}
-                  className="bg-green-600 hover:bg-green-700"
-                >
-                  <Plus className="h-4 w-4 mr-1" />
-                  Tambah
-                </Button>
-              </TableCell>
+    <div className="space-y-2">
+      {enableEnterToAdd && products.length > 0 && (
+        <div className="bg-blue-50 border border-blue-200 p-2 rounded text-sm text-blue-700">
+          💡 Tekan Enter untuk menambah produk teratas ke keranjang
+        </div>
+      )}
+      
+      <div className="border rounded-lg">
+        <Table>
+          <TableHeader>
+            <TableRow className="bg-gray-50">
+              <TableHead className="font-semibold">Nama Produk</TableHead>
+              <TableHead className="font-semibold">Harga</TableHead>
+              <TableHead className="font-semibold">Stok</TableHead>
+              <TableHead className="font-semibold">Barcode</TableHead>
+              <TableHead className="font-semibold text-center">Aksi</TableHead>
             </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+          </TableHeader>
+          <TableBody>
+            {products.map((product, index) => (
+              <TableRow 
+                key={product.id} 
+                className={`hover:bg-gray-50 ${index === 0 && enableEnterToAdd ? 'bg-blue-50 border-l-4 border-blue-400' : ''}`}
+              >
+                <TableCell className="font-medium">
+                  <div className="flex flex-col">
+                    <span className="font-semibold text-gray-900">
+                      {product.nama}
+                      {index === 0 && enableEnterToAdd && (
+                        <Badge variant="secondary" className="ml-2 text-xs bg-blue-100 text-blue-700">
+                          Enter
+                        </Badge>
+                      )}
+                    </span>
+                    <span className="text-xs text-gray-500">Per {product.satuan}</span>
+                  </div>
+                </TableCell>
+                <TableCell>
+                  <span className="text-lg font-bold text-blue-600">
+                    Rp {Number(product.harga_jual).toLocaleString('id-ID')}
+                  </span>
+                </TableCell>
+                <TableCell>
+                  <Badge variant={product.stok_saat_ini > 10 ? "secondary" : "destructive"}>
+                    {product.stok_saat_ini} {product.satuan}
+                  </Badge>
+                </TableCell>
+                <TableCell>
+                  <span className="text-sm text-gray-600">
+                    {product.barcode || '-'}
+                  </span>
+                </TableCell>
+                <TableCell className="text-center">
+                  <Button
+                    size="sm"
+                    onClick={() => onAddToCart({
+                      id: product.id,
+                      nama: product.nama,
+                      harga_jual: Number(product.harga_jual),
+                      stok_saat_ini: product.stok_saat_ini,
+                      satuan: product.satuan || 'pcs',
+                      barcode: product.barcode || undefined
+                    })}
+                    disabled={product.stok_saat_ini === 0}
+                    className="bg-green-600 hover:bg-green-700"
+                  >
+                    <Plus className="h-4 w-4 mr-1" />
+                    Tambah
+                  </Button>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
     </div>
   );
 };

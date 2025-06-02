@@ -1,15 +1,20 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { Package } from 'lucide-react';
-import { useCreateKonsinyasiHarian } from '@/hooks/useKonsinyasiHarian';
-import { useBarangKonsinyasi } from '@/hooks/useBarangKonsinyasi';
-import { useSupplier } from '@/hooks/useSupplier';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Package, RefreshCw, Wallet } from 'lucide-react';
+import { 
+  useCreateKonsinyasiHarian, 
+  useKonsinyasiSuppliers, 
+  useKonsinyasiProductsBySupplier,
+  usePOSSalesForProduct 
+} from '@/hooks/useKonsinyasiHarian';
+import { useKonsinyasiPayment } from '@/hooks/useKonsinyasiPayment';
 import { useSimpleAuth } from '@/hooks/useSimpleAuth';
 import { useToast } from '@/hooks/use-toast';
 
@@ -20,19 +25,38 @@ const KonsinyasiHarianForm = () => {
   const [jumlahTerjualSistem, setJumlahTerjualSistem] = useState(0);
   const [jumlahRealTerjual, setJumlahRealTerjual] = useState(0);
   const [keterangan, setKeterangan] = useState('');
+  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
+  const [processPayment, setProcessPayment] = useState(false);
 
-  const { data: products } = useBarangKonsinyasi();
-  const { data: suppliers } = useSupplier();
+  const { data: suppliers } = useKonsinyasiSuppliers();
+  const { data: products } = useKonsinyasiProductsBySupplier(supplierId);
+  const { data: posSales, refetch: refetchPOSSales } = usePOSSalesForProduct(productId, selectedDate);
   const { user } = useSimpleAuth();
   const createKonsinyasi = useCreateKonsinyasiHarian();
+  const processPaymentMutation = useKonsinyasiPayment();
   const { toast } = useToast();
 
   const selectedProduct = products?.find(p => p.id === productId);
   const selectedSupplier = suppliers?.find(s => s.id === supplierId);
 
+  // Auto-sync POS sales data when product or date changes
+  useEffect(() => {
+    if (posSales?.totalSold !== undefined) {
+      setJumlahTerjualSistem(posSales.totalSold);
+    }
+  }, [posSales]);
+
   const sisaStok = jumlahTitipan - jumlahRealTerjual;
   const selisihStok = jumlahRealTerjual - jumlahTerjualSistem;
   const totalPembayaran = selectedProduct ? (selectedProduct.harga_beli || 0) * jumlahRealTerjual : 0;
+
+  const handleSyncPOSSales = () => {
+    refetchPOSSales();
+    toast({
+      title: "Data disinkronkan",
+      description: "Data penjualan POS telah diperbarui"
+    });
+  };
 
   const handleSubmit = async () => {
     if (!supplierId || !productId || jumlahTitipan <= 0) {
@@ -45,7 +69,8 @@ const KonsinyasiHarianForm = () => {
     }
 
     try {
-      await createKonsinyasi.mutateAsync({
+      // Create consignment record
+      const konsinyasiData = {
         supplier_id: supplierId,
         supplier_name: selectedSupplier?.nama || '',
         product_id: productId,
@@ -57,13 +82,30 @@ const KonsinyasiHarianForm = () => {
         selisih_stok: selisihStok,
         harga_beli: selectedProduct?.harga_beli || 0,
         total_pembayaran: totalPembayaran,
+        tanggal_konsinyasi: selectedDate,
         kasir_name: user?.full_name || '',
         keterangan
-      });
+      };
+
+      await createKonsinyasi.mutateAsync(konsinyasiData);
+
+      // Process payment if checked
+      if (processPayment && totalPembayaran > 0) {
+        await processPaymentMutation.mutateAsync({
+          konsinyasiData: {
+            ...konsinyasiData,
+            id: Date.now().toString() // Temporary ID for reference
+          },
+          kasirId: user?.kasir_id || '',
+          kasirName: user?.full_name || ''
+        });
+      }
 
       toast({
         title: "Konsinyasi harian berhasil",
-        description: "Data konsinyasi harian berhasil disimpan"
+        description: processPayment 
+          ? `Data konsinyasi dan pembayaran Rp ${totalPembayaran.toLocaleString('id-ID')} berhasil disimpan`
+          : "Data konsinyasi harian berhasil disimpan"
       });
 
       // Reset form
@@ -73,6 +115,7 @@ const KonsinyasiHarianForm = () => {
       setJumlahTerjualSistem(0);
       setJumlahRealTerjual(0);
       setKeterangan('');
+      setProcessPayment(false);
     } catch (error) {
       toast({
         title: "Gagal menyimpan konsinyasi",
@@ -93,7 +136,17 @@ const KonsinyasiHarianForm = () => {
       <CardContent className="space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <Label htmlFor="supplier">Supplier</Label>
+            <Label htmlFor="date">Tanggal Konsinyasi</Label>
+            <Input
+              id="date"
+              type="date"
+              value={selectedDate}
+              onChange={(e) => setSelectedDate(e.target.value)}
+            />
+          </div>
+
+          <div>
+            <Label htmlFor="supplier">Supplier (Produk Konsinyasi Harian)</Label>
             <Select value={supplierId} onValueChange={setSupplierId}>
               <SelectTrigger>
                 <SelectValue placeholder="Pilih supplier..." />
@@ -109,13 +162,13 @@ const KonsinyasiHarianForm = () => {
           </div>
 
           <div>
-            <Label htmlFor="product">Produk</Label>
-            <Select value={productId} onValueChange={setProductId}>
+            <Label htmlFor="product">Produk Konsinyasi Harian</Label>
+            <Select value={productId} onValueChange={setProductId} disabled={!supplierId}>
               <SelectTrigger>
-                <SelectValue placeholder="Pilih produk..." />
+                <SelectValue placeholder={supplierId ? "Pilih produk..." : "Pilih supplier dulu"} />
               </SelectTrigger>
               <SelectContent>
-                {products?.filter(p => p.jenis_konsinyasi === 'konsinyasi').map((product) => (
+                {products?.map((product) => (
                   <SelectItem key={product.id} value={product.id}>
                     {product.nama} - Rp {(product.harga_beli || 0).toLocaleString('id-ID')}
                   </SelectItem>
@@ -137,15 +190,28 @@ const KonsinyasiHarianForm = () => {
           </div>
 
           <div>
-            <Label htmlFor="jumlah_sistem">Jumlah Terjual (Sistem)</Label>
-            <Input
-              id="jumlah_sistem"
-              type="number"
-              value={jumlahTerjualSistem}
-              onChange={(e) => setJumlahTerjualSistem(Number(e.target.value))}
-              placeholder="Jumlah terjual di sistem..."
-              min="0"
-            />
+            <Label htmlFor="jumlah_sistem">Jumlah Terjual (Sistem POS)</Label>
+            <div className="flex gap-2">
+              <Input
+                id="jumlah_sistem"
+                type="number"
+                value={jumlahTerjualSistem}
+                onChange={(e) => setJumlahTerjualSistem(Number(e.target.value))}
+                placeholder="Otomatis dari POS..."
+                min="0"
+                className="bg-blue-50"
+              />
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={handleSyncPOSSales}
+                disabled={!productId}
+              >
+                <RefreshCw className="h-4 w-4" />
+              </Button>
+            </div>
+            <p className="text-xs text-blue-600 mt-1">Data otomatis dari penjualan POS tanggal {selectedDate}</p>
           </div>
 
           <div>
@@ -170,20 +236,20 @@ const KonsinyasiHarianForm = () => {
           </div>
 
           <div>
-            <Label>Selisih Stok</Label>
+            <Label>Selisih Stok (Real - Sistem)</Label>
             <Input
               value={selisihStok}
               readOnly
-              className={`bg-gray-100 ${selisihStok !== 0 ? 'text-red-600' : ''}`}
+              className={`bg-gray-100 ${selisihStok !== 0 ? 'text-red-600 font-medium' : ''}`}
             />
           </div>
 
-          <div>
-            <Label>Total Pembayaran</Label>
+          <div className="md:col-span-2">
+            <Label>Total Pembayaran ke Supplier</Label>
             <Input
               value={`Rp ${totalPembayaran.toLocaleString('id-ID')}`}
               readOnly
-              className="bg-gray-100 font-medium"
+              className="bg-green-50 font-bold text-green-700 text-lg"
             />
           </div>
 
@@ -196,14 +262,38 @@ const KonsinyasiHarianForm = () => {
               onChange={(e) => setKeterangan(e.target.value)}
             />
           </div>
+
+          <div className="md:col-span-2">
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="process_payment"
+                checked={processPayment}
+                onCheckedChange={setProcessPayment}
+              />
+              <Label htmlFor="process_payment" className="flex items-center gap-2">
+                <Wallet className="h-4 w-4" />
+                Proses pembayaran sekaligus (kas keluar otomatis ke kas umum)
+              </Label>
+            </div>
+            {processPayment && totalPembayaran > 0 && (
+              <p className="text-sm text-orange-600 mt-2">
+                Akan mencatat kas keluar Rp {totalPembayaran.toLocaleString('id-ID')} dan sinkronisasi ke kas umum
+              </p>
+            )}
+          </div>
         </div>
 
         <Button
           onClick={handleSubmit}
-          disabled={createKonsinyasi.isPending}
+          disabled={createKonsinyasi.isPending || processPaymentMutation.isPending}
           className="w-full"
         >
-          {createKonsinyasi.isPending ? 'Menyimpan...' : 'Simpan Konsinyasi'}
+          {createKonsinyasi.isPending || processPaymentMutation.isPending 
+            ? 'Menyimpan...' 
+            : processPayment 
+              ? 'Simpan Konsinyasi & Proses Pembayaran'
+              : 'Simpan Konsinyasi'
+          }
         </Button>
       </CardContent>
     </Card>

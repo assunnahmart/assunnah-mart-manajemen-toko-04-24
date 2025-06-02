@@ -83,6 +83,7 @@ const KonsinyasiHarianForm = () => {
         harga_beli: selectedProduct?.harga_beli || 0,
         total_pembayaran: totalPembayaran,
         tanggal_konsinyasi: selectedDate,
+        kasir_id: user?.kasir_id || '',
         kasir_name: user?.full_name || '',
         keterangan
       };
@@ -268,7 +269,7 @@ const KonsinyasiHarianForm = () => {
               <Checkbox
                 id="process_payment"
                 checked={processPayment}
-                onCheckedChange={setProcessPayment}
+                onCheckedChange={(checked) => setProcessPayment(checked === true)}
               />
               <Label htmlFor="process_payment" className="flex items-center gap-2">
                 <Wallet className="h-4 w-4" />

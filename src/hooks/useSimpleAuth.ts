@@ -1,9 +1,11 @@
+
 import { useState, useEffect } from 'react';
 
 interface UserProfile {
   username: string;
   full_name: string;
   role: 'admin' | 'kasir';
+  kasir_id?: string; // Add kasir_id to the interface
 }
 
 interface AuthState {
@@ -12,14 +14,14 @@ interface AuthState {
   loading: boolean;
 }
 
-// Demo users data
+// Demo users data with kasir_id
 const DEMO_USERS = [
-  { username: 'Ginanjar', password: 'admin', full_name: 'Ginanjar', role: 'admin' as const },
-  { username: 'Jamhur', password: 'admin1', full_name: 'Jamhur', role: 'admin' as const },
-  { username: 'Jamhur2', password: 'kasir1', full_name: 'Jamhur2', role: 'kasir' as const },
-  { username: 'Agus', password: 'kasir4', full_name: 'Agus', role: 'kasir' as const },
-  { username: 'Yadi', password: 'kasir7', full_name: 'Yadi', role: 'kasir' as const },
-  { username: 'Nurohman', password: 'kasir12', full_name: 'Nurohman', role: 'kasir' as const }
+  { username: 'Ginanjar', password: 'admin', full_name: 'Ginanjar', role: 'admin' as const, kasir_id: 'admin-001' },
+  { username: 'Jamhur', password: 'admin1', full_name: 'Jamhur', role: 'admin' as const, kasir_id: 'admin-002' },
+  { username: 'Jamhur2', password: 'kasir1', full_name: 'Jamhur2', role: 'kasir' as const, kasir_id: 'kasir-001' },
+  { username: 'Agus', password: 'kasir4', full_name: 'Agus', role: 'kasir' as const, kasir_id: 'kasir-002' },
+  { username: 'Yadi', password: 'kasir7', full_name: 'Yadi', role: 'kasir' as const, kasir_id: 'kasir-003' },
+  { username: 'Nurohman', password: 'kasir12', full_name: 'Nurohman', role: 'kasir' as const, kasir_id: 'kasir-004' }
 ];
 
 export const useSimpleAuth = () => {
@@ -76,7 +78,8 @@ export const useSimpleAuth = () => {
       const userProfile: UserProfile = {
         username: user.username,
         full_name: user.full_name,
-        role: user.role
+        role: user.role,
+        kasir_id: user.kasir_id
       };
 
       console.log('useSimpleAuth: Login successful, saving user:', userProfile);

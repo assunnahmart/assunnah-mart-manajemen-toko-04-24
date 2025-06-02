@@ -269,6 +269,19 @@ const POSSystem = () => {
                         {cartItems.length} Item{cartItems.length !== 1 ? 's' : ''}
                       </Badge>
                       <p className="text-yellow-100 text-sm mt-2">Program by Abu Mughiroh Junaedi</p>
+                      <div className="text-yellow-100 text-xs mt-1">
+                        <Badge variant="outline" className="border-yellow-300 text-yellow-200 bg-transparent mr-2">
+                          Kasir: {user?.full_name}
+                        </Badge>
+                        <Badge variant="outline" className="border-yellow-300 text-yellow-200 bg-transparent">
+                          {new Date().toLocaleDateString('id-ID', { 
+                            weekday: 'long', 
+                            year: 'numeric', 
+                            month: 'long', 
+                            day: 'numeric' 
+                          })}
+                        </Badge>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -276,36 +289,6 @@ const POSSystem = () => {
             </div>
             
             <div className="container mx-auto p-4 max-w-7xl">
-              {/* Kasir Info, Date and Auto-Sync above Product Search */}
-              <div className="mb-6">
-                <div className="grid grid-cols-3 gap-6 items-center">
-                  {/* Left Section - Kasir info */}
-                  <div>
-                    <Badge variant="outline" className="border-red-300 text-red-700">
-                      Kasir: {user?.full_name}
-                    </Badge>
-                  </div>
-
-                  {/* Center Section - Empty space for better layout */}
-                  <div></div>
-
-                  {/* Right Section - Date and Auto-Sync */}
-                  <div className="flex flex-col items-end gap-2">
-                    <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">
-                      {new Date().toLocaleDateString('id-ID', { 
-                        weekday: 'long', 
-                        year: 'numeric', 
-                        month: 'long', 
-                        day: 'numeric' 
-                      })}
-                    </Badge>
-                    <Badge variant="secondary" className="bg-green-100 text-green-800">
-                      Auto-Sync: Aktif
-                    </Badge>
-                  </div>
-                </div>
-              </div>
-
               {/* Main Content Layout - Product Search and Cart */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
                 {/* Product Search */}

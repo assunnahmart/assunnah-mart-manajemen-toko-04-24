@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import NewProtectedRoute from '@/components/NewProtectedRoute';
 import NewNavbar from '@/components/NewNavbar';
@@ -279,11 +280,10 @@ const POSSystem = () => {
           <div className="min-h-screen bg-gray-50">
             <NewNavbar />
             
-            <div className="container mx-auto p-4 max-w-7xl">
-              {/* Header */}
-              <div className="mb-6">
-                {/* Total Shopping Display */}
-                <div className="bg-gradient-to-r from-yellow-600 via-yellow-700 to-yellow-800 rounded-xl p-6 mb-6 shadow-lg border-2 border-yellow-500">
+            {/* Fixed Total Shopping Display - Always at top */}
+            <div className="sticky top-16 z-40 bg-gray-50 pt-4 pb-2">
+              <div className="container mx-auto px-4 max-w-7xl">
+                <div className="bg-gradient-to-r from-yellow-600 via-yellow-700 to-yellow-800 rounded-xl p-6 shadow-lg border-2 border-yellow-500">
                   <div className="flex items-center justify-between text-white">
                     <div className="flex items-center gap-4">
                       <div className="bg-red-500 p-3 rounded-lg shadow-lg">
@@ -304,7 +304,12 @@ const POSSystem = () => {
                     </div>
                   </div>
                 </div>
-
+              </div>
+            </div>
+            
+            <div className="container mx-auto p-4 max-w-7xl">
+              {/* Header */}
+              <div className="mb-6">
                 {/* Credit Payment Warning */}
                 {selectedPaymentMethod === 'credit' && !selectedCustomer && (
                   <div className="bg-orange-50 border border-orange-200 p-3 rounded-lg mb-4">
@@ -427,7 +432,7 @@ const POSSystem = () => {
                       {showHistory ? (
                         <POSTransactionHistory />
                       ) : (
-                        <Card className="h-[calc(100vh-450px)] border-red-200">
+                        <Card className="h-[calc(100vh-550px)] border-red-200">
                           <CardHeader className="pb-4 bg-gradient-to-r from-red-50 to-yellow-50 rounded-t-lg">
                             <CardTitle className="flex items-center gap-2 text-red-700">
                               <Search className="h-5 w-5" />
@@ -466,7 +471,7 @@ const POSSystem = () => {
 
                     {/* Shopping Cart (37.5% of total width) */}
                     <div>
-                      <Card className="h-[calc(100vh-450px)] border-yellow-200">
+                      <Card className="h-[calc(100vh-550px)] border-yellow-200">
                         <CardHeader className="pb-4 bg-gradient-to-r from-yellow-50 to-orange-50 rounded-t-lg">
                           <CardTitle className="flex items-center justify-between text-yellow-800">
                             <span className="flex items-center gap-2">

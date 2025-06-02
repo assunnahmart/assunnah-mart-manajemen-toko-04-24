@@ -60,9 +60,8 @@ const NewNavbar = () => {
               <img 
                 src="/lovable-uploads/b19ae95c-b38c-40ee-893f-aa5a2366191d.png" 
                 alt="Assunnah Mart Logo" 
-                className="h-8 w-auto mr-2"
+                className="h-8 w-auto"
               />
-              <span className="font-bold text-xl text-gray-900">Assunnah Mart</span>
             </Link>
           </div>
 

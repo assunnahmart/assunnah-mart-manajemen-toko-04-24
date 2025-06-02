@@ -1,4 +1,3 @@
-
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { 
@@ -17,10 +16,10 @@ import {
 import { useSimpleAuth } from '@/hooks/useSimpleAuth';
 
 const NewNavbar = () => {
-  const { user, logout } = useSimpleAuth();
+  const { user, signOut } = useSimpleAuth();
 
   const handleLogout = () => {
-    logout();
+    signOut();
   };
 
   // Hide navigation menu for kasir role

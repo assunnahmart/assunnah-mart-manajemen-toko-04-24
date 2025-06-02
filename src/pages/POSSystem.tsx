@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import NewProtectedRoute from '@/components/NewProtectedRoute';
 import NewNavbar from '@/components/NewNavbar';
@@ -6,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Search, ShoppingCart, Save, CreditCard, Camera, DollarSign, ChevronUp, ChevronDown, Clock, FileText, History } from 'lucide-react';
+import { Search, ShoppingCart, Save, CreditCard, Camera, DollarSign, ChevronUp, ChevronDown, Clock, FileText, History, Package, Wallet } from 'lucide-react';
 import { useSimpleAuth } from '@/hooks/useSimpleAuth';
 import { useCreatePOSTransaction } from '@/hooks/usePOSTransactions';
 import { usePOSTransactionSync } from '@/hooks/usePOSTransactionSync';
@@ -20,6 +21,10 @@ import POSCustomerSelect from '@/components/pos/POSCustomerSelect';
 import POSPaymentMethod from '@/components/pos/POSPaymentMethod';
 import POSKasirTransactionHistory from '@/components/pos/POSKasirTransactionHistory';
 import POSDailyReport from '@/components/pos/POSDailyReport';
+import KonsinyasiHarianForm from '@/components/konsinyasi/KonsinyasiHarianForm';
+import KonsinyasiHarianHistory from '@/components/konsinyasi/KonsinyasiHarianHistory';
+import KasirKasForm from '@/components/kas/KasirKasForm';
+import KasirKasHistory from '@/components/kas/KasirKasHistory';
 
 interface Customer {
   id: string;
@@ -40,6 +45,8 @@ const POSSystem = () => {
   const [isMenuCollapsed, setIsMenuCollapsed] = useState(false);
   const [showTransactionHistory, setShowTransactionHistory] = useState(false);
   const [showDailyReport, setShowDailyReport] = useState(false);
+  const [showKonsinyasi, setShowKonsinyasi] = useState(false);
+  const [showKasirKas, setShowKasirKas] = useState(false);
   
   const createTransaction = useCreatePOSTransaction();
   const { syncStock, syncCustomerDebt, isSyncingStock, isSyncingDebt } = usePOSTransactionSync();
@@ -302,8 +309,24 @@ const POSSystem = () => {
                   </Button>
                   <Button
                     variant="outline"
-                    onClick={() => setShowDailyReport(true)}
+                    onClick={() => setShowKonsinyasi(true)}
                     className="bg-white hover:bg-green-50 border-green-300 text-green-700"
+                  >
+                    <Package className="h-4 w-4 mr-2" />
+                    Konsinyasi Harian
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => setShowKasirKas(true)}
+                    className="bg-white hover:bg-orange-50 border-orange-300 text-orange-700"
+                  >
+                    <Wallet className="h-4 w-4 mr-2" />
+                    Kas Kasir
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => setShowDailyReport(true)}
+                    className="bg-white hover:bg-purple-50 border-purple-300 text-purple-700"
                   >
                     <FileText className="h-4 w-4 mr-2" />
                     Cetak Laporan
@@ -455,6 +478,60 @@ const POSSystem = () => {
                 onClose={() => setShowTransactionHistory(false)}
                 kasirName={user.full_name}
               />
+            )}
+
+            {/* Konsinyasi Harian Modal */}
+            {showKonsinyasi && (
+              <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+                <div className="bg-white rounded-lg max-w-6xl w-full max-h-[90vh] overflow-hidden">
+                  <div className="flex items-center justify-between p-6 border-b">
+                    <h2 className="text-xl font-semibold flex items-center gap-2">
+                      <Package className="h-5 w-5" />
+                      Konsinyasi Harian
+                    </h2>
+                    <Button
+                      variant="ghost"
+                      onClick={() => setShowKonsinyasi(false)}
+                      className="h-8 w-8 p-0"
+                    >
+                      ×
+                    </Button>
+                  </div>
+                  <div className="p-6 overflow-y-auto max-h-[calc(90vh-80px)]">
+                    <div className="space-y-6">
+                      <KonsinyasiHarianForm />
+                      <KonsinyasiHarianHistory />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Kas Kasir Modal */}
+            {showKasirKas && (
+              <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+                <div className="bg-white rounded-lg max-w-6xl w-full max-h-[90vh] overflow-hidden">
+                  <div className="flex items-center justify-between p-6 border-b">
+                    <h2 className="text-xl font-semibold flex items-center gap-2">
+                      <Wallet className="h-5 w-5" />
+                      Kas Kasir
+                    </h2>
+                    <Button
+                      variant="ghost"
+                      onClick={() => setShowKasirKas(false)}
+                      className="h-8 w-8 p-0"
+                    >
+                      ×
+                    </Button>
+                  </div>
+                  <div className="p-6 overflow-y-auto max-h-[calc(90vh-80px)]">
+                    <div className="space-y-6">
+                      <KasirKasForm />
+                      <KasirKasHistory />
+                    </div>
+                  </div>
+                </div>
+              </div>
             )}
 
             {/* Daily Report Modal */}

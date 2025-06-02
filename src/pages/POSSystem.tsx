@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import NewProtectedRoute from '@/components/NewProtectedRoute';
 import NewNavbar from '@/components/NewNavbar';
@@ -306,18 +305,6 @@ const POSSystem = () => {
                   </div>
                 </div>
 
-                {/* Customer & Payment Method Row */}
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
-                  <POSCustomerSelect
-                    selectedCustomer={selectedCustomer}
-                    onCustomerSelect={setSelectedCustomer}
-                  />
-                  <POSPaymentMethod
-                    selectedMethod={selectedPaymentMethod}
-                    onMethodSelect={setSelectedPaymentMethod}
-                  />
-                </div>
-
                 {/* Credit Payment Warning */}
                 {selectedPaymentMethod === 'credit' && !selectedCustomer && (
                   <div className="bg-orange-50 border border-orange-200 p-3 rounded-lg mb-4">
@@ -419,13 +406,13 @@ const POSSystem = () => {
               </div>
 
               {/* Main Content Layout - Product Search and Cart side by side with equal sizes */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
                 {/* Left Section - Product Search (50% width) */}
                 <div>
                   {showHistory ? (
                     <POSTransactionHistory />
                   ) : (
-                    <Card className="h-[calc(100vh-300px)] border-red-200">
+                    <Card className="h-[calc(100vh-450px)] border-red-200">
                       <CardHeader className="pb-4 bg-gradient-to-r from-red-50 to-yellow-50 rounded-t-lg">
                         <CardTitle className="flex items-center gap-2 text-red-700">
                           <Search className="h-5 w-5" />
@@ -464,7 +451,7 @@ const POSSystem = () => {
 
                 {/* Right Section - Cart (50% width) */}
                 <div>
-                  <Card className="h-[calc(100vh-300px)] border-yellow-200">
+                  <Card className="h-[calc(100vh-450px)] border-yellow-200">
                     <CardHeader className="pb-4 bg-gradient-to-r from-yellow-50 to-orange-50 rounded-t-lg">
                       <CardTitle className="flex items-center justify-between text-yellow-800">
                         <span className="flex items-center gap-2">
@@ -495,6 +482,22 @@ const POSSystem = () => {
                       />
                     </CardContent>
                   </Card>
+                </div>
+              </div>
+
+              {/* Customer & Payment Method Row - Below Cart & Search */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                <div className="lg:col-span-1">
+                  <POSCustomerSelect
+                    selectedCustomer={selectedCustomer}
+                    onCustomerSelect={setSelectedCustomer}
+                  />
+                </div>
+                <div className="lg:col-span-1">
+                  <POSPaymentMethod
+                    selectedMethod={selectedPaymentMethod}
+                    onMethodSelect={setSelectedPaymentMethod}
+                  />
                 </div>
               </div>
             </div>

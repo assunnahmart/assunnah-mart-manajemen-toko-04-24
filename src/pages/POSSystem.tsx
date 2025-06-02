@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import NewProtectedRoute from '@/components/NewProtectedRoute';
 import NewNavbar from '@/components/NewNavbar';
@@ -281,32 +280,9 @@ const POSSystem = () => {
             <NewNavbar />
             
             <div className="container mx-auto p-4 max-w-7xl">
-              {/* Enhanced Header with Assunnah Mart Logo and Total Shopping Amount */}
+              {/* Header */}
               <div className="mb-6">
-                {/* Logo Banner with Assunnah Mart Theme */}
-                <div className="bg-gradient-to-r from-red-500 via-red-600 to-pink-500 rounded-xl p-6 mb-4 shadow-lg relative overflow-hidden">
-                  <div className="absolute inset-0 bg-gradient-to-r from-yellow-400/10 to-blue-400/10"></div>
-                  <div className="relative flex items-center justify-between">
-                    <div className="flex items-center gap-6">
-                      <img 
-                        src="/lovable-uploads/b19ae95c-b38c-40ee-893f-aa5a2366191d.png" 
-                        alt="Assunnah Mart Logo" 
-                        className="h-16 w-auto bg-white rounded-lg p-2 shadow-md"
-                      />
-                      <div className="text-white">
-                        <h1 className="text-2xl font-bold mb-1">ASSUNNAH MART</h1>
-                        <p className="text-red-100 text-sm italic">belanja hemat, berkah, nikmat</p>
-                      </div>
-                    </div>
-                    <div className="text-right text-white">
-                      <Badge variant="secondary" className="bg-white/20 text-white border-white/30 text-sm px-3 py-1">
-                        POS System
-                      </Badge>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Total Shopping Display - Changed to dark yellow */}
+                {/* Total Shopping Display */}
                 <div className="bg-gradient-to-r from-yellow-600 via-yellow-700 to-yellow-800 rounded-xl p-6 mb-6 shadow-lg border-2 border-yellow-500">
                   <div className="flex items-center justify-between text-white">
                     <div className="flex items-center gap-4">
@@ -329,7 +305,7 @@ const POSSystem = () => {
                   </div>
                 </div>
 
-                {/* Customer & Payment Method Row - Moved Below Total Shopping */}
+                {/* Customer & Payment Method Row */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
                   <POSCustomerSelect
                     selectedCustomer={selectedCustomer}
@@ -351,7 +327,7 @@ const POSSystem = () => {
                   </div>
                 )}
 
-                {/* Actions - Moved Below Customer/Payment Selection */}
+                {/* Actions */}
                 <Card className="border-blue-200 mb-6">
                   <CardContent className="pt-6">
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -441,14 +417,14 @@ const POSSystem = () => {
                 </div>
               </div>
 
-              {/* Landscape Layout - Optimized for Desktop */}
-              <div className="grid grid-cols-1 xl:grid-cols-4 gap-6">
-                {/* Left Section - Product Search (60% width on desktop) */}
+              {/* Main Content Layout - Adjusted for better product search size */}
+              <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+                {/* Left Section - Product Search (Larger area - 2/3 width) */}
                 <div className="xl:col-span-2">
                   {showHistory ? (
                     <POSTransactionHistory />
                   ) : (
-                    <Card className="h-[calc(100vh-450px)] border-red-200">
+                    <Card className="h-[calc(100vh-400px)] border-red-200">
                       <CardHeader className="pb-4 bg-gradient-to-r from-red-50 to-yellow-50 rounded-t-lg">
                         <CardTitle className="flex items-center gap-2 text-red-700">
                           <Search className="h-5 w-5" />
@@ -485,10 +461,10 @@ const POSSystem = () => {
                   )}
                 </div>
 
-                {/* Right Section - Cart (40% width on desktop) */}
-                <div className="xl:col-span-2 space-y-4">
+                {/* Right Section - Cart (Smaller area - 1/3 width) */}
+                <div className="xl:col-span-1 space-y-4">
                   {/* Cart */}
-                  <Card className="h-[350px] border-yellow-200">
+                  <Card className="h-[calc(100vh-400px)] border-yellow-200">
                     <CardHeader className="pb-4 bg-gradient-to-r from-yellow-50 to-orange-50 rounded-t-lg">
                       <CardTitle className="flex items-center justify-between text-yellow-800">
                         <span className="flex items-center gap-2">

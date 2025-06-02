@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import NewProtectedRoute from '@/components/NewProtectedRoute';
 import NewNavbar from '@/components/NewNavbar';
@@ -417,14 +418,14 @@ const POSSystem = () => {
                 </div>
               </div>
 
-              {/* Main Content Layout - Adjusted for better product search size */}
-              <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-                {/* Left Section - Product Search (Larger area - 2/3 width) */}
-                <div className="xl:col-span-2">
+              {/* Main Content Layout - Product Search and Cart side by side with equal sizes */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Left Section - Product Search (50% width) */}
+                <div>
                   {showHistory ? (
                     <POSTransactionHistory />
                   ) : (
-                    <Card className="h-[calc(100vh-400px)] border-red-200">
+                    <Card className="h-[calc(100vh-300px)] border-red-200">
                       <CardHeader className="pb-4 bg-gradient-to-r from-red-50 to-yellow-50 rounded-t-lg">
                         <CardTitle className="flex items-center gap-2 text-red-700">
                           <Search className="h-5 w-5" />
@@ -461,10 +462,9 @@ const POSSystem = () => {
                   )}
                 </div>
 
-                {/* Right Section - Cart (Smaller area - 1/3 width) */}
-                <div className="xl:col-span-1 space-y-4">
-                  {/* Cart */}
-                  <Card className="h-[calc(100vh-400px)] border-yellow-200">
+                {/* Right Section - Cart (50% width) */}
+                <div>
+                  <Card className="h-[calc(100vh-300px)] border-yellow-200">
                     <CardHeader className="pb-4 bg-gradient-to-r from-yellow-50 to-orange-50 rounded-t-lg">
                       <CardTitle className="flex items-center justify-between text-yellow-800">
                         <span className="flex items-center gap-2">

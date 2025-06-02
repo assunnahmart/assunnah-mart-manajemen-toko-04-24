@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Search, ShoppingCart, Save, CreditCard, Camera, DollarSign, ChevronUp, ChevronDown, Clock } from 'lucide-react';
+import { Search, ShoppingCart, Save, CreditCard, Camera, DollarSign, ChevronUp, ChevronDown, Clock, FileText, History } from 'lucide-react';
 import { useSimpleAuth } from '@/hooks/useSimpleAuth';
 import { useCreatePOSTransaction } from '@/hooks/usePOSTransactions';
 import { usePOSTransactionSync } from '@/hooks/usePOSTransactionSync';
@@ -18,6 +18,8 @@ import POSBarcodeScanner from '@/components/pos/POSBarcodeScanner';
 import POSTransactionSync from '@/components/pos/POSTransactionSync';
 import POSCustomerSelect from '@/components/pos/POSCustomerSelect';
 import POSPaymentMethod from '@/components/pos/POSPaymentMethod';
+import POSKasirTransactionHistory from '@/components/pos/POSKasirTransactionHistory';
+import POSDailyReport from '@/components/pos/POSDailyReport';
 
 interface Customer {
   id: string;
@@ -36,6 +38,8 @@ const POSSystem = () => {
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState('cash');
   const [isMenuCollapsed, setIsMenuCollapsed] = useState(false);
+  const [showTransactionHistory, setShowTransactionHistory] = useState(false);
+  const [showDailyReport, setShowDailyReport] = useState(false);
   
   const createTransaction = useCreatePOSTransaction();
   const { syncStock, syncCustomerDebt, isSyncingStock, isSyncingDebt } = usePOSTransactionSync();
@@ -285,11 +289,31 @@ const POSSystem = () => {
                     </div>
                   </div>
                 </div>
+
+                {/* Kasir Action Buttons */}
+                <div className="mt-4 flex justify-center gap-3">
+                  <Button
+                    variant="outline"
+                    onClick={() => setShowTransactionHistory(true)}
+                    className="bg-white hover:bg-blue-50 border-blue-300 text-blue-700"
+                  >
+                    <History className="h-4 w-4 mr-2" />
+                    Riwayat Transaksi
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => setShowDailyReport(true)}
+                    className="bg-white hover:bg-green-50 border-green-300 text-green-700"
+                  >
+                    <FileText className="h-4 w-4 mr-2" />
+                    Cetak Laporan
+                  </Button>
+                </div>
               </div>
             </div>
             
+            {/* Main Content Layout - Product Search and Cart */}
             <div className="container mx-auto p-4 max-w-7xl">
-              {/* Main Content Layout - Product Search and Cart */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
                 {/* Product Search */}
                 <Card className="h-[700px] border-red-200">
@@ -423,6 +447,24 @@ const POSSystem = () => {
                 </div>
               )}
             </div>
+
+            {/* Transaction History Modal */}
+            {showTransactionHistory && user?.full_name && (
+              <POSKasirTransactionHistory
+                isOpen={showTransactionHistory}
+                onClose={() => setShowTransactionHistory(false)}
+                kasirName={user.full_name}
+              />
+            )}
+
+            {/* Daily Report Modal */}
+            {showDailyReport && user?.full_name && (
+              <POSDailyReport
+                isOpen={showDailyReport}
+                onClose={() => setShowDailyReport(false)}
+                kasirName={user.full_name}
+              />
+            )}
 
             {/* Payment Modal */}
             {showPayment && (

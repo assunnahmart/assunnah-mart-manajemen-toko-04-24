@@ -76,6 +76,11 @@ const Dashboard = () => {
     }
   ];
 
+  // Filter quick actions for kasir - only show POS System
+  const filteredQuickActions = user?.role === 'kasir' 
+    ? quickActions.filter(action => action.path === '/pos')
+    : quickActions;
+
   return (
     <NewProtectedRoute>
       <Layout>
@@ -85,14 +90,18 @@ const Dashboard = () => {
           <div className="container mx-auto p-6">
             <div className="mb-8">
               <h1 className="text-3xl font-bold text-gray-900 mb-2">
-                Dashboard Kasir Pro
+                {user?.role === 'kasir' ? 'Dashboard Kasir' : 'Dashboard Kasir Pro'}
               </h1>
               <p className="text-gray-600">
-                Selamat datang, {user?.full_name}! Kelola toko Anda dengan mudah.
+                Selamat datang, {user?.full_name}! 
+                {user?.role === 'kasir' 
+                  ? ' Anda dapat mengakses sistem POS untuk melakukan transaksi penjualan.'
+                  : ' Kelola toko Anda dengan mudah.'
+                }
               </p>
             </div>
 
-            {/* Stats Cards */}
+            {/* Stats Cards - Hide for kasir except basic stats */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -109,35 +118,39 @@ const Dashboard = () => {
                 </CardContent>
               </Card>
 
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Saldo Kas</CardTitle>
-                  <DollarSign className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">
-                    Rp {(kasSummary?.saldo || 0).toLocaleString('id-ID')}
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    Kas umum saat ini
-                  </p>
-                </CardContent>
-              </Card>
+              {user?.role !== 'kasir' && (
+                <>
+                  <Card>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                      <CardTitle className="text-sm font-medium">Saldo Kas</CardTitle>
+                      <DollarSign className="h-4 w-4 text-muted-foreground" />
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold">
+                        Rp {(kasSummary?.saldo || 0).toLocaleString('id-ID')}
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        Kas umum saat ini
+                      </p>
+                    </CardContent>
+                  </Card>
 
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Stok Rendah</CardTitle>
-                  <AlertTriangle className="h-4 w-4 text-orange-500" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold text-orange-600">
-                    {stockAlerts?.length || 0}
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    Produk perlu restock
-                  </p>
-                </CardContent>
-              </Card>
+                  <Card>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                      <CardTitle className="text-sm font-medium">Stok Rendah</CardTitle>
+                      <AlertTriangle className="h-4 w-4 text-orange-500" />
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold text-orange-600">
+                        {stockAlerts?.length || 0}
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        Produk perlu restock
+                      </p>
+                    </CardContent>
+                  </Card>
+                </>
+              )}
 
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -153,14 +166,16 @@ const Dashboard = () => {
               </Card>
             </div>
 
-            {/* Quick Actions */}
+            {/* Quick Actions - Filtered for kasir */}
             <Card>
               <CardHeader>
-                <CardTitle>Aksi Cepat</CardTitle>
+                <CardTitle>
+                  {user?.role === 'kasir' ? 'Akses Sistem' : 'Aksi Cepat'}
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {quickActions.map((action) => (
+                  {filteredQuickActions.map((action) => (
                     <Button
                       key={action.title}
                       variant="outline"
@@ -184,8 +199,8 @@ const Dashboard = () => {
               </CardContent>
             </Card>
 
-            {/* Stock Alerts */}
-            {stockAlerts && stockAlerts.length > 0 && (
+            {/* Stock Alerts - Hide for kasir */}
+            {user?.role !== 'kasir' && stockAlerts && stockAlerts.length > 0 && (
               <Card className="mt-6">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
@@ -216,6 +231,30 @@ const Dashboard = () => {
                       Lihat Semua ({stockAlerts.length} produk)
                     </Button>
                   )}
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Additional message for kasir */}
+            {user?.role === 'kasir' && (
+              <Card className="mt-6 bg-blue-50 border-blue-200">
+                <CardContent className="pt-4">
+                  <div className="text-center">
+                    <ShoppingCart className="h-12 w-12 text-blue-500 mx-auto mb-3" />
+                    <h3 className="text-lg font-semibold text-blue-900 mb-2">
+                      Sistem POS Siap Digunakan
+                    </h3>
+                    <p className="text-blue-700 mb-4">
+                      Klik tombol "POS System" di atas untuk mulai melakukan transaksi penjualan.
+                    </p>
+                    <Button 
+                      onClick={() => navigate('/pos')}
+                      className="bg-blue-600 hover:bg-blue-700"
+                    >
+                      <ShoppingCart className="h-4 w-4 mr-2" />
+                      Buka POS System
+                    </Button>
+                  </div>
                 </CardContent>
               </Card>
             )}

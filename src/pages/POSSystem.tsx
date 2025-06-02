@@ -52,13 +52,11 @@ const POSSystem = () => {
     try {
       console.log('Starting transaction synchronization:', { transactionData, items });
       
-      // Sync stock updates for all items
       if (items && items.length > 0) {
         await syncStock(items);
         console.log('Stock synchronized successfully');
       }
       
-      // Sync customer debt if credit payment
       if (transactionData.payment_method === 'credit' && selectedCustomer && selectedCustomer.type !== 'guest') {
         await syncCustomerDebt({
           customer: selectedCustomer,
@@ -209,7 +207,6 @@ const POSSystem = () => {
   const handleBarcodeScanned = (barcode: string) => {
     console.log('Barcode scanned in POS:', barcode);
     
-    // Set search query to trigger search in POSProductSearch
     setSearchQuery(barcode);
     
     toast({
@@ -219,10 +216,9 @@ const POSSystem = () => {
   };
 
   const handleProductAutoAdded = () => {
-    // Clear search query after product is auto-added from barcode
     setTimeout(() => {
       setSearchQuery('');
-    }, 1500); // Give time for the toast to show
+    }, 1500);
   };
 
   // Show different views based on current mode
@@ -307,16 +303,22 @@ const POSSystem = () => {
             </div>
             
             <div className="container mx-auto p-4 max-w-7xl">
-              {/* Header with Actions moved to top left */}
+              {/* Header Layout - Reorganized with three sections */}
               <div className="mb-6">
-                <div className="flex items-start justify-between mb-4">
-                  {/* Left side - Action buttons */}
+                <div className="grid grid-cols-3 gap-6 items-start">
+                  {/* Left Section - Point of Sale System title and Action buttons */}
                   <div className="flex flex-col gap-4">
+                    <div>
+                      <h2 className="text-2xl font-bold text-gray-900 mb-2">Point of Sale System</h2>
+                      <Badge variant="outline" className="border-red-300 text-red-700">
+                        Kasir: {user?.full_name}
+                      </Badge>
+                    </div>
+                    
                     {/* Quick Save and Payment Buttons */}
                     <Card className="border-blue-200">
                       <CardContent className="pt-4">
-                        <div className="flex flex-col gap-3 w-72">
-                          {/* Quick Save Button with F2 indicator */}
+                        <div className="flex flex-col gap-3">
                           <Button
                             onClick={handleQuickSave}
                             disabled={cartItems.length === 0 || createTransaction.isPending}
@@ -327,7 +329,6 @@ const POSSystem = () => {
                             {createTransaction.isPending ? 'Menyimpan...' : 'Simpan ke Database (F2)'}
                           </Button>
 
-                          {/* Regular Payment Button */}
                           <Button
                             onClick={handleRegularPayment}
                             disabled={cartItems.length === 0 || (selectedPaymentMethod === 'credit' && !selectedCustomer)}
@@ -342,7 +343,7 @@ const POSSystem = () => {
                     </Card>
 
                     {/* Customer and Payment Method Selection */}
-                    <div className="space-y-4 w-72">
+                    <div className="space-y-4">
                       <POSCustomerSelect
                         selectedCustomer={selectedCustomer}
                         onCustomerSelect={setSelectedCustomer}
@@ -354,14 +355,13 @@ const POSSystem = () => {
                     </div>
                   </div>
 
-                  {/* Right side - Header Info and Navigation */}
+                  {/* Center Section - Empty space for better layout */}
+                  <div></div>
+
+                  {/* Right Section - Navigation buttons and date */}
                   <div className="flex flex-col items-end gap-4">
                     <div className="text-right">
-                      <h2 className="text-2xl font-bold text-gray-900 mb-2">Point of Sale System</h2>
-                      <div className="flex items-center gap-4 flex-wrap justify-end">
-                        <Badge variant="outline" className="border-red-300 text-red-700">
-                          Kasir: {user?.full_name}
-                        </Badge>
+                      <div className="flex items-center gap-4 flex-wrap justify-end mb-4">
                         <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">
                           {new Date().toLocaleDateString('id-ID', { 
                             weekday: 'long', 
@@ -375,11 +375,11 @@ const POSSystem = () => {
                         </Badge>
                       </div>
                     </div>
-                    <div className="flex gap-2">
+                    <div className="flex flex-col gap-2">
                       <Button
                         variant="outline"
                         onClick={() => setShowReport(true)}
-                        className="border-purple-300 text-purple-700 hover:bg-purple-50"
+                        className="border-purple-300 text-purple-700 hover:bg-purple-50 w-full"
                       >
                         <BarChart className="h-4 w-4 mr-2" />
                         Rekap & Diagram
@@ -387,7 +387,7 @@ const POSSystem = () => {
                       <Button
                         variant="outline"
                         onClick={() => setShowCashierHistory(true)}
-                        className="border-indigo-300 text-indigo-700 hover:bg-indigo-50"
+                        className="border-indigo-300 text-indigo-700 hover:bg-indigo-50 w-full"
                       >
                         <History className="h-4 w-4 mr-2" />
                         Riwayat Kasir
@@ -395,7 +395,7 @@ const POSSystem = () => {
                       <Button
                         variant="outline"
                         onClick={() => setShowHistory(!showHistory)}
-                        className="border-red-300 text-red-700 hover:bg-red-50"
+                        className="border-red-300 text-red-700 hover:bg-red-50 w-full"
                       >
                         <History className="h-4 w-4 mr-2" />
                         Ringkasan
@@ -405,9 +405,9 @@ const POSSystem = () => {
                   </div>
                 </div>
 
-                {/* Credit Payment Warning */}
+                {/* Warning messages */}
                 {selectedPaymentMethod === 'credit' && !selectedCustomer && (
-                  <div className="bg-orange-50 border border-orange-200 p-3 rounded-lg mb-4">
+                  <div className="bg-orange-50 border border-orange-200 p-3 rounded-lg mb-4 mt-4">
                     <p className="text-orange-700 text-sm flex items-center gap-2">
                       <Receipt className="h-4 w-4" />
                       Pembayaran kredit memerlukan pemilihan pelanggan
@@ -415,9 +415,8 @@ const POSSystem = () => {
                   </div>
                 )}
 
-                {/* Sync Status Indicator */}
                 {(isSyncingStock || isSyncingDebt) && (
-                  <div className="bg-blue-50 border border-blue-200 p-3 rounded-lg mb-4">
+                  <div className="bg-blue-50 border border-blue-200 p-3 rounded-lg mb-4 mt-4">
                     <p className="text-blue-700 text-sm flex items-center gap-2">
                       <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-700"></div>
                       Menyinkronisasi data transaksi dengan database...
@@ -426,83 +425,85 @@ const POSSystem = () => {
                 )}
               </div>
 
-              {/* Main Content Layout - Product Search and Cart side by side, larger */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-                {/* Product Search (50% width, taller) */}
-                <div>
-                  {showHistory ? (
-                    <POSTransactionHistory />
-                  ) : (
-                    <Card className="h-[calc(100vh-300px)] border-red-200">
-                      <CardHeader className="pb-4 bg-gradient-to-r from-red-50 to-yellow-50 rounded-t-lg">
-                        <CardTitle className="flex items-center gap-2 text-red-700">
-                          <Search className="h-5 w-5" />
-                          Cari Produk
-                        </CardTitle>
-                        <div className="flex gap-2">
-                          <div className="relative flex-1">
-                            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                            <Input
-                              placeholder="Cari nama produk atau scan barcode..."
-                              value={searchQuery}
-                              onChange={(e) => setSearchQuery(e.target.value)}
-                              className="pl-10 border-red-200 focus:border-red-400"
-                            />
+              {/* Main Content Layout - Centered and taller product search and cart */}
+              <div className="flex justify-center">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 w-full max-w-6xl">
+                  {/* Product Search - Centered and taller */}
+                  <div>
+                    {showHistory ? (
+                      <POSTransactionHistory />
+                    ) : (
+                      <Card className="h-[calc(100vh-200px)] border-red-200">
+                        <CardHeader className="pb-4 bg-gradient-to-r from-red-50 to-yellow-50 rounded-t-lg">
+                          <CardTitle className="flex items-center gap-2 text-red-700">
+                            <Search className="h-5 w-5" />
+                            Cari Produk
+                          </CardTitle>
+                          <div className="flex gap-2">
+                            <div className="relative flex-1">
+                              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                              <Input
+                                placeholder="Cari nama produk atau scan barcode..."
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                className="pl-10 border-red-200 focus:border-red-400"
+                              />
+                            </div>
+                            <Button
+                              variant="outline"
+                              onClick={() => setShowScanner(true)}
+                              className="shrink-0 border-red-300 text-red-700 hover:bg-red-50"
+                            >
+                              <Camera className="h-4 w-4 mr-2" />
+                              Scan
+                            </Button>
                           </div>
-                          <Button
-                            variant="outline"
-                            onClick={() => setShowScanner(true)}
-                            className="shrink-0 border-red-300 text-red-700 hover:bg-red-50"
-                          >
-                            <Camera className="h-4 w-4 mr-2" />
-                            Scan
-                          </Button>
-                        </div>
+                        </CardHeader>
+                        <CardContent className="h-[calc(100%-120px)] overflow-hidden">
+                          <POSProductSearch 
+                            searchQuery={searchQuery}
+                            onAddToCart={addToCart}
+                            onProductAutoAdded={handleProductAutoAdded}
+                          />
+                        </CardContent>
+                      </Card>
+                    )}
+                  </div>
+
+                  {/* Shopping Cart - Centered and taller */}
+                  <div>
+                    <Card className="h-[calc(100vh-200px)] border-yellow-200">
+                      <CardHeader className="pb-4 bg-gradient-to-r from-yellow-50 to-orange-50 rounded-t-lg">
+                        <CardTitle className="flex items-center justify-between text-yellow-800">
+                          <span className="flex items-center gap-2">
+                            <ShoppingCart className="h-5 w-5" />
+                            Keranjang Belanja
+                          </span>
+                          <div className="flex gap-2">
+                            <POSReceiptPrint 
+                              cartItems={cartItems}
+                              totalAmount={getTotalAmount()}
+                            />
+                            <Button 
+                              variant="outline" 
+                              size="sm" 
+                              onClick={clearCart}
+                              disabled={cartItems.length === 0}
+                              className="border-red-300 text-red-700 hover:bg-red-50"
+                            >
+                              Clear
+                            </Button>
+                          </div>
+                        </CardTitle>
                       </CardHeader>
-                      <CardContent className="h-[calc(100%-120px)] overflow-hidden">
-                        <POSProductSearch 
-                          searchQuery={searchQuery}
-                          onAddToCart={addToCart}
-                          onProductAutoAdded={handleProductAutoAdded}
+                      <CardContent className="h-[calc(100%-80px)] overflow-hidden">
+                        <POSCart 
+                          items={cartItems}
+                          onUpdateQuantity={updateCartQuantity}
                         />
                       </CardContent>
                     </Card>
-                  )}
-                </div>
-
-                {/* Shopping Cart (50% width, taller) */}
-                <div>
-                  <Card className="h-[calc(100vh-300px)] border-yellow-200">
-                    <CardHeader className="pb-4 bg-gradient-to-r from-yellow-50 to-orange-50 rounded-t-lg">
-                      <CardTitle className="flex items-center justify-between text-yellow-800">
-                        <span className="flex items-center gap-2">
-                          <ShoppingCart className="h-5 w-5" />
-                          Keranjang Belanja
-                        </span>
-                        <div className="flex gap-2">
-                          <POSReceiptPrint 
-                            cartItems={cartItems}
-                            totalAmount={getTotalAmount()}
-                          />
-                          <Button 
-                            variant="outline" 
-                            size="sm" 
-                            onClick={clearCart}
-                            disabled={cartItems.length === 0}
-                            className="border-red-300 text-red-700 hover:bg-red-50"
-                          >
-                            Clear
-                          </Button>
-                        </div>
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent className="h-[calc(100%-80px)] overflow-hidden">
-                      <POSCart 
-                        items={cartItems}
-                        onUpdateQuantity={updateCartQuantity}
-                      />
-                    </CardContent>
-                  </Card>
+                  </div>
                 </div>
               </div>
             </div>

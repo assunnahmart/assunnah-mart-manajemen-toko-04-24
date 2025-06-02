@@ -57,11 +57,7 @@ const NewNavbar = () => {
         <div className="flex justify-between h-16">
           <div className="flex items-center">
             <Link to="/dashboard" className="flex-shrink-0 flex items-center">
-              <img 
-                src="/lovable-uploads/b19ae95c-b38c-40ee-893f-aa5a2366191d.png" 
-                alt="Assunnah Mart Logo" 
-                className="h-8 w-auto"
-              />
+              <span className="text-2xl font-bold text-blue-600">Assunnah Mart</span>
             </Link>
           </div>
 

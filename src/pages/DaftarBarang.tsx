@@ -17,6 +17,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import ProductForm from '@/components/products/ProductForm';
 
 const DaftarBarang = () => {
   const { data: products, isLoading, refetch } = useBarangKonsinyasi();
@@ -187,6 +188,25 @@ const DaftarBarang = () => {
             </CardContent>
           </Card>
         </div>
+
+        {showForm && (
+          <ProductForm
+            product={editingProduct}
+            onClose={() => {
+              setShowForm(false);
+              setEditingProduct(null);
+            }}
+            onSuccess={() => {
+              setShowForm(false);
+              setEditingProduct(null);
+              refetch();
+              toast({
+                title: "Berhasil",
+                description: editingProduct ? "Produk berhasil diperbarui" : "Produk berhasil ditambahkan"
+              });
+            }}
+          />
+        )}
       </div>
     </NewProtectedRoute>
   );

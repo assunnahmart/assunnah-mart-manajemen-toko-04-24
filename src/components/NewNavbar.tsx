@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Menu, X, LogOut, User, Store, Package, ShoppingCart, Calculator, CreditCard, TrendingUp, Users, Settings } from 'lucide-react';
@@ -27,7 +26,7 @@ const NewNavbar = () => {
   const menuItems = [
     { path: '/dashboard', label: 'Dashboard', icon: TrendingUp },
     { path: '/pos', label: 'POS System', icon: Calculator },
-    { path: '/daftar-barang', label: 'Daftar Barang', icon: Package },
+    { path: '/data-produk', label: 'Data Produk', icon: Package },
     { path: '/stock-management', label: 'Stok Management', icon: Store },
     { path: '/konsinyasi', label: 'Konsinyasi', icon: ShoppingCart },
     { path: '/konsinyasi-harian', label: 'Konsinyasi Harian', icon: Package },

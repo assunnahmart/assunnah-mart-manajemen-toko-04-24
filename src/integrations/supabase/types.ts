@@ -18,6 +18,7 @@ export type Database = {
           id: string
           jenis_konsinyasi: string
           kategori_id: string | null
+          kategori_pembelian: string | null
           nama: string
           satuan: string | null
           status: string | null
@@ -34,6 +35,7 @@ export type Database = {
           id?: string
           jenis_konsinyasi: string
           kategori_id?: string | null
+          kategori_pembelian?: string | null
           nama: string
           satuan?: string | null
           status?: string | null
@@ -50,6 +52,7 @@ export type Database = {
           id?: string
           jenis_konsinyasi?: string
           kategori_id?: string | null
+          kategori_pembelian?: string | null
           nama?: string
           satuan?: string | null
           status?: string | null
@@ -1183,6 +1186,10 @@ export type Database = {
           p_jatuh_tempo: string
         }
         Returns: undefined
+      }
+      generate_barcode: {
+        Args: Record<PropertyKey, never>
+        Returns: string
       }
       generate_kas_transaction_number: {
         Args: Record<PropertyKey, never>

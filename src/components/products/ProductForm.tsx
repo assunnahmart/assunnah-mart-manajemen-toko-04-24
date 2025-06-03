@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useCreateBarangKonsinyasi, useUpdateBarangKonsinyasi } from '@/hooks/useBarangKonsinyasi';
 import { useSupplier } from '@/hooks/useSupplier';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 interface Product {
   id?: string;
@@ -51,6 +52,34 @@ const ProductForm = ({ product, onClose, onSuccess }: ProductFormProps) => {
   });
 
   const [loading, setLoading] = useState(false);
+  const [generatingBarcode, setGeneratingBarcode] = useState(false);
+
+  const generateBarcode = async () => {
+    setGeneratingBarcode(true);
+    try {
+      const { data, error } = await supabase.rpc('generate_barcode');
+      if (error) throw error;
+      
+      setFormData(prev => ({
+        ...prev,
+        barcode: data
+      }));
+      
+      toast({
+        title: "Barcode berhasil di-generate",
+        description: `Barcode baru: ${data}`
+      });
+    } catch (error) {
+      console.error('Error generating barcode:', error);
+      toast({
+        title: "Gagal generate barcode",
+        description: "Terjadi kesalahan saat membuat barcode",
+        variant: "destructive"
+      });
+    } finally {
+      setGeneratingBarcode(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -61,6 +90,13 @@ const ProductForm = ({ product, onClose, onSuccess }: ProductFormProps) => {
         ...formData,
         supplier_id: formData.supplier_id === 'none' ? null : formData.supplier_id
       };
+
+      // Auto-generate barcode if empty
+      if (!submitData.barcode) {
+        const { data: newBarcode, error } = await supabase.rpc('generate_barcode');
+        if (error) throw error;
+        submitData.barcode = newBarcode;
+      }
 
       if (product?.id) {
         // Update existing product
@@ -135,11 +171,25 @@ const ProductForm = ({ product, onClose, onSuccess }: ProductFormProps) => {
 
           <div>
             <Label htmlFor="barcode">Barcode</Label>
-            <Input
-              id="barcode"
-              value={formData.barcode}
-              onChange={(e) => handleInputChange('barcode', e.target.value)}
-            />
+            <div className="flex gap-2">
+              <Input
+                id="barcode"
+                value={formData.barcode}
+                onChange={(e) => handleInputChange('barcode', e.target.value)}
+                placeholder="Kosongkan untuk auto-generate"
+              />
+              <Button
+                type="button"
+                variant="outline"
+                onClick={generateBarcode}
+                disabled={generatingBarcode}
+              >
+                {generatingBarcode ? 'Generate...' : 'Generate'}
+              </Button>
+            </div>
+            <p className="text-xs text-gray-500 mt-1">
+              Barcode akan di-generate otomatis jika dikosongkan
+            </p>
           </div>
 
           <div className="grid grid-cols-2 gap-4">

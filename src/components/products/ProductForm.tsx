@@ -45,7 +45,7 @@ const ProductForm = ({ product, onClose, onSuccess }: ProductFormProps) => {
     stok_saat_ini: product?.stok_saat_ini || 0,
     stok_minimal: product?.stok_minimal || 0,
     status: product?.status || 'aktif',
-    supplier_id: product?.supplier_id || ''
+    supplier_id: product?.supplier_id || 'none'
   });
 
   const [loading, setLoading] = useState(false);
@@ -57,7 +57,7 @@ const ProductForm = ({ product, onClose, onSuccess }: ProductFormProps) => {
     try {
       const submitData = {
         ...formData,
-        supplier_id: formData.supplier_id || null
+        supplier_id: formData.supplier_id === 'none' ? null : formData.supplier_id
       };
 
       if (product?.id) {
@@ -121,7 +121,7 @@ const ProductForm = ({ product, onClose, onSuccess }: ProductFormProps) => {
                 <SelectValue placeholder="Pilih supplier" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Tanpa Supplier</SelectItem>
+                <SelectItem value="none">Tanpa Supplier</SelectItem>
                 {suppliers?.map((supplier) => (
                   <SelectItem key={supplier.id} value={supplier.id}>
                     {supplier.nama}

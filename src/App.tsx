@@ -33,14 +33,14 @@ const App = () => (
           <Route path="/login" element={<Login />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/pos" element={<POSSystem />} />
-          <Route path="/products" element={<DaftarProduk />} />
+          <Route path="/daftar-produk" element={<DaftarProduk />} />
           <Route path="/admin" element={<AdminPanel />} />
           <Route path="/konsinyasi" element={<Konsinyasi />} />
           <Route path="/konsinyasi-harian" element={<KonsinyasiHarianPage />} />
           <Route path="/purchase" element={<PurchasePage />} />
           <Route path="/kas-umum" element={<KasUmumPage />} />
           <Route path="/kasir-kas" element={<KasirKasPage />} />
-          <Route path="/stock" element={<StockManagementPage />} />
+          <Route path="/stock-management" element={<StockManagementPage />} />
           <Route path="/penjualan-kredit" element={<PenjualanKredit />} />
           <Route path="/kasir-management" element={<KasirManagement />} />
           <Route path="*" element={<NotFound />} />

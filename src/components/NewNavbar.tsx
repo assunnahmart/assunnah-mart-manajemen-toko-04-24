@@ -8,13 +8,13 @@ import { useToast } from '@/hooks/use-toast';
 
 const NewNavbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const { user, logout } = useSimpleAuth();
+  const { user, signOut } = useSimpleAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
 
   const handleLogout = () => {
-    logout();
+    signOut();
     toast({
       title: "Logout berhasil",
       description: "Anda telah keluar dari sistem"

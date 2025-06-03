@@ -1,9 +1,8 @@
-
 import { useEffect, useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { RefreshCw, CheckCircle, AlertCircle, Sync } from 'lucide-react';
+import { RefreshCw, CheckCircle, AlertCircle, RotateCcw } from 'lucide-react';
 import { usePOSTransactionsToday } from '@/hooks/usePOSTransactions';
 import { useStockMutations, useStockSyncStatus } from '@/hooks/useStockManagement';
 import { useQueryClient } from '@tanstack/react-query';
@@ -102,7 +101,7 @@ const StockSyncNotification = () => {
               onClick={handleForceSync}
               className="flex items-center gap-2"
             >
-              <Sync className="h-4 w-4" />
+              <RotateCcw className="h-4 w-4" />
               Force Sync
             </Button>
           </div>

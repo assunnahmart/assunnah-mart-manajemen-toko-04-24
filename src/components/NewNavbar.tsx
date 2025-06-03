@@ -1,112 +1,180 @@
-import { Link } from 'react-router-dom';
+
+import { useState } from 'react';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { Menu, X, LogOut, User, Store, Package, ShoppingCart, Calculator, CreditCard, TrendingUp, Users, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { 
-  ShoppingCart, 
-  Package, 
-  Users, 
-  BarChart3, 
-  LogOut,
-  Home,
-  DollarSign,
-  ShoppingBag,
-  ClipboardList,
-  PackageCheck,
-  Wallet
-} from 'lucide-react';
 import { useSimpleAuth } from '@/hooks/useSimpleAuth';
+import { useToast } from '@/hooks/use-toast';
 
 const NewNavbar = () => {
-  const { user, signOut } = useSimpleAuth();
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const { user, logout } = useSimpleAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { toast } = useToast();
 
   const handleLogout = () => {
-    signOut();
+    logout();
+    toast({
+      title: "Logout berhasil",
+      description: "Anda telah keluar dari sistem"
+    });
+    navigate('/login');
   };
 
-  // Hide navigation menu for kasir role
-  if (user?.role === 'kasir') {
-    return (
-      <nav className="bg-white shadow-sm border-b">
-        <div className="container mx-auto px-4">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center space-x-4">
-              <Link to="/dashboard" className="text-xl font-bold text-gray-900">
-                Kasir Pro
+  const isActive = (path: string) => location.pathname === path;
+
+  const menuItems = [
+    { path: '/dashboard', label: 'Dashboard', icon: TrendingUp },
+    { path: '/pos', label: 'POS System', icon: Calculator },
+    { path: '/daftar-produk', label: 'Daftar Produk', icon: Package },
+    { path: '/stock-management', label: 'Stok Management', icon: Store },
+    { path: '/konsinyasi', label: 'Konsinyasi', icon: ShoppingCart },
+    { path: '/konsinyasi-harian', label: 'Konsinyasi Harian', icon: Package },
+    { path: '/purchase', label: 'Pembelian', icon: ShoppingCart },
+    { path: '/penjualan-kredit', label: 'Penjualan Kredit', icon: CreditCard },
+    { path: '/kasir-kas', label: 'Kasir Kas', icon: CreditCard },
+    { path: '/kas-umum', label: 'Kas Umum', icon: CreditCard },
+  ];
+
+  const adminMenuItems = [
+    { path: '/admin', label: 'Admin Panel', icon: Settings },
+    { path: '/kasir-management', label: 'Kasir Management', icon: Users },
+  ];
+
+  return (
+    <nav className="bg-white shadow-lg border-b">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex justify-between h-16">
+          <div className="flex items-center">
+            <Link to="/dashboard" className="flex-shrink-0 flex items-center">
+              <Store className="h-8 w-8 text-blue-600" />
+              <span className="ml-2 text-xl font-bold text-gray-900">Assunnah Mart</span>
+            </Link>
+          </div>
+
+          {/* Desktop Menu */}
+          <div className="hidden md:flex items-center space-x-4">
+            {menuItems.map((item) => (
+              <Link
+                key={item.path}
+                to={item.path}
+                className={`flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                  isActive(item.path)
+                    ? 'bg-blue-100 text-blue-700'
+                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                }`}
+              >
+                <item.icon className="h-4 w-4 mr-2" />
+                {item.label}
               </Link>
+            ))}
+
+            {user?.role === 'admin' && (
+              <>
+                {adminMenuItems.map((item) => (
+                  <Link
+                    key={item.path}
+                    to={item.path}
+                    className={`flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                      isActive(item.path)
+                        ? 'bg-blue-100 text-blue-700'
+                        : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                    }`}
+                  >
+                    <item.icon className="h-4 w-4 mr-2" />
+                    {item.label}
+                  </Link>
+                ))}
+              </>
+            )}
+
+            <div className="flex items-center space-x-2 ml-4 pl-4 border-l">
+              <div className="flex items-center space-x-2">
+                <User className="h-4 w-4 text-gray-600" />
+                <span className="text-sm text-gray-600">{user?.full_name}</span>
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleLogout}
+                className="text-gray-600 hover:text-red-600"
+              >
+                <LogOut className="h-4 w-4" />
+              </Button>
             </div>
-            
-            <div className="flex items-center space-x-4">
-              <span className="text-sm text-gray-600">
-                {user?.full_name} ({user?.role})
-              </span>
-              <Button variant="ghost" size="sm" onClick={handleLogout}>
-                <LogOut className="h-4 w-4 mr-2" />
+          </div>
+
+          {/* Mobile menu button */}
+          <div className="md:hidden flex items-center">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+            >
+              {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+            </Button>
+          </div>
+        </div>
+      </div>
+
+      {/* Mobile Menu */}
+      {isMenuOpen && (
+        <div className="md:hidden">
+          <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3 bg-white border-t">
+            {menuItems.map((item) => (
+              <Link
+                key={item.path}
+                to={item.path}
+                className={`flex items-center px-3 py-2 rounded-md text-base font-medium transition-colors ${
+                  isActive(item.path)
+                    ? 'bg-blue-100 text-blue-700'
+                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                }`}
+                onClick={() => setIsMenuOpen(false)}
+              >
+                <item.icon className="h-5 w-5 mr-3" />
+                {item.label}
+              </Link>
+            ))}
+
+            {user?.role === 'admin' && (
+              <>
+                {adminMenuItems.map((item) => (
+                  <Link
+                    key={item.path}
+                    to={item.path}
+                    className={`flex items-center px-3 py-2 rounded-md text-base font-medium transition-colors ${
+                      isActive(item.path)
+                        ? 'bg-blue-100 text-blue-700'
+                        : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                    }`}
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    <item.icon className="h-5 w-5 mr-3" />
+                    {item.label}
+                  </Link>
+                ))}
+              </>
+            )}
+
+            <div className="border-t pt-4 mt-4">
+              <div className="flex items-center px-3 py-2">
+                <User className="h-5 w-5 text-gray-600 mr-3" />
+                <span className="text-base text-gray-600">{user?.full_name}</span>
+              </div>
+              <Button
+                variant="ghost"
+                className="w-full justify-start text-red-600 hover:text-red-700 hover:bg-red-50"
+                onClick={handleLogout}
+              >
+                <LogOut className="h-5 w-5 mr-3" />
                 Logout
               </Button>
             </div>
           </div>
         </div>
-      </nav>
-    );
-  }
-
-  return (
-    <nav className="bg-white shadow-sm border-b">
-      <div className="container mx-auto px-4">
-        <div className="flex justify-between items-center h-16">
-          <div className="flex items-center space-x-4">
-            <Link to="/dashboard" className="text-xl font-bold text-gray-900">
-              Kasir Pro
-            </Link>
-          </div>
-          
-          <div className="hidden md:flex items-center space-x-6">
-            <Link to="/dashboard" className="flex items-center space-x-2 text-gray-600 hover:text-gray-900">
-              <Home className="h-4 w-4" />
-              <span>Dashboard</span>
-            </Link>
-            
-            <Link to="/pos" className="flex items-center space-x-2 text-gray-600 hover:text-gray-900">
-              <ShoppingCart className="h-4 w-4" />
-              <span>POS</span>
-            </Link>
-            
-            <Link to="/products" className="flex items-center space-x-2 text-gray-600 hover:text-gray-900">
-              <Package className="h-4 w-4" />
-              <span>Produk</span>
-            </Link>
-            
-            <Link to="/purchase" className="flex items-center space-x-2 text-gray-600 hover:text-gray-900">
-              <ShoppingBag className="h-4 w-4" />
-              <span>Pembelian</span>
-            </Link>
-            
-            <Link to="/stock" className="flex items-center space-x-2 text-gray-600 hover:text-gray-900">
-              <ClipboardList className="h-4 w-4" />
-              <span>Stok</span>
-            </Link>
-            
-            <Link to="/kas-umum" className="flex items-center space-x-2 text-gray-600 hover:text-gray-900">
-              <DollarSign className="h-4 w-4" />
-              <span>Kas Umum</span>
-            </Link>
-            
-            <Link to="/admin" className="flex items-center space-x-2 text-gray-600 hover:text-gray-900">
-              <BarChart3 className="h-4 w-4" />
-              <span>Laporan</span>
-            </Link>
-          </div>
-          
-          <div className="flex items-center space-x-4">
-            <span className="text-sm text-gray-600">
-              {user?.full_name} ({user?.role})
-            </span>
-            <Button variant="ghost" size="sm" onClick={handleLogout}>
-              <LogOut className="h-4 w-4 mr-2" />
-              Logout
-            </Button>
-          </div>
-        </div>
-      </div>
+      )}
     </nav>
   );
 };

@@ -99,14 +99,27 @@ export const useCreateKonsinyasiHarian = () => {
 
   return useMutation({
     mutationFn: async (data: any) => {
-      const { error } = await supabase
-        .from('konsinyasi_harian')
-        .insert(data);
+      console.log('Creating konsinyasi harian with data:', data);
       
-      if (error) throw error;
+      const { data: result, error } = await supabase
+        .from('konsinyasi_harian')
+        .insert([data])
+        .select()
+        .single();
+      
+      if (error) {
+        console.error('Supabase error:', error);
+        throw new Error(`Database error: ${error.message}`);
+      }
+      
+      console.log('Successfully created konsinyasi:', result);
+      return result;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['konsinyasi_harian'] });
+    },
+    onError: (error) => {
+      console.error('Mutation error:', error);
     },
   });
 };

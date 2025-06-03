@@ -12,15 +12,19 @@ export const useKonsinyasiPayment = () => {
 
   return useMutation({
     mutationFn: async ({ 
+      konsinyasiId, 
       konsinyasiData, 
       kasirId, 
       kasirName 
     }: { 
+      konsinyasiId: string;
       konsinyasiData: any; 
       kasirId: string; 
       kasirName: string; 
     }) => {
       try {
+        console.log('Processing konsinyasi payment:', { konsinyasiId, konsinyasiData, kasirId, kasirName });
+        
         // Create kasir kas transaction (outgoing) - don't pass kasir_id as UUID since our system uses string IDs
         await createKasirTransaction.mutateAsync({
           kasir_id: null, // Set to null since our kasir table expects UUID but auth system uses strings
@@ -30,7 +34,7 @@ export const useKonsinyasiPayment = () => {
           jumlah: konsinyasiData.total_pembayaran,
           keterangan: `Pembayaran konsinyasi ${konsinyasiData.product_name} - ${konsinyasiData.supplier_name}`,
           referensi_tipe: 'konsinyasi_payment',
-          referensi_id: konsinyasiData.id,
+          referensi_id: konsinyasiId, // Use the actual konsinyasi ID from database
           sync_to_kas_umum: true
         });
 

@@ -88,14 +88,18 @@ const KonsinyasiHarianForm = () => {
         keterangan
       };
 
-      await createKonsinyasi.mutateAsync(konsinyasiData);
+      console.log('Creating konsinyasi with data:', konsinyasiData);
+      const createdKonsinyasi = await createKonsinyasi.mutateAsync(konsinyasiData);
+      console.log('Created konsinyasi result:', createdKonsinyasi);
 
       // Process payment if checked
       if (processPayment && totalPembayaran > 0) {
+        console.log('Processing payment for konsinyasi ID:', createdKonsinyasi.id);
         await processPaymentMutation.mutateAsync({
+          konsinyasiId: createdKonsinyasi.id, // Use the actual ID from database
           konsinyasiData: {
             ...konsinyasiData,
-            id: Date.now().toString() // Temporary ID for reference
+            id: createdKonsinyasi.id
           },
           kasirId: user?.kasir_id || '',
           kasirName: user?.full_name || ''
@@ -118,6 +122,7 @@ const KonsinyasiHarianForm = () => {
       setKeterangan('');
       setProcessPayment(false);
     } catch (error) {
+      console.error('Error in handleSubmit:', error);
       toast({
         title: "Gagal menyimpan konsinyasi",
         description: error.message,

@@ -1,13 +1,20 @@
 
 import { ReactNode } from 'react';
+import { useSimpleAuth } from '@/hooks/useSimpleAuth';
+import NewNavbar from './NewNavbar';
 
 interface LayoutProps {
   children: ReactNode;
 }
 
 const Layout = ({ children }: LayoutProps) => {
+  const { user } = useSimpleAuth();
+
   return (
     <div className="min-h-screen flex flex-col">
+      {/* Only show navbar if user is not kasir */}
+      {user?.role !== 'kasir' && <NewNavbar />}
+      
       <main className="flex-1">
         {children}
       </main>

@@ -33,6 +33,9 @@ const POSProductSearch = ({ searchQuery, onAddToCart, onProductAutoAdded, enable
   const [autoAddProcessed, setAutoAddProcessed] = useState<string>('');
   const { data: products = [], isLoading, error } = useBarang(searchQuery);
 
+  console.log('POS Product Search - Search Query:', searchQuery);
+  console.log('POS Product Search - Products:', products);
+
   useEffect(() => {
     // Auto-add if exact barcode match is found and not already processed
     if (searchQuery.length > 5 && searchQuery !== autoAddProcessed) {
@@ -102,11 +105,12 @@ const POSProductSearch = ({ searchQuery, onAddToCart, onProductAutoAdded, enable
   }
 
   if (error) {
+    console.error('POS Product Search Error:', error);
     return (
       <div className="text-center py-8 text-red-500">
         <Package className="h-12 w-12 mx-auto mb-4 text-red-300" />
         <p>Gagal memuat data produk</p>
-        <p className="text-sm">Periksa koneksi database</p>
+        <p className="text-sm">Periksa koneksi database: {error.message}</p>
       </div>
     );
   }
@@ -116,7 +120,9 @@ const POSProductSearch = ({ searchQuery, onAddToCart, onProductAutoAdded, enable
       <div className="text-center py-8 text-gray-500">
         <Package className="h-12 w-12 mx-auto mb-4 text-gray-300" />
         <p>Tidak ada produk ditemukan</p>
-        <p className="text-sm">Coba kata kunci lain atau scan barcode</p>
+        <p className="text-sm">
+          {searchQuery ? `Tidak ada produk dengan kata kunci "${searchQuery}"` : 'Coba kata kunci lain atau scan barcode'}
+        </p>
       </div>
     );
   }
@@ -161,7 +167,7 @@ const POSProductSearch = ({ searchQuery, onAddToCart, onProductAutoAdded, enable
                 </TableCell>
                 <TableCell>
                   <span className="text-lg font-bold text-blue-600">
-                    Rp {Number(product.harga_jual).toLocaleString('id-ID')}
+                    Rp {Number(product.harga_jual || 0).toLocaleString('id-ID')}
                   </span>
                 </TableCell>
                 <TableCell>
@@ -180,7 +186,7 @@ const POSProductSearch = ({ searchQuery, onAddToCart, onProductAutoAdded, enable
                     onClick={() => onAddToCart({
                       id: product.id,
                       nama: product.nama,
-                      harga_jual: Number(product.harga_jual),
+                      harga_jual: Number(product.harga_jual || 0),
                       stok_saat_ini: product.stok_saat_ini,
                       satuan: product.satuan || 'pcs',
                       barcode: product.barcode || undefined

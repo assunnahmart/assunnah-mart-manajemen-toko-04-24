@@ -9,7 +9,7 @@ type BarangKonsinyasiUpdate = TablesUpdate<'barang_konsinyasi'>;
 
 export const useBarang = (searchQuery?: string) => {
   return useQuery({
-    queryKey: ['barang', searchQuery],
+    queryKey: ['barang_konsinyasi', searchQuery],
     queryFn: async () => {
       let query = supabase
         .from('barang_konsinyasi')
@@ -17,7 +17,8 @@ export const useBarang = (searchQuery?: string) => {
           *,
           kategori_barang (nama),
           supplier!supplier_id (nama)
-        `);
+        `)
+        .eq('status', 'aktif'); // Only show active products in POS
       
       if (searchQuery && searchQuery.trim()) {
         query = query.or(`nama.ilike.%${searchQuery}%,barcode.ilike.%${searchQuery}%`);
@@ -25,8 +26,38 @@ export const useBarang = (searchQuery?: string) => {
       
       const { data, error } = await query.order('nama');
       
-      if (error) throw error;
-      return data;
+      if (error) {
+        console.error('Error fetching barang:', error);
+        throw error;
+      }
+      
+      console.log('Fetched barang data:', data);
+      return data || [];
+    },
+  });
+};
+
+export const useBarangKonsinyasi = () => {
+  return useQuery({
+    queryKey: ['barang_konsinyasi'],
+    queryFn: async () => {
+      const query = supabase
+        .from('barang_konsinyasi')
+        .select(`
+          *,
+          kategori_barang (nama),
+          supplier!supplier_id (nama)
+        `);
+      
+      const { data, error } = await query.order('nama');
+      
+      if (error) {
+        console.error('Error fetching barang konsinyasi:', error);
+        throw error;
+      }
+      
+      console.log('Fetched barang konsinyasi data:', data);
+      return data || [];
     },
   });
 };

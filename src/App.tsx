@@ -8,7 +8,7 @@ import Index from "./pages/Index";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import POSSystem from "./pages/POSSystem";
-import DaftarProduk from "./pages/DaftarProduk";
+import DaftarBarang from "./pages/DaftarBarang";
 import AdminPanel from "./pages/AdminPanel";
 import Konsinyasi from "./pages/Konsinyasi";
 import PurchasePage from "./pages/PurchasePage";
@@ -40,7 +40,7 @@ const App = () => (
           <Route path="/login" element={<Login />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/pos" element={<POSSystem />} />
-          <Route path="/daftar-produk" element={<DaftarProduk />} />
+          <Route path="/daftar-barang" element={<DaftarBarang />} />
           <Route path="/admin" element={<AdminPanel />} />
           <Route path="/konsinyasi" element={<Konsinyasi />} />
           <Route path="/konsinyasi-harian" element={<KonsinyasiHarianPage />} />

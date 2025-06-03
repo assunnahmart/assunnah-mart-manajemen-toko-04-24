@@ -27,7 +27,7 @@ const NewNavbar = () => {
   const menuItems = [
     { path: '/dashboard', label: 'Dashboard', icon: TrendingUp },
     { path: '/pos', label: 'POS System', icon: Calculator },
-    { path: '/daftar-produk', label: 'Daftar Produk', icon: Package },
+    { path: '/daftar-barang', label: 'Daftar Barang', icon: Package },
     { path: '/stock-management', label: 'Stok Management', icon: Store },
     { path: '/konsinyasi', label: 'Konsinyasi', icon: ShoppingCart },
     { path: '/konsinyasi-harian', label: 'Konsinyasi Harian', icon: Package },

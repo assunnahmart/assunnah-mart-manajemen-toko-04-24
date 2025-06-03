@@ -21,9 +21,9 @@ export const useKonsinyasiPayment = () => {
       kasirName: string; 
     }) => {
       try {
-        // Create kasir kas transaction (outgoing)
+        // Create kasir kas transaction (outgoing) - don't pass kasir_id as UUID since our system uses string IDs
         await createKasirTransaction.mutateAsync({
-          kasir_id: kasirId,
+          kasir_id: null, // Set to null since our kasir table expects UUID but auth system uses strings
           kasir_name: kasirName,
           jenis_transaksi: 'keluar',
           kategori: 'konsinyasi',

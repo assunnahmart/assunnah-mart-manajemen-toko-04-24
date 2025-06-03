@@ -16,7 +16,7 @@ export const useBarang = (searchQuery?: string) => {
         .select(`
           *,
           kategori_barang (nama),
-          supplier!supplier_id (nama)
+          supplier!barang_konsinyasi_supplier_id_fkey (nama)
         `)
         .eq('status', 'aktif'); // Only show active products in POS
       
@@ -46,7 +46,7 @@ export const useBarangKonsinyasi = () => {
         .select(`
           *,
           kategori_barang (nama),
-          supplier!supplier_id (nama)
+          supplier!barang_konsinyasi_supplier_id_fkey (nama)
         `);
       
       const { data, error } = await query.order('nama');

@@ -285,7 +285,11 @@ const POSSystem = () => {
                 <div className="flex items-center justify-between text-white">
                   <div className="flex items-center gap-4">
                     <div className="bg-red-500 p-3 rounded-lg shadow-lg">
-                      <DollarSign className="h-8 w-8" />
+                      <img 
+                        src="/lovable-uploads/163a7d14-7869-47b2-b33b-40be703e48e1.png" 
+                        alt="Assunnah Mart Logo" 
+                        className="h-8 w-8 object-contain"
+                      />
                     </div>
                     <div>
                       <p className="text-yellow-100 text-xl font-bold mb-2">Assunnah Mart</p>

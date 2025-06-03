@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -8,10 +9,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Package, AlertTriangle, TrendingDown, TrendingUp, Search, Edit, Eye, RefreshCw } from 'lucide-react';
+import { Package, AlertTriangle, Search, Edit, RefreshCw } from 'lucide-react';
 import { useStockData, useLowStockProducts, useUpdateStock } from '@/hooks/useStockManagement';
 import { useToast } from '@/hooks/use-toast';
-import StockSyncNotification from './StockSyncNotification';
 
 const StockManagement = () => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -81,58 +81,8 @@ const StockManagement = () => {
     );
   }
 
-  const totalProducts = stockData?.length || 0;
-  const lowStockCount = lowStockProducts?.length || 0;
-  const totalStockValue = stockData?.reduce((sum, item) => 
-    sum + (item.harga_beli * item.stok_saat_ini), 0
-  ) || 0;
-
   return (
     <div className="space-y-6">
-      {/* Stock Synchronization Status */}
-      <StockSyncNotification />
-
-      {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Total Produk</p>
-                <p className="text-2xl font-bold">{totalProducts}</p>
-              </div>
-              <Package className="h-8 w-8 text-blue-600" />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Stok Rendah</p>
-                <p className="text-2xl font-bold text-orange-600">{lowStockCount}</p>
-              </div>
-              <AlertTriangle className="h-8 w-8 text-orange-600" />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Nilai Stok</p>
-                <p className="text-2xl font-bold text-green-600">
-                  Rp {totalStockValue.toLocaleString('id-ID')}
-                </p>
-              </div>
-              <TrendingUp className="h-8 w-8 text-green-600" />
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
       <Tabs defaultValue="all-stock" className="space-y-4">
         <TabsList>
           <TabsTrigger value="all-stock" className="flex items-center gap-2">
@@ -141,7 +91,7 @@ const StockManagement = () => {
           </TabsTrigger>
           <TabsTrigger value="low-stock" className="flex items-center gap-2">
             <AlertTriangle className="h-4 w-4" />
-            Stok Rendah ({lowStockCount})
+            Stok Rendah ({lowStockProducts?.length || 0})
           </TabsTrigger>
         </TabsList>
 
@@ -152,7 +102,7 @@ const StockManagement = () => {
                 <span>Manajemen Stok Produk</span>
                 <Badge variant="outline" className="bg-green-50 text-green-700">
                   <RefreshCw className="h-3 w-3 mr-1" />
-                  Tersinkronisasi dengan POS
+                  Tersinkronisasi dengan POS & Pembelian
                 </Badge>
               </CardTitle>
               <div className="relative">

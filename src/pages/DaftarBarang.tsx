@@ -18,6 +18,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import ProductForm from '@/components/products/ProductForm';
+import ProductExportImport from '@/components/products/ProductExportImport';
 
 const DaftarBarang = () => {
   const { data: products, isLoading, refetch } = useBarangKonsinyasi();
@@ -89,6 +90,14 @@ const DaftarBarang = () => {
                   Tambah Barang
                 </Button>
               </div>
+            </div>
+
+            {/* Export/Import Controls */}
+            <div className="mb-4">
+              <ProductExportImport 
+                products={products || []} 
+                onImportSuccess={refetch}
+              />
             </div>
 
             {/* Search */}

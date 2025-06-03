@@ -155,6 +155,7 @@ const ProductForm = ({ product, onClose, onSuccess }: ProductFormProps) => {
                 <SelectContent>
                   <SelectItem value="harian">Harian</SelectItem>
                   <SelectItem value="mingguan">Mingguan</SelectItem>
+                  <SelectItem value="pembelian">Pembelian</SelectItem>
                 </SelectContent>
               </Select>
             </div>

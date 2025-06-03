@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import NewProtectedRoute from '@/components/NewProtectedRoute';
 import NewNavbar from '@/components/NewNavbar';
@@ -30,8 +29,7 @@ const DaftarProduk = () => {
   const filteredProducts = products?.filter(product =>
     product.nama.toLowerCase().includes(searchQuery.toLowerCase()) ||
     product.barcode?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    product.supplier?.nama?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    product.kategori_pembelian?.toLowerCase().includes(searchQuery.toLowerCase())
+    product.supplier?.nama?.toLowerCase().includes(searchQuery.toLowerCase())
   ) || [];
 
   const handleEdit = (product) => {
@@ -101,7 +99,7 @@ const DaftarProduk = () => {
             <div className="relative mb-4">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
               <Input
-                placeholder="Cari nama produk, barcode, supplier, atau kategori..."
+                placeholder="Cari nama produk, barcode, supplier..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-10"

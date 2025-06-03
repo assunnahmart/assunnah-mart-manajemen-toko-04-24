@@ -23,6 +23,29 @@ export const useBarangKonsinyasi = () => {
   });
 };
 
+export const useBarangStokRendah = () => {
+  return useQuery({
+    queryKey: ['barang-stok-rendah'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('barang_konsinyasi')
+        .select(`
+          *,
+          supplier!supplier_id (
+            id,
+            nama
+          )
+        `)
+        .filter('stok_saat_ini', 'lte', 'stok_minimal')
+        .eq('status', 'aktif')
+        .order('nama');
+
+      if (error) throw error;
+      return data;
+    },
+  });
+};
+
 export const useCreateBarangKonsinyasi = () => {
   const queryClient = useQueryClient();
   
@@ -39,6 +62,7 @@ export const useCreateBarangKonsinyasi = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['barang-konsinyasi'] });
+      queryClient.invalidateQueries({ queryKey: ['barang-stok-rendah'] });
     },
   });
 };
@@ -60,6 +84,7 @@ export const useUpdateBarangKonsinyasi = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['barang-konsinyasi'] });
+      queryClient.invalidateQueries({ queryKey: ['barang-stok-rendah'] });
     },
   });
 };
@@ -78,6 +103,7 @@ export const useDeleteBarangKonsinyasi = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['barang-konsinyasi'] });
+      queryClient.invalidateQueries({ queryKey: ['barang-stok-rendah'] });
     },
   });
 };

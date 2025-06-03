@@ -6,11 +6,12 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Search, ShoppingCart, Save, CreditCard, Camera, DollarSign, ChevronUp, ChevronDown, Clock, FileText, History, Package, Wallet, ClipboardList } from 'lucide-react';
+import { Search, ShoppingCart, Save, CreditCard, Camera, DollarSign, ChevronUp, ChevronDown, Clock, FileText, History, Package, Wallet, ClipboardList, LogOut } from 'lucide-react';
 import { useSimpleAuth } from '@/hooks/useSimpleAuth';
 import { useCreatePOSTransaction } from '@/hooks/usePOSTransactions';
 import { usePOSTransactionSync } from '@/hooks/usePOSTransactionSync';
 import { useToast } from '@/hooks/use-toast';
+import { useNavigate } from 'react-router-dom';
 import POSCart from '@/components/pos/POSCart';
 import POSProductSearch from '@/components/pos/POSProductSearch';
 import POSPayment from '@/components/pos/POSPayment';
@@ -34,8 +35,9 @@ interface Customer {
 }
 
 const POSSystem = () => {
-  const { user } = useSimpleAuth();
+  const { user, signOut } = useSimpleAuth();
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [cartItems, setCartItems] = useState([]);
   const [showPayment, setShowPayment] = useState(false);
   const [showScanner, setShowScanner] = useState(false);
@@ -103,6 +105,16 @@ const POSSystem = () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
   }, [cartItems, selectedPaymentMethod, selectedCustomer, user, createTransaction]);
+
+  // Add logout function
+  const handleLogout = () => {
+    signOut();
+    toast({
+      title: "Logout berhasil",
+      description: "Anda telah keluar dari sistem"
+    });
+    navigate('/login');
+  };
 
   const addToCart = (product) => {
     const existingItem = cartItems.find(item => item.id === product.id);
@@ -276,6 +288,7 @@ const POSSystem = () => {
                       <DollarSign className="h-8 w-8" />
                     </div>
                     <div>
+                      <p className="text-yellow-100 text-xl font-bold mb-2">Assunnah Mart</p>
                       <p className="text-yellow-100 text-sm font-medium mb-1">Total Belanja Saat Ini</p>
                       <p className="text-3xl font-bold text-white drop-shadow-md">
                         Rp {getTotalAmount().toLocaleString('id-ID')}
@@ -346,6 +359,14 @@ const POSSystem = () => {
                 >
                   <FileText className="h-4 w-4 mr-2" />
                   Cetak Laporan
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={handleLogout}
+                  className="bg-white hover:bg-red-50 border-red-300 text-red-700"
+                >
+                  <LogOut className="h-4 w-4 mr-2" />
+                  Keluar
                 </Button>
               </div>
             </div>
@@ -529,7 +550,7 @@ const POSSystem = () => {
               <div className="bg-white rounded-lg max-w-6xl w-full max-h-[90vh] overflow-hidden">
                 <div className="flex items-center justify-between p-6 border-b">
                   <h2 className="text-xl font-semibold flex items-center gap-2">
-                    <ClipboardList className="h-5 w-5" />
+                    <ClipboardList className="h-5 w-4" />
                     Stok Opname
                   </h2>
                   <Button

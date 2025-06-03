@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Search, Edit, Package, Plus } from 'lucide-react';
-import { useBarangKonsinyasi } from '@/hooks/useBarangKonsinyasi';
+import { useBarangKonsinyasi } from '@/hooks/useBarang';
 import { useToast } from '@/hooks/use-toast';
 import {
   Table,
@@ -92,11 +92,17 @@ const DataProduk = () => {
               </div>
             </div>
 
-            {/* Export/Import Controls */}
+            {/* Export/Import Controls - Make sure this is visible */}
             <div className="mb-4">
               <ProductExportImport 
                 products={products || []} 
-                onImportSuccess={refetch}
+                onImportSuccess={() => {
+                  refetch();
+                  toast({
+                    title: "Import berhasil",
+                    description: "Data produk berhasil diimpor"
+                  });
+                }}
               />
             </div>
 
@@ -133,6 +139,12 @@ const DataProduk = () => {
                   <p className="text-gray-600">
                     {searchQuery ? 'Produk tidak ditemukan' : 'Belum ada produk'}
                   </p>
+                  {!searchQuery && (
+                    <Button onClick={handleAddNew} className="mt-4">
+                      <Plus className="h-4 w-4 mr-2" />
+                      Tambah Produk Pertama
+                    </Button>
+                  )}
                 </div>
               ) : (
                 <div className="overflow-x-auto">

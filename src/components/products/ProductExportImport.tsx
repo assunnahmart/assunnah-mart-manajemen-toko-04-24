@@ -1,9 +1,8 @@
-
 import { Button } from '@/components/ui/button';
 import { Download, Upload, FileText } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useSupplier } from '@/hooks/useSupplier';
-import { useCreateBarangKonsinyasi } from '@/hooks/useBarangKonsinyasi';
+import { useCreateBarang } from '@/hooks/useBarang';
 import * as XLSX from 'xlsx';
 import { useState } from 'react';
 import { Progress } from '@/components/ui/progress';
@@ -33,7 +32,7 @@ interface ProductExportImportProps {
 const ProductExportImport = ({ products, onImportSuccess }: ProductExportImportProps) => {
   const { toast } = useToast();
   const { data: suppliers } = useSupplier();
-  const createProduct = useCreateBarangKonsinyasi();
+  const createProduct = useCreateBarang();
   const [isImporting, setIsImporting] = useState(false);
   const [importProgress, setImportProgress] = useState(0);
 

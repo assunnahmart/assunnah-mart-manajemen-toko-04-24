@@ -5,6 +5,8 @@ import { useToast } from '@/hooks/use-toast';
 import { useSupplier } from '@/hooks/useSupplier';
 import { useCreateBarangKonsinyasi } from '@/hooks/useBarangKonsinyasi';
 import * as XLSX from 'xlsx';
+import { useState } from 'react';
+import { Progress } from '@/components/ui/progress';
 
 interface Product {
   id: string;
@@ -17,6 +19,7 @@ interface Product {
   stok_saat_ini: number;
   stok_minimal: number;
   status: string;
+  kategori_pembelian?: string;
   supplier?: {
     nama: string;
   };
@@ -31,6 +34,8 @@ const ProductExportImport = ({ products, onImportSuccess }: ProductExportImportP
   const { toast } = useToast();
   const { data: suppliers } = useSupplier();
   const createProduct = useCreateBarangKonsinyasi();
+  const [isImporting, setIsImporting] = useState(false);
+  const [importProgress, setImportProgress] = useState(0);
 
   const exportToExcel = () => {
     if (!products || products.length === 0) {
@@ -42,11 +47,12 @@ const ProductExportImport = ({ products, onImportSuccess }: ProductExportImportP
       return;
     }
 
-    // Prepare data for export with supplier information
+    // Prepare data for export with all fields including kategori pembelian
     const exportData = products.map(product => ({
       'Nama Produk': product.nama,
       'Barcode': product.barcode || '',
-      'Jenis Konsinyasi': product.jenis_konsinyasi === 'harian' ? 'Harian' : 'Mingguan',
+      'Jenis Barang': product.jenis_konsinyasi === 'harian' ? 'Harian' : 'Mingguan',
+      'Kategori Pembelian': product.kategori_pembelian || 'retail',
       'Satuan': product.satuan,
       'Harga Beli': product.harga_beli || 0,
       'Harga Jual': product.harga_jual || 0,
@@ -79,11 +85,12 @@ const ProductExportImport = ({ products, onImportSuccess }: ProductExportImportP
     // Add worksheet to workbook
     XLSX.utils.book_append_sheet(wb, ws, 'Daftar Produk');
 
-    // Create template sheet
+    // Create template sheet with updated fields
     const templateData = [{
       'Nama Produk': 'Contoh Produk',
       'Barcode': '1234567890',
-      'Jenis Konsinyasi': 'Harian',
+      'Jenis Barang': 'Harian',
+      'Kategori Pembelian': 'retail',
       'Satuan': 'pcs',
       'Harga Beli': 5000,
       'Harga Jual': 7000,
@@ -109,9 +116,64 @@ const ProductExportImport = ({ products, onImportSuccess }: ProductExportImportP
     });
   };
 
+  // Process import in batches for better performance
+  const processBatch = async (batch: any[], batchIndex: number, totalBatches: number) => {
+    const results = { success: 0, errors: [] as string[] };
+    
+    for (let i = 0; i < batch.length; i++) {
+      const row = batch[i];
+      const rowNumber = batchIndex * 100 + i + 2; // +2 because of header row and 1-based indexing
+      
+      try {
+        // Find supplier by name
+        let supplierId = null;
+        if (row['Supplier'] && suppliers) {
+          const supplier = suppliers.find(s => 
+            s.nama.toLowerCase() === row['Supplier'].toString().toLowerCase()
+          );
+          supplierId = supplier?.id || null;
+        }
+
+        // Prepare product data with kategori_pembelian
+        const productData = {
+          nama: row['Nama Produk']?.toString() || '',
+          barcode: row['Barcode']?.toString() || '',
+          jenis_konsinyasi: row['Jenis Barang']?.toString().toLowerCase() === 'mingguan' ? 'mingguan' : 'harian',
+          kategori_pembelian: row['Kategori Pembelian']?.toString().toLowerCase() || 'retail',
+          satuan: row['Satuan']?.toString() || 'pcs',
+          harga_beli: parseFloat(row['Harga Beli']) || 0,
+          harga_jual: parseFloat(row['Harga Jual']) || 0,
+          stok_saat_ini: parseInt(row['Stok Saat Ini']) || 0,
+          stok_minimal: parseInt(row['Stok Minimal']) || 0,
+          status: row['Status']?.toString().toLowerCase() === 'nonaktif' ? 'nonaktif' : 'aktif',
+          supplier_id: supplierId
+        };
+
+        // Validate required fields
+        if (!productData.nama) {
+          results.errors.push(`Baris ${rowNumber}: Nama produk tidak boleh kosong`);
+          continue;
+        }
+
+        // Create product
+        await createProduct.mutateAsync(productData);
+        results.success++;
+
+      } catch (error) {
+        console.error(`Error importing row ${rowNumber}:`, error);
+        results.errors.push(`Baris ${rowNumber}: ${error.message || 'Gagal menyimpan produk'}`);
+      }
+    }
+    
+    return results;
+  };
+
   const handleFileImport = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
+
+    setIsImporting(true);
+    setImportProgress(0);
 
     const reader = new FileReader();
     reader.onload = async (e) => {
@@ -132,79 +194,55 @@ const ProductExportImport = ({ products, onImportSuccess }: ProductExportImportP
             description: "File tidak mengandung data untuk diimpor",
             variant: "destructive"
           });
+          setIsImporting(false);
           return;
         }
 
-        let successCount = 0;
-        let errorCount = 0;
-        const errors: string[] = [];
+        // Process in batches of 100 items for better performance
+        const batchSize = 100;
+        const totalBatches = Math.ceil(jsonData.length / batchSize);
+        let totalSuccess = 0;
+        let allErrors: string[] = [];
 
-        // Process each row
-        for (let i = 0; i < jsonData.length; i++) {
-          const row = jsonData[i];
+        for (let batchIndex = 0; batchIndex < totalBatches; batchIndex++) {
+          const start = batchIndex * batchSize;
+          const end = Math.min(start + batchSize, jsonData.length);
+          const batch = jsonData.slice(start, end);
           
-          try {
-            // Find supplier by name
-            let supplierId = null;
-            if (row['Supplier'] && suppliers) {
-              const supplier = suppliers.find(s => 
-                s.nama.toLowerCase() === row['Supplier'].toString().toLowerCase()
-              );
-              supplierId = supplier?.id || null;
-            }
-
-            // Prepare product data
-            const productData = {
-              nama: row['Nama Produk']?.toString() || '',
-              barcode: row['Barcode']?.toString() || '',
-              jenis_konsinyasi: row['Jenis Konsinyasi']?.toString().toLowerCase() === 'mingguan' ? 'mingguan' : 'harian',
-              satuan: row['Satuan']?.toString() || 'pcs',
-              harga_beli: parseFloat(row['Harga Beli']) || 0,
-              harga_jual: parseFloat(row['Harga Jual']) || 0,
-              stok_saat_ini: parseInt(row['Stok Saat Ini']) || 0,
-              stok_minimal: parseInt(row['Stok Minimal']) || 0,
-              status: row['Status']?.toString().toLowerCase() === 'nonaktif' ? 'nonaktif' : 'aktif',
-              supplier_id: supplierId
-            };
-
-            // Validate required fields
-            if (!productData.nama) {
-              errors.push(`Baris ${i + 2}: Nama produk tidak boleh kosong`);
-              errorCount++;
-              continue;
-            }
-
-            // Create product
-            await createProduct.mutateAsync(productData);
-            successCount++;
-
-          } catch (error) {
-            console.error(`Error importing row ${i + 2}:`, error);
-            errors.push(`Baris ${i + 2}: ${error.message || 'Gagal menyimpan produk'}`);
-            errorCount++;
-          }
+          console.log(`Processing batch ${batchIndex + 1}/${totalBatches} (${batch.length} items)`);
+          
+          const batchResults = await processBatch(batch, batchIndex, totalBatches);
+          totalSuccess += batchResults.success;
+          allErrors = [...allErrors, ...batchResults.errors];
+          
+          // Update progress
+          const progress = ((batchIndex + 1) / totalBatches) * 100;
+          setImportProgress(progress);
+          
+          // Small delay to prevent UI blocking
+          await new Promise(resolve => setTimeout(resolve, 100));
         }
 
         // Show results
-        if (successCount > 0) {
+        if (totalSuccess > 0) {
           onImportSuccess();
           toast({
             title: "Import berhasil",
-            description: `${successCount} produk berhasil diimpor. ${errorCount > 0 ? `${errorCount} produk gagal.` : ''}`
+            description: `${totalSuccess} produk berhasil diimpor. ${allErrors.length > 0 ? `${allErrors.length} produk gagal.` : ''}`
           });
         }
 
-        if (errors.length > 0 && errors.length <= 5) {
+        if (allErrors.length > 0 && allErrors.length <= 5) {
           // Show first few errors
           toast({
             title: "Beberapa produk gagal diimpor",
-            description: errors.slice(0, 3).join('; '),
+            description: allErrors.slice(0, 3).join('; '),
             variant: "destructive"
           });
-        } else if (errors.length > 5) {
+        } else if (allErrors.length > 5) {
           toast({
             title: "Banyak produk gagal diimpor",
-            description: `${errors.length} produk gagal diimpor. Periksa format file.`,
+            description: `${allErrors.length} produk gagal diimpor. Periksa format file.`,
             variant: "destructive"
           });
         }
@@ -216,6 +254,9 @@ const ProductExportImport = ({ products, onImportSuccess }: ProductExportImportP
           description: "Format file tidak valid atau terjadi kesalahan",
           variant: "destructive"
         });
+      } finally {
+        setIsImporting(false);
+        setImportProgress(0);
       }
     };
     
@@ -226,34 +267,46 @@ const ProductExportImport = ({ products, onImportSuccess }: ProductExportImportP
   };
 
   return (
-    <div className="flex gap-2">
-      <Button
-        onClick={exportToExcel}
-        variant="outline"
-        size="sm"
-        className="flex items-center gap-2"
-      >
-        <Download className="h-4 w-4" />
-        Export Excel
-      </Button>
-      
-      <Button
-        variant="outline"
-        size="sm"
-        className="flex items-center gap-2"
-        onClick={() => document.getElementById('import-excel-file')?.click()}
-      >
-        <Upload className="h-4 w-4" />
-        Import Excel
-      </Button>
-      
-      <input
-        id="import-excel-file"
-        type="file"
-        accept=".xlsx,.xls"
-        onChange={handleFileImport}
-        className="hidden"
-      />
+    <div className="space-y-4">
+      <div className="flex gap-2">
+        <Button
+          onClick={exportToExcel}
+          variant="outline"
+          size="sm"
+          className="flex items-center gap-2"
+        >
+          <Download className="h-4 w-4" />
+          Export Excel
+        </Button>
+        
+        <Button
+          variant="outline"
+          size="sm"
+          className="flex items-center gap-2"
+          onClick={() => document.getElementById('import-excel-file')?.click()}
+          disabled={isImporting}
+        >
+          <Upload className="h-4 w-4" />
+          {isImporting ? 'Mengimpor...' : 'Import Excel'}
+        </Button>
+        
+        <input
+          id="import-excel-file"
+          type="file"
+          accept=".xlsx,.xls"
+          onChange={handleFileImport}
+          className="hidden"
+        />
+      </div>
+
+      {isImporting && (
+        <div className="space-y-2">
+          <div className="text-sm text-gray-600">
+            Mengimpor data... {Math.round(importProgress)}%
+          </div>
+          <Progress value={importProgress} className="w-full" />
+        </div>
+      )}
     </div>
   );
 };

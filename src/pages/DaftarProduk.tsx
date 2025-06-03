@@ -30,7 +30,8 @@ const DaftarProduk = () => {
   const filteredProducts = products?.filter(product =>
     product.nama.toLowerCase().includes(searchQuery.toLowerCase()) ||
     product.barcode?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    product.supplier?.nama?.toLowerCase().includes(searchQuery.toLowerCase())
+    product.supplier?.nama?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    product.kategori_pembelian?.toLowerCase().includes(searchQuery.toLowerCase())
   ) || [];
 
   const handleEdit = (product) => {
@@ -100,7 +101,7 @@ const DaftarProduk = () => {
             <div className="relative mb-4">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
               <Input
-                placeholder="Cari nama produk, barcode, atau supplier..."
+                placeholder="Cari nama produk, barcode, supplier, atau kategori..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-10"
@@ -138,7 +139,8 @@ const DaftarProduk = () => {
                         <TableHead>Nama Produk</TableHead>
                         <TableHead>Supplier</TableHead>
                         <TableHead>Barcode</TableHead>
-                        <TableHead>Jenis</TableHead>
+                        <TableHead>Jenis Barang</TableHead>
+                        <TableHead>Kategori</TableHead>
                         <TableHead>Satuan</TableHead>
                         <TableHead>Harga Beli</TableHead>
                         <TableHead>Harga Jual</TableHead>
@@ -164,6 +166,11 @@ const DaftarProduk = () => {
                           <TableCell>
                             <Badge variant="outline">
                               {product.jenis_konsinyasi === 'harian' ? 'Harian' : 'Mingguan'}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant="outline" className="bg-purple-50 text-purple-700">
+                              {product.kategori_pembelian || 'retail'}
                             </Badge>
                           </TableCell>
                           <TableCell>{product.satuan}</TableCell>

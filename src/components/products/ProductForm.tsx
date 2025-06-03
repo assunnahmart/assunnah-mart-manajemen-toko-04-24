@@ -21,6 +21,7 @@ interface Product {
   stok_minimal: number;
   status: string;
   supplier_id?: string;
+  kategori_pembelian?: string;
 }
 
 interface ProductFormProps {
@@ -45,7 +46,8 @@ const ProductForm = ({ product, onClose, onSuccess }: ProductFormProps) => {
     stok_saat_ini: product?.stok_saat_ini || 0,
     stok_minimal: product?.stok_minimal || 0,
     status: product?.status || 'aktif',
-    supplier_id: product?.supplier_id || 'none'
+    supplier_id: product?.supplier_id || 'none',
+    kategori_pembelian: product?.kategori_pembelian || 'retail'
   });
 
   const [loading, setLoading] = useState(false);
@@ -142,7 +144,7 @@ const ProductForm = ({ product, onClose, onSuccess }: ProductFormProps) => {
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <Label htmlFor="jenis_konsinyasi">Jenis Konsinyasi</Label>
+              <Label htmlFor="jenis_konsinyasi">Jenis Barang</Label>
               <Select
                 value={formData.jenis_konsinyasi}
                 onValueChange={(value) => handleInputChange('jenis_konsinyasi', value)}
@@ -158,13 +160,30 @@ const ProductForm = ({ product, onClose, onSuccess }: ProductFormProps) => {
             </div>
 
             <div>
-              <Label htmlFor="satuan">Satuan</Label>
-              <Input
-                id="satuan"
-                value={formData.satuan}
-                onChange={(e) => handleInputChange('satuan', e.target.value)}
-              />
+              <Label htmlFor="kategori_pembelian">Kategori Pembelian</Label>
+              <Select
+                value={formData.kategori_pembelian}
+                onValueChange={(value) => handleInputChange('kategori_pembelian', value)}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="retail">Retail</SelectItem>
+                  <SelectItem value="grosir">Grosir</SelectItem>
+                  <SelectItem value="khusus">Khusus</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
+          </div>
+
+          <div>
+            <Label htmlFor="satuan">Satuan</Label>
+            <Input
+              id="satuan"
+              value={formData.satuan}
+              onChange={(e) => handleInputChange('satuan', e.target.value)}
+            />
           </div>
 
           <div className="grid grid-cols-2 gap-4">

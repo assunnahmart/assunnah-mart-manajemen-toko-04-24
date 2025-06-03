@@ -73,6 +73,13 @@ export type Database = {
             referencedRelation: "supplier"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "fk_barang_konsinyasi_supplier"
+            columns: ["supplier_id"]
+            isOneToOne: false
+            referencedRelation: "supplier"
+            referencedColumns: ["id"]
+          },
         ]
       }
       chart_of_accounts: {

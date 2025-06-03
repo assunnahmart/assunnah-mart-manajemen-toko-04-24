@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Search, Download, Upload, FileText, Edit, Trash2, Package } from 'lucide-react';
+import { Search, Edit, Package } from 'lucide-react';
 import { useBarangKonsinyasi } from '@/hooks/useBarangKonsinyasi';
 import { useToast } from '@/hooks/use-toast';
 import {
@@ -21,7 +21,7 @@ import ProductExportImport from '@/components/products/ProductExportImport';
 import ProductForm from '@/components/products/ProductForm';
 
 const DaftarProduk = () => {
-  const { data: products, isLoading } = useBarangKonsinyasi();
+  const { data: products, isLoading, refetch } = useBarangKonsinyasi();
   const { toast } = useToast();
   const [searchQuery, setSearchQuery] = useState('');
   const [showForm, setShowForm] = useState(false);
@@ -29,7 +29,8 @@ const DaftarProduk = () => {
 
   const filteredProducts = products?.filter(product =>
     product.nama.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    product.barcode?.toLowerCase().includes(searchQuery.toLowerCase())
+    product.barcode?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    product.supplier?.nama?.toLowerCase().includes(searchQuery.toLowerCase())
   ) || [];
 
   const handleEdit = (product) => {
@@ -40,6 +41,10 @@ const DaftarProduk = () => {
   const handleAddNew = () => {
     setEditingProduct(null);
     setShowForm(true);
+  };
+
+  const handleImportSuccess = () => {
+    refetch();
   };
 
   const formatCurrency = (amount) => {
@@ -80,7 +85,10 @@ const DaftarProduk = () => {
                 <p className="text-gray-600">Kelola data produk konsinyasi</p>
               </div>
               <div className="flex gap-2">
-                <ProductExportImport products={filteredProducts} />
+                <ProductExportImport 
+                  products={filteredProducts} 
+                  onImportSuccess={handleImportSuccess}
+                />
                 <Button onClick={handleAddNew} className="flex items-center gap-2">
                   <Package className="h-4 w-4" />
                   Tambah Produk
@@ -92,7 +100,7 @@ const DaftarProduk = () => {
             <div className="relative mb-4">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
               <Input
-                placeholder="Cari nama produk atau barcode..."
+                placeholder="Cari nama produk, barcode, atau supplier..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-10"
@@ -128,6 +136,7 @@ const DaftarProduk = () => {
                     <TableHeader>
                       <TableRow>
                         <TableHead>Nama Produk</TableHead>
+                        <TableHead>Supplier</TableHead>
                         <TableHead>Barcode</TableHead>
                         <TableHead>Jenis</TableHead>
                         <TableHead>Satuan</TableHead>
@@ -142,6 +151,15 @@ const DaftarProduk = () => {
                       {filteredProducts.map((product) => (
                         <TableRow key={product.id}>
                           <TableCell className="font-medium">{product.nama}</TableCell>
+                          <TableCell>
+                            {product.supplier?.nama ? (
+                              <Badge variant="outline" className="bg-blue-50 text-blue-700">
+                                {product.supplier.nama}
+                              </Badge>
+                            ) : (
+                              <span className="text-gray-400">-</span>
+                            )}
+                          </TableCell>
                           <TableCell>{product.barcode || '-'}</TableCell>
                           <TableCell>
                             <Badge variant="outline">
@@ -191,6 +209,7 @@ const DaftarProduk = () => {
             onSuccess={() => {
               setShowForm(false);
               setEditingProduct(null);
+              refetch();
               toast({
                 title: "Berhasil",
                 description: editingProduct ? "Produk berhasil diperbarui" : "Produk berhasil ditambahkan"

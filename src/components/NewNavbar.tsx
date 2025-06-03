@@ -45,7 +45,9 @@ const NewNavbar = () => {
         <div className="flex justify-between h-16">
           <div className="flex items-center">
             <Link to="/dashboard" className="flex-shrink-0 flex items-center">
-              <Store className="h-8 w-8 text-blue-600" />
+              <div className="h-8 w-8 bg-gradient-to-br from-green-600 to-green-800 rounded-lg flex items-center justify-center">
+                <span className="text-white font-bold text-sm">AM</span>
+              </div>
               <span className="ml-2 text-xl font-bold text-gray-900">Assunnah Mart</span>
             </Link>
           </div>

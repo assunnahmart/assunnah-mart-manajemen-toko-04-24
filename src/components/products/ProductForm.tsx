@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useCreateBarangKonsinyasi, useUpdateBarangKonsinyasi } from '@/hooks/useBarangKonsinyasi';
+import { useSupplier } from '@/hooks/useSupplier';
 import { useToast } from '@/hooks/use-toast';
 
 interface Product {
@@ -19,6 +20,7 @@ interface Product {
   stok_saat_ini: number;
   stok_minimal: number;
   status: string;
+  supplier_id?: string;
 }
 
 interface ProductFormProps {
@@ -31,6 +33,7 @@ const ProductForm = ({ product, onClose, onSuccess }: ProductFormProps) => {
   const { toast } = useToast();
   const createProduct = useCreateBarangKonsinyasi();
   const updateProduct = useUpdateBarangKonsinyasi();
+  const { data: suppliers } = useSupplier();
   
   const [formData, setFormData] = useState({
     nama: product?.nama || '',
@@ -41,7 +44,8 @@ const ProductForm = ({ product, onClose, onSuccess }: ProductFormProps) => {
     harga_jual: product?.harga_jual || 0,
     stok_saat_ini: product?.stok_saat_ini || 0,
     stok_minimal: product?.stok_minimal || 0,
-    status: product?.status || 'aktif'
+    status: product?.status || 'aktif',
+    supplier_id: product?.supplier_id || ''
   });
 
   const [loading, setLoading] = useState(false);
@@ -51,15 +55,20 @@ const ProductForm = ({ product, onClose, onSuccess }: ProductFormProps) => {
     setLoading(true);
 
     try {
+      const submitData = {
+        ...formData,
+        supplier_id: formData.supplier_id || null
+      };
+
       if (product?.id) {
         // Update existing product
         await updateProduct.mutateAsync({
           id: product.id,
-          updates: formData
+          updates: submitData
         });
       } else {
         // Create new product
-        await createProduct.mutateAsync(formData);
+        await createProduct.mutateAsync(submitData);
       }
       
       onSuccess();
@@ -84,7 +93,7 @@ const ProductForm = ({ product, onClose, onSuccess }: ProductFormProps) => {
 
   return (
     <Dialog open={true} onOpenChange={onClose}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-w-md max-h-[80vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
             {product ? 'Edit Produk' : 'Tambah Produk Baru'}
@@ -100,6 +109,26 @@ const ProductForm = ({ product, onClose, onSuccess }: ProductFormProps) => {
               onChange={(e) => handleInputChange('nama', e.target.value)}
               required
             />
+          </div>
+
+          <div>
+            <Label htmlFor="supplier_id">Supplier</Label>
+            <Select
+              value={formData.supplier_id}
+              onValueChange={(value) => handleInputChange('supplier_id', value)}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Pilih supplier" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">Tanpa Supplier</SelectItem>
+                {suppliers?.map((supplier) => (
+                  <SelectItem key={supplier.id} value={supplier.id}>
+                    {supplier.nama}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           <div>

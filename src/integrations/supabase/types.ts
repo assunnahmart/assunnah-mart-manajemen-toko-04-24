@@ -599,13 +599,6 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "konsinyasi_harian_kasir_id_fkey"
-            columns: ["kasir_id"]
-            isOneToOne: false
-            referencedRelation: "kasir"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "konsinyasi_harian_product_id_fkey"
             columns: ["product_id"]
             isOneToOne: false

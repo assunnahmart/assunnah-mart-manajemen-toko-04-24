@@ -39,7 +39,7 @@ export const useBarang = (searchQuery?: string) => {
 
 export const useBarangKonsinyasi = () => {
   return useQuery({
-    queryKey: ['barang_konsinyasi'],
+    queryKey: ['barang-konsinyasi'],
     queryFn: async () => {
       const query = supabase
         .from('barang_konsinyasi')
@@ -77,8 +77,8 @@ export const useCreateBarang = () => {
       return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['barang'] });
       queryClient.invalidateQueries({ queryKey: ['barang_konsinyasi'] });
+      queryClient.invalidateQueries({ queryKey: ['barang-konsinyasi'] });
     },
   });
 };
@@ -99,8 +99,8 @@ export const useUpdateBarang = () => {
       return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['barang'] });
       queryClient.invalidateQueries({ queryKey: ['barang_konsinyasi'] });
+      queryClient.invalidateQueries({ queryKey: ['barang-konsinyasi'] });
     },
   });
 };

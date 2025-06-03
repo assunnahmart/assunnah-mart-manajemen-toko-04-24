@@ -1,11 +1,10 @@
-
 import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useCreateBarangKonsinyasi, useUpdateBarangKonsinyasi } from '@/hooks/useBarangKonsinyasi';
+import { useCreateBarang, useUpdateBarang } from '@/hooks/useBarang';
 import { useSupplier } from '@/hooks/useSupplier';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -33,8 +32,8 @@ interface ProductFormProps {
 
 const ProductForm = ({ product, onClose, onSuccess }: ProductFormProps) => {
   const { toast } = useToast();
-  const createProduct = useCreateBarangKonsinyasi();
-  const updateProduct = useUpdateBarangKonsinyasi();
+  const createProduct = useCreateBarang();
+  const updateProduct = useUpdateBarang();
   const { data: suppliers } = useSupplier();
   
   const [formData, setFormData] = useState({

@@ -16,7 +16,7 @@ export const useBarangKonsinyasi = (jenisKonsinyasi?: 'harian' | 'mingguan') => 
         .select(`
           *,
           kategori_barang (nama),
-          supplier (nama)
+          supplier!supplier_id (nama)
         `);
       
       if (jenisKonsinyasi) {
@@ -40,7 +40,7 @@ export const useBarangStokRendah = () => {
         .select(`
           *,
           kategori_barang (nama),
-          supplier (nama)
+          supplier!supplier_id (nama)
         `)
         .filter('stok_saat_ini', 'lt', 'stok_minimal')
         .eq('status', 'aktif')

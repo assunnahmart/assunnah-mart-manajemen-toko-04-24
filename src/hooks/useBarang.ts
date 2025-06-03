@@ -16,7 +16,7 @@ export const useBarang = (searchQuery?: string) => {
         .select(`
           *,
           kategori_barang (nama),
-          supplier (nama)
+          supplier!supplier_id (nama)
         `);
       
       if (searchQuery && searchQuery.trim()) {

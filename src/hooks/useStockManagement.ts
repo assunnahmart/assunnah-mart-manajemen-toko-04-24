@@ -10,7 +10,7 @@ export const useStockData = () => {
         .from('barang_konsinyasi')
         .select(`
           *,
-          supplier(nama),
+          supplier!supplier_id(nama),
           kategori_barang(nama)
         `)
         .order('nama');
@@ -167,7 +167,7 @@ export const useLowStockProducts = () => {
         .from('barang_konsinyasi')
         .select(`
           *,
-          supplier(nama)
+          supplier!supplier_id(nama)
         `)
         .lte('stok_saat_ini', 'stok_minimal')
         .order('stok_saat_ini', { ascending: true });

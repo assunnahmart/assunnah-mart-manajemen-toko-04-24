@@ -52,6 +52,10 @@ const POSSystem = () => {
   const createTransaction = useCreatePOSTransaction();
   const { syncStock, syncCustomerDebt, isSyncingStock, isSyncingDebt } = usePOSTransactionSync();
 
+  // Users who should not see the menu header
+  const hiddenMenuUsers = ['Agus', 'Yadi', 'Nurohman', 'Jamhur2'];
+  const shouldHideMenuForUser = user?.username && hiddenMenuUsers.includes(user.username);
+
   // Handle transaction synchronization
   const handleTransactionSync = async (transactionData: any, items: any[]) => {
     try {
@@ -230,33 +234,37 @@ const POSSystem = () => {
     <NewProtectedRoute>
       <POSTransactionSync onTransactionComplete={handleTransactionSync}>
         <div className="min-h-screen bg-gray-50">
-          {/* Collapsible Navbar - Hidden by default */}
-          <div className={`transition-all duration-300 ${isMenuCollapsed ? 'h-0 overflow-hidden' : 'h-auto'}`}>
-            <NewNavbar />
-          </div>
-          
-          {/* Menu Toggle Button */}
-          <div className="bg-white border-b shadow-sm">
-            <div className="container mx-auto px-4 max-w-7xl">
-              <Button
-                variant="ghost"
-                onClick={() => setIsMenuCollapsed(!isMenuCollapsed)}
-                className="w-full py-2 flex items-center justify-center gap-2 text-gray-600 hover:text-gray-900"
-              >
-                {isMenuCollapsed ? (
-                  <>
-                    <ChevronDown className="h-4 w-4" />
-                    Tampilkan Menu
-                  </>
-                ) : (
-                  <>
-                    <ChevronUp className="h-4 w-4" />
-                    Sembunyikan Menu
-                  </>
-                )}
-              </Button>
+          {/* Collapsible Navbar - Hidden by default, and completely hidden for specific users */}
+          {!shouldHideMenuForUser && (
+            <div className={`transition-all duration-300 ${isMenuCollapsed ? 'h-0 overflow-hidden' : 'h-auto'}`}>
+              <NewNavbar />
             </div>
-          </div>
+          )}
+          
+          {/* Menu Toggle Button - Only show for users who can access the menu */}
+          {!shouldHideMenuForUser && (
+            <div className="bg-white border-b shadow-sm">
+              <div className="container mx-auto px-4 max-w-7xl">
+                <Button
+                  variant="ghost"
+                  onClick={() => setIsMenuCollapsed(!isMenuCollapsed)}
+                  className="w-full py-2 flex items-center justify-center gap-2 text-gray-600 hover:text-gray-900"
+                >
+                  {isMenuCollapsed ? (
+                    <>
+                      <ChevronDown className="h-4 w-4" />
+                      Tampilkan Menu
+                    </>
+                  ) : (
+                    <>
+                      <ChevronUp className="h-4 w-4" />
+                      Sembunyikan Menu
+                    </>
+                  )}
+                </Button>
+              </div>
+            </div>
+          )}
           
           {/* Fixed Total Shopping Display at the very top */}
           <div className="sticky top-0 z-40 bg-gray-50 pb-4">

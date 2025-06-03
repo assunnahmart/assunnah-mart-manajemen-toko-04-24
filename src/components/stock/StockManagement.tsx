@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -9,7 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Package, AlertTriangle, TrendingDown, TrendingUp, Search, Edit, Eye, Sync } from 'lucide-react';
+import { Package, AlertTriangle, TrendingDown, TrendingUp, Search, Edit, Eye, RefreshCw } from 'lucide-react';
 import { useStockData, useLowStockProducts, useUpdateStock } from '@/hooks/useStockManagement';
 import { useToast } from '@/hooks/use-toast';
 import StockSyncNotification from './StockSyncNotification';
@@ -152,7 +151,7 @@ const StockManagement = () => {
               <CardTitle className="flex items-center justify-between">
                 <span>Manajemen Stok Produk</span>
                 <Badge variant="outline" className="bg-green-50 text-green-700">
-                  <Sync className="h-3 w-3 mr-1" />
+                  <RefreshCw className="h-3 w-3 mr-1" />
                   Tersinkronisasi dengan POS
                 </Badge>
               </CardTitle>

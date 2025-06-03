@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -9,12 +8,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { ClipboardList, Plus, Search, Scan } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { ClipboardList, Plus, Search, Scan, FileSpreadsheet } from 'lucide-react';
 import { useStockData, useStockOpname, useCreateStockOpname } from '@/hooks/useStockManagement';
 import { useKasir } from '@/hooks/useKasir';
 import { useSimpleAuth } from '@/hooks/useSimpleAuth';
 import { useToast } from '@/hooks/use-toast';
 import CameraBarcodeScanner from './CameraBarcodeScanner';
+import StockOpnameExportImport from './StockOpnameExportImport';
 
 const StockOpname = () => {
   const [selectedProduct, setSelectedProduct] = useState('');
@@ -104,126 +105,167 @@ const StockOpname = () => {
           <p className="text-gray-600">Input dan monitoring stok fisik produk</p>
         </div>
         
-        <Dialog open={showDialog} onOpenChange={setShowDialog}>
-          <DialogTrigger asChild>
-            <Button className="gap-2">
-              <Plus className="h-4 w-4" />
-              Input Stok Opname
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-md">
-            <DialogHeader>
-              <DialogTitle>Input Stok Opname</DialogTitle>
-            </DialogHeader>
-            
-            <div className="space-y-4">
-              <div>
-                <Label>Cari Produk</Label>
-                <div className="flex gap-2">
-                  <div className="relative flex-1">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                    <Input
-                      placeholder="Cari nama produk atau barcode..."
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      className="pl-10"
-                    />
+        <div className="flex gap-2">
+          <Dialog open={showDialog} onOpenChange={setShowDialog}>
+            <DialogTrigger asChild>
+              <Button className="gap-2">
+                <Plus className="h-4 w-4" />
+                Input Manual
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-md">
+              <DialogHeader>
+                <DialogTitle>Input Stok Opname</DialogTitle>
+              </DialogHeader>
+              
+              <div className="space-y-4">
+                <div>
+                  <Label>Cari Produk</Label>
+                  <div className="flex gap-2">
+                    <div className="relative flex-1">
+                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                      <Input
+                        placeholder="Cari nama produk atau barcode..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="pl-10"
+                      />
+                    </div>
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => setShowScanner(true)}
+                      className="gap-1"
+                    >
+                      <Scan className="h-4 w-4" />
+                      Scan
+                    </Button>
                   </div>
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={() => setShowScanner(true)}
-                    className="gap-1"
+                </div>
+                
+                <div>
+                  <Label htmlFor="product">Pilih Produk</Label>
+                  <Select value={selectedProduct} onValueChange={setSelectedProduct}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Pilih produk..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {filteredProducts.map((product) => (
+                        <SelectItem key={product.id} value={product.id}>
+                          {product.nama} - Stok: {product.stok_saat_ini} {product.satuan}
+                          {product.barcode && ` (${product.barcode})`}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                {selectedProductData && (
+                  <div className="bg-gray-50 p-3 rounded-lg">
+                    <p className="text-sm font-medium">Stok Sistem Saat Ini</p>
+                    <p className="text-lg font-bold text-blue-600">
+                      {selectedProductData.stok_saat_ini} {selectedProductData.satuan}
+                    </p>
+                    {selectedProductData.barcode && (
+                      <p className="text-xs text-gray-500">Barcode: {selectedProductData.barcode}</p>
+                    )}
+                  </div>
+                )}
+                
+                <div>
+                  <Label htmlFor="stokFisik">Stok Fisik Aktual</Label>
+                  <Input
+                    id="stokFisik"
+                    type="number"
+                    value={stokFisik}
+                    onChange={(e) => setStokFisik(Number(e.target.value))}
+                    min="0"
+                    placeholder="Masukkan stok fisik..."
+                  />
+                </div>
+                
+                {selectedProductData && stokFisik !== selectedProductData.stok_saat_ini && (
+                  <div className="bg-yellow-50 p-3 rounded-lg">
+                    <p className="text-sm font-medium">Selisih Stok</p>
+                    <p className={`text-lg font-bold ${
+                      stokFisik > selectedProductData.stok_saat_ini ? 'text-green-600' : 'text-red-600'
+                    }`}>
+                      {stokFisik > selectedProductData.stok_saat_ini ? '+' : ''}
+                      {stokFisik - selectedProductData.stok_saat_ini} {selectedProductData.satuan}
+                    </p>
+                  </div>
+                )}
+                
+                <div>
+                  <Label htmlFor="keterangan">Keterangan</Label>
+                  <Textarea
+                    id="keterangan"
+                    placeholder="Catatan stok opname..."
+                    value={keterangan}
+                    onChange={(e) => setKeterangan(e.target.value)}
+                  />
+                </div>
+                
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    onClick={() => setShowDialog(false)}
+                    className="flex-1"
                   >
-                    <Scan className="h-4 w-4" />
-                    Scan
+                    Batal
+                  </Button>
+                  <Button
+                    onClick={handleSubmitOpname}
+                    disabled={!selectedProduct || createStockOpname.isPending}
+                    className="flex-1"
+                  >
+                    {createStockOpname.isPending ? 'Menyimpan...' : 'Simpan'}
                   </Button>
                 </div>
               </div>
-              
-              <div>
-                <Label htmlFor="product">Pilih Produk</Label>
-                <Select value={selectedProduct} onValueChange={setSelectedProduct}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Pilih produk..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {filteredProducts.map((product) => (
-                      <SelectItem key={product.id} value={product.id}>
-                        {product.nama} - Stok: {product.stok_saat_ini} {product.satuan}
-                        {product.barcode && ` (${product.barcode})`}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              {selectedProductData && (
-                <div className="bg-gray-50 p-3 rounded-lg">
-                  <p className="text-sm font-medium">Stok Sistem Saat Ini</p>
-                  <p className="text-lg font-bold text-blue-600">
-                    {selectedProductData.stok_saat_ini} {selectedProductData.satuan}
-                  </p>
-                  {selectedProductData.barcode && (
-                    <p className="text-xs text-gray-500">Barcode: {selectedProductData.barcode}</p>
-                  )}
-                </div>
-              )}
-              
-              <div>
-                <Label htmlFor="stokFisik">Stok Fisik Aktual</Label>
-                <Input
-                  id="stokFisik"
-                  type="number"
-                  value={stokFisik}
-                  onChange={(e) => setStokFisik(Number(e.target.value))}
-                  min="0"
-                  placeholder="Masukkan stok fisik..."
-                />
-              </div>
-              
-              {selectedProductData && stokFisik !== selectedProductData.stok_saat_ini && (
-                <div className="bg-yellow-50 p-3 rounded-lg">
-                  <p className="text-sm font-medium">Selisih Stok</p>
-                  <p className={`text-lg font-bold ${
-                    stokFisik > selectedProductData.stok_saat_ini ? 'text-green-600' : 'text-red-600'
-                  }`}>
-                    {stokFisik > selectedProductData.stok_saat_ini ? '+' : ''}
-                    {stokFisik - selectedProductData.stok_saat_ini} {selectedProductData.satuan}
-                  </p>
-                </div>
-              )}
-              
-              <div>
-                <Label htmlFor="keterangan">Keterangan</Label>
-                <Textarea
-                  id="keterangan"
-                  placeholder="Catatan stok opname..."
-                  value={keterangan}
-                  onChange={(e) => setKeterangan(e.target.value)}
-                />
-              </div>
-              
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  onClick={() => setShowDialog(false)}
-                  className="flex-1"
-                >
-                  Batal
-                </Button>
-                <Button
-                  onClick={handleSubmitOpname}
-                  disabled={!selectedProduct || createStockOpname.isPending}
-                  className="flex-1"
-                >
-                  {createStockOpname.isPending ? 'Menyimpan...' : 'Simpan'}
-                </Button>
-              </div>
-            </div>
-          </DialogContent>
-        </Dialog>
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
+
+      {/* Tabs for different input methods */}
+      <Tabs defaultValue="manual" className="space-y-4">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="manual" className="flex items-center gap-2">
+            <ClipboardList className="h-4 w-4" />
+            Input Manual
+          </TabsTrigger>
+          <TabsTrigger value="excel" className="flex items-center gap-2">
+            <FileSpreadsheet className="h-4 w-4" />
+            Export/Import Excel
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="manual">
+          <Card>
+            <CardHeader>
+              <CardTitle>Input Manual Stok Opname</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-gray-600">
+                Gunakan tombol "Input Manual" di atas untuk melakukan stok opname satu per satu produk.
+                Anda dapat menggunakan scanner barcode untuk mempercepat proses.
+              </p>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="excel">
+          <Card>
+            <CardHeader>
+              <CardTitle>Export/Import Excel</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <StockOpnameExportImport />
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
 
       {/* Opname History */}
       <Card>

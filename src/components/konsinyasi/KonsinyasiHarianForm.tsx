@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -49,6 +48,7 @@ const KonsinyasiHarianForm = () => {
   const sisaStok = jumlahTitipan - jumlahRealTerjual;
   const selisihStok = jumlahRealTerjual - jumlahTerjualSistem;
   const totalPembayaran = selectedProduct ? (selectedProduct.harga_beli || 0) * jumlahRealTerjual : 0;
+  const selisihAmount = selectedProduct ? Math.abs(selisihStok * (selectedProduct.harga_beli || 0)) : 0;
 
   const handleSyncPOSSales = () => {
     refetchPOSSales();
@@ -93,10 +93,10 @@ const KonsinyasiHarianForm = () => {
       console.log('Created konsinyasi result:', createdKonsinyasi);
 
       // Process payment if checked
-      if (processPayment && totalPembayaran > 0) {
+      if (processPayment && (totalPembayaran > 0 || selisihAmount > 0)) {
         console.log('Processing payment for konsinyasi ID:', createdKonsinyasi.id);
         await processPaymentMutation.mutateAsync({
-          konsinyasiId: createdKonsinyasi.id, // Use the actual ID from database
+          konsinyasiId: createdKonsinyasi.id,
           konsinyasiData: {
             ...konsinyasiData,
             id: createdKonsinyasi.id
@@ -106,10 +106,14 @@ const KonsinyasiHarianForm = () => {
         });
       }
 
+      const selisihMessage = selisihStok !== 0 
+        ? ` dan ${selisihStok > 0 ? 'penerimaan' : 'pengeluaran'} selisih Rp ${selisihAmount.toLocaleString('id-ID')}`
+        : '';
+
       toast({
         title: "Konsinyasi harian berhasil",
         description: processPayment 
-          ? `Data konsinyasi dan pembayaran Rp ${totalPembayaran.toLocaleString('id-ID')} berhasil disimpan`
+          ? `Data konsinyasi dan pembayaran Rp ${totalPembayaran.toLocaleString('id-ID')}${selisihMessage} berhasil disimpan`
           : "Data konsinyasi harian berhasil disimpan"
       });
 
@@ -259,6 +263,25 @@ const KonsinyasiHarianForm = () => {
             />
           </div>
 
+          {selisihStok !== 0 && (
+            <div className="md:col-span-2">
+              <Label>
+                {selisihStok > 0 ? 'Penerimaan' : 'Pengeluaran'} Selisih Stok
+              </Label>
+              <Input
+                value={`Rp ${selisihAmount.toLocaleString('id-ID')}`}
+                readOnly
+                className={`font-bold ${selisihStok > 0 ? 'bg-blue-50 text-blue-700' : 'bg-red-50 text-red-700'}`}
+              />
+              <p className="text-xs mt-1 text-gray-600">
+                {selisihStok > 0 
+                  ? `Lebih terjual ${selisihStok} pcs dari sistem - kas masuk`
+                  : `Kurang terjual ${Math.abs(selisihStok)} pcs dari sistem - kas keluar`
+                }
+              </p>
+            </div>
+          )}
+
           <div className="md:col-span-2">
             <Label htmlFor="keterangan">Keterangan</Label>
             <Textarea
@@ -281,10 +304,23 @@ const KonsinyasiHarianForm = () => {
                 Proses pembayaran sekaligus (kas keluar otomatis ke kas umum)
               </Label>
             </div>
-            {processPayment && totalPembayaran > 0 && (
-              <p className="text-sm text-orange-600 mt-2">
-                Akan mencatat kas keluar Rp {totalPembayaran.toLocaleString('id-ID')} dan sinkronisasi ke kas umum
-              </p>
+            {processPayment && (totalPembayaran > 0 || selisihAmount > 0) && (
+              <div className="mt-2 space-y-1">
+                {totalPembayaran > 0 && (
+                  <p className="text-sm text-orange-600">
+                    Akan mencatat kas keluar Rp {totalPembayaran.toLocaleString('id-ID')} untuk pembayaran konsinyasi
+                  </p>
+                )}
+                {selisihAmount > 0 && (
+                  <p className="text-sm text-blue-600">
+                    {selisihStok > 0 
+                      ? `Akan mencatat kas masuk Rp ${selisihAmount.toLocaleString('id-ID')} untuk selisih lebih`
+                      : `Akan mencatat kas keluar Rp ${selisihAmount.toLocaleString('id-ID')} untuk selisih kurang`
+                    }
+                  </p>
+                )}
+                <p className="text-xs text-gray-500">Semua transaksi akan disinkronkan ke kas umum</p>
+              </div>
             )}
           </div>
         </div>

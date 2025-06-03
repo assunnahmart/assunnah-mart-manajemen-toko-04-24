@@ -34,6 +34,7 @@ export const useBarang = (searchQuery?: string) => {
       console.log('Fetched barang data:', data);
       return data || [];
     },
+    refetchInterval: 30000, // Auto-refresh every 30 seconds for POS sync
   });
 };
 
@@ -59,6 +60,7 @@ export const useBarangKonsinyasi = () => {
       console.log('Fetched barang konsinyasi data:', data);
       return data || [];
     },
+    refetchInterval: 30000, // Auto-refresh for stock management sync
   });
 };
 
@@ -79,6 +81,8 @@ export const useCreateBarang = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['barang_konsinyasi'] });
       queryClient.invalidateQueries({ queryKey: ['barang-konsinyasi'] });
+      queryClient.invalidateQueries({ queryKey: ['stock_data'] });
+      queryClient.invalidateQueries({ queryKey: ['low_stock_products'] });
     },
   });
 };
@@ -101,6 +105,8 @@ export const useUpdateBarang = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['barang_konsinyasi'] });
       queryClient.invalidateQueries({ queryKey: ['barang-konsinyasi'] });
+      queryClient.invalidateQueries({ queryKey: ['stock_data'] });
+      queryClient.invalidateQueries({ queryKey: ['low_stock_products'] });
     },
   });
 };

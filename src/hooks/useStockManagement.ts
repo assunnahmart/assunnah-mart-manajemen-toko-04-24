@@ -19,6 +19,7 @@ export const useStockData = () => {
       
       return barang;
     },
+    refetchInterval: 30000, // Refresh every 30 seconds to sync with POS transactions
   });
 };
 
@@ -59,6 +60,7 @@ export const useStockMutations = () => {
       
       return data;
     },
+    refetchInterval: 10000, // Refresh frequently to show POS transactions
   });
 };
 
@@ -94,6 +96,7 @@ export const useCreateStockOpname = () => {
       queryClient.invalidateQueries({ queryKey: ['stock_opname'] });
       queryClient.invalidateQueries({ queryKey: ['stock_mutations'] });
       queryClient.invalidateQueries({ queryKey: ['barang_konsinyasi'] });
+      queryClient.invalidateQueries({ queryKey: ['barang'] });
     },
   });
 };
@@ -155,6 +158,7 @@ export const useUpdateStock = () => {
       queryClient.invalidateQueries({ queryKey: ['stock_data'] });
       queryClient.invalidateQueries({ queryKey: ['stock_mutations'] });
       queryClient.invalidateQueries({ queryKey: ['barang_konsinyasi'] });
+      queryClient.invalidateQueries({ queryKey: ['barang'] });
     },
   });
 };
@@ -169,12 +173,38 @@ export const useLowStockProducts = () => {
           *,
           supplier!supplier_id(nama)
         `)
-        .lte('stok_saat_ini', 'stok_minimal')
+        .filter('stok_saat_ini', 'lte', 'stok_minimal')
         .order('stok_saat_ini', { ascending: true });
       
       if (error) throw error;
       
       return data;
+    },
+    refetchInterval: 30000, // Refresh to catch low stock from POS sales
+  });
+};
+
+// New hook for real-time stock synchronization
+export const usePOSStockSync = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (transactionItems: any[]) => {
+      // This will be called when POS transactions complete
+      for (const item of transactionItems) {
+        await supabase.rpc('update_stok_barang', {
+          barang_id: item.product_id,
+          jumlah_keluar: item.quantity
+        });
+      }
+    },
+    onSuccess: () => {
+      // Invalidate all stock-related queries to refresh data
+      queryClient.invalidateQueries({ queryKey: ['stock_data'] });
+      queryClient.invalidateQueries({ queryKey: ['stock_mutations'] });
+      queryClient.invalidateQueries({ queryKey: ['low_stock_products'] });
+      queryClient.invalidateQueries({ queryKey: ['barang_konsinyasi'] });
+      queryClient.invalidateQueries({ queryKey: ['barang'] });
     },
   });
 };

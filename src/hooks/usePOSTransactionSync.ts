@@ -26,9 +26,12 @@ export const usePOSTransactionSync = () => {
       }
     },
     onSuccess: () => {
-      // Invalidate stock-related queries
+      // Invalidate stock-related queries for real-time sync
       queryClient.invalidateQueries({ queryKey: ['barang'] });
       queryClient.invalidateQueries({ queryKey: ['barang_konsinyasi'] });
+      queryClient.invalidateQueries({ queryKey: ['stock_data'] });
+      queryClient.invalidateQueries({ queryKey: ['stock_mutations'] });
+      queryClient.invalidateQueries({ queryKey: ['low_stock_products'] });
     },
     onError: (error) => {
       console.error('Stock sync error:', error);

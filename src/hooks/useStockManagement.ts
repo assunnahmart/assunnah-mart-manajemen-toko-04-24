@@ -10,7 +10,7 @@ export const useStockData = () => {
         .from('barang_konsinyasi')
         .select(`
           *,
-          supplier!supplier_id(nama),
+          supplier!barang_konsinyasi_supplier_id_fkey(nama),
           kategori_barang(nama)
         `)
         .order('nama');
@@ -19,7 +19,7 @@ export const useStockData = () => {
       
       return barang;
     },
-    refetchInterval: 30000, // Refresh every 30 seconds to sync with POS transactions
+    refetchInterval: 10000, // Refresh every 10 seconds for better sync with POS
   });
 };
 
@@ -60,7 +60,7 @@ export const useStockMutations = () => {
       
       return data;
     },
-    refetchInterval: 10000, // Refresh frequently to show POS transactions
+    refetchInterval: 5000, // Refresh frequently to show POS transactions immediately
   });
 };
 
@@ -92,11 +92,14 @@ export const useCreateStockOpname = () => {
       return { success: true };
     },
     onSuccess: () => {
+      // Invalidate all related queries for immediate sync
       queryClient.invalidateQueries({ queryKey: ['stock_data'] });
       queryClient.invalidateQueries({ queryKey: ['stock_opname'] });
       queryClient.invalidateQueries({ queryKey: ['stock_mutations'] });
       queryClient.invalidateQueries({ queryKey: ['barang_konsinyasi'] });
+      queryClient.invalidateQueries({ queryKey: ['barang-konsinyasi'] });
       queryClient.invalidateQueries({ queryKey: ['barang'] });
+      queryClient.invalidateQueries({ queryKey: ['low_stock_products'] });
     },
   });
 };
@@ -155,10 +158,13 @@ export const useUpdateStock = () => {
       return { success: true };
     },
     onSuccess: () => {
+      // Invalidate all related queries for immediate sync
       queryClient.invalidateQueries({ queryKey: ['stock_data'] });
       queryClient.invalidateQueries({ queryKey: ['stock_mutations'] });
       queryClient.invalidateQueries({ queryKey: ['barang_konsinyasi'] });
+      queryClient.invalidateQueries({ queryKey: ['barang-konsinyasi'] });
       queryClient.invalidateQueries({ queryKey: ['barang'] });
+      queryClient.invalidateQueries({ queryKey: ['low_stock_products'] });
     },
   });
 };
@@ -171,7 +177,7 @@ export const useLowStockProducts = () => {
         .from('barang_konsinyasi')
         .select(`
           *,
-          supplier!supplier_id(nama)
+          supplier!barang_konsinyasi_supplier_id_fkey(nama)
         `)
         .filter('stok_saat_ini', 'lte', 'stok_minimal')
         .order('stok_saat_ini', { ascending: true });
@@ -180,11 +186,11 @@ export const useLowStockProducts = () => {
       
       return data;
     },
-    refetchInterval: 30000, // Refresh to catch low stock from POS sales
+    refetchInterval: 10000, // Refresh to catch low stock from POS sales
   });
 };
 
-// New hook for real-time stock synchronization
+// Enhanced hook for real-time stock synchronization with POS
 export const usePOSStockSync = () => {
   const queryClient = useQueryClient();
 
@@ -199,12 +205,51 @@ export const usePOSStockSync = () => {
       }
     },
     onSuccess: () => {
-      // Invalidate all stock-related queries to refresh data
+      // Invalidate all stock-related queries to refresh data immediately
       queryClient.invalidateQueries({ queryKey: ['stock_data'] });
       queryClient.invalidateQueries({ queryKey: ['stock_mutations'] });
       queryClient.invalidateQueries({ queryKey: ['low_stock_products'] });
       queryClient.invalidateQueries({ queryKey: ['barang_konsinyasi'] });
+      queryClient.invalidateQueries({ queryKey: ['barang-konsinyasi'] });
       queryClient.invalidateQueries({ queryKey: ['barang'] });
     },
+  });
+};
+
+// New hook for real-time sync monitoring
+export const useStockSyncStatus = () => {
+  return useQuery({
+    queryKey: ['stock_sync_status'],
+    queryFn: async () => {
+      // Get today's POS transactions count
+      const today = new Date().toISOString().split('T')[0];
+      
+      const { data: posTransactions, error: posError } = await supabase
+        .from('pos_transactions')
+        .select('id')
+        .gte('created_at', `${today}T00:00:00`)
+        .lt('created_at', `${today}T23:59:59`)
+        .eq('status', 'completed');
+      
+      if (posError) throw posError;
+      
+      // Get today's stock mutations from POS
+      const { data: stockMutations, error: mutationError } = await supabase
+        .from('mutasi_stok')
+        .select('id')
+        .eq('referensi_tipe', 'penjualan')
+        .gte('created_at', `${today}T00:00:00`)
+        .lt('created_at', `${today}T23:59:59`);
+      
+      if (mutationError) throw mutationError;
+      
+      return {
+        posTransactionsCount: posTransactions?.length || 0,
+        stockMutationsCount: stockMutations?.length || 0,
+        isSynced: (posTransactions?.length || 0) === (stockMutations?.length || 0),
+        lastSyncTime: new Date()
+      };
+    },
+    refetchInterval: 5000, // Check sync status every 5 seconds
   });
 };

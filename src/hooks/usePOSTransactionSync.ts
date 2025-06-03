@@ -26,12 +26,16 @@ export const usePOSTransactionSync = () => {
       }
     },
     onSuccess: () => {
-      // Invalidate stock-related queries for real-time sync
+      // Invalidate all stock-related queries for immediate sync across all components
       queryClient.invalidateQueries({ queryKey: ['barang'] });
       queryClient.invalidateQueries({ queryKey: ['barang_konsinyasi'] });
+      queryClient.invalidateQueries({ queryKey: ['barang-konsinyasi'] });
       queryClient.invalidateQueries({ queryKey: ['stock_data'] });
       queryClient.invalidateQueries({ queryKey: ['stock_mutations'] });
       queryClient.invalidateQueries({ queryKey: ['low_stock_products'] });
+      queryClient.invalidateQueries({ queryKey: ['stock_sync_status'] });
+      
+      console.log('Stock sync completed successfully');
     },
     onError: (error) => {
       console.error('Stock sync error:', error);
@@ -75,6 +79,8 @@ export const usePOSTransactionSync = () => {
       // Invalidate customer-related queries
       queryClient.invalidateQueries({ queryKey: ['pelanggan_unit'] });
       queryClient.invalidateQueries({ queryKey: ['pelanggan_perorangan'] });
+      
+      console.log('Customer debt sync completed successfully');
     },
     onError: (error) => {
       console.error('Customer debt sync error:', error);

@@ -34,7 +34,7 @@ export const useBarang = (searchQuery?: string) => {
       console.log('Fetched barang data:', data);
       return data || [];
     },
-    refetchInterval: 30000, // Auto-refresh every 30 seconds for POS sync
+    refetchInterval: 5000, // Auto-refresh every 5 seconds for better POS sync
   });
 };
 
@@ -60,7 +60,7 @@ export const useBarangKonsinyasi = () => {
       console.log('Fetched barang konsinyasi data:', data);
       return data || [];
     },
-    refetchInterval: 30000, // Auto-refresh for stock management sync
+    refetchInterval: 5000, // Auto-refresh for better stock management sync
   });
 };
 
@@ -79,10 +79,12 @@ export const useCreateBarang = () => {
       return data;
     },
     onSuccess: () => {
+      // Invalidate all related queries for immediate sync across all components
       queryClient.invalidateQueries({ queryKey: ['barang_konsinyasi'] });
       queryClient.invalidateQueries({ queryKey: ['barang-konsinyasi'] });
       queryClient.invalidateQueries({ queryKey: ['stock_data'] });
       queryClient.invalidateQueries({ queryKey: ['low_stock_products'] });
+      queryClient.invalidateQueries({ queryKey: ['barang'] });
     },
   });
 };
@@ -103,10 +105,12 @@ export const useUpdateBarang = () => {
       return data;
     },
     onSuccess: () => {
+      // Invalidate all related queries for immediate sync across all components
       queryClient.invalidateQueries({ queryKey: ['barang_konsinyasi'] });
       queryClient.invalidateQueries({ queryKey: ['barang-konsinyasi'] });
       queryClient.invalidateQueries({ queryKey: ['stock_data'] });
       queryClient.invalidateQueries({ queryKey: ['low_stock_products'] });
+      queryClient.invalidateQueries({ queryKey: ['barang'] });
     },
   });
 };

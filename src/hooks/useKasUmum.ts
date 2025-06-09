@@ -1,4 +1,3 @@
-
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Tables, TablesInsert } from '@/integrations/supabase/types';
@@ -29,6 +28,20 @@ export const useCreateKasTransaction = () => {
   
   return useMutation({
     mutationFn: async (transaction: Omit<KasTransactionInsert, 'transaction_number'>) => {
+      // Validate that akun_id exists and is active
+      if (transaction.akun_id) {
+        const { data: account, error: accountError } = await supabase
+          .from('chart_of_accounts')
+          .select('id, nama_akun')
+          .eq('id', transaction.akun_id)
+          .eq('is_active', true)
+          .single();
+        
+        if (accountError || !account) {
+          throw new Error('Akun yang dipilih tidak valid atau tidak aktif');
+        }
+      }
+      
       // Generate transaction number
       const { data: transactionNumber, error: numberError } = await supabase
         .rpc('generate_kas_transaction_number');

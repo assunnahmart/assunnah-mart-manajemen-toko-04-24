@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -25,6 +24,7 @@ const StockOpname = () => {
   const [showDialog, setShowDialog] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [showScanner, setShowScanner] = useState(false);
+  const [quickScanMode, setQuickScanMode] = useState(false); // Track if we're in quick scan mode
   
   const { data: stockData, isLoading: isLoadingStock } = useStockData();
   const { data: opnameHistory } = useStockOpname();
@@ -63,7 +63,10 @@ const StockOpname = () => {
     if (product) {
       setSelectedProduct(product.id);
       setSearchQuery(barcode);
-      setShowScanner(false);
+      setStokFisik(product.stok_saat_ini.toString()); // Auto-fill with current stock
+      setShowScanner(false); // Close scanner
+      setShowDialog(true); // Open input dialog automatically
+      setQuickScanMode(true); // Enable quick scan mode
       toast({
         title: "Produk ditemukan",
         description: `${product.nama} berhasil dipilih dari barcode scan`
@@ -74,7 +77,7 @@ const StockOpname = () => {
         description: `Barcode ${barcode} tidak ditemukan di database`,
         variant: "destructive"
       });
-      setShowScanner(false);
+      // Keep scanner open for retry
     }
   };
 
@@ -142,6 +145,13 @@ const StockOpname = () => {
       setKeterangan('');
       setSearchQuery('');
       setShowDialog(false);
+      
+      // If in quick scan mode, immediately open scanner for next item
+      if (quickScanMode) {
+        setTimeout(() => {
+          setShowScanner(true);
+        }, 500); // Small delay for user feedback
+      }
     } catch (error) {
       console.error('Error creating stock opname:', error);
       toast({
@@ -157,6 +167,12 @@ const StockOpname = () => {
     setStokFisik('');
     setKeterangan('');
     setSearchQuery('');
+    setQuickScanMode(false);
+  };
+
+  const startQuickScan = () => {
+    setQuickScanMode(true);
+    setShowScanner(true);
   };
 
   return (
@@ -183,6 +199,14 @@ const StockOpname = () => {
         </div>
         
         <div className="flex gap-2">
+          <Button 
+            onClick={startQuickScan}
+            className="gap-2 bg-green-600 hover:bg-green-700"
+          >
+            <Scan className="h-4 w-4" />
+            Quick Scan
+          </Button>
+          
           <Dialog open={showDialog} onOpenChange={(open) => {
             setShowDialog(open);
             if (!open) {
@@ -197,66 +221,77 @@ const StockOpname = () => {
             </DialogTrigger>
             <DialogContent className="max-w-md">
               <DialogHeader>
-                <DialogTitle>Input Stok Opname Manual</DialogTitle>
+                <DialogTitle>
+                  {quickScanMode ? 'Stok Opname - Quick Scan' : 'Input Stok Opname Manual'}
+                </DialogTitle>
               </DialogHeader>
               
               <div className="space-y-4">
-                <div>
-                  <Label>Cari Produk</Label>
-                  <div className="flex gap-2">
-                    <div className="relative flex-1">
-                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                      <Input
-                        placeholder="Cari nama produk atau barcode..."
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        className="pl-10"
-                      />
+                {!quickScanMode && (
+                  <>
+                    <div>
+                      <Label>Cari Produk</Label>
+                      <div className="flex gap-2">
+                        <div className="relative flex-1">
+                          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                          <Input
+                            placeholder="Cari nama produk atau barcode..."
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            className="pl-10"
+                          />
+                        </div>
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => setShowScanner(true)}
+                          className="gap-1"
+                        >
+                          <Scan className="h-4 w-4" />
+                          Scan
+                        </Button>
+                      </div>
                     </div>
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      onClick={() => setShowScanner(true)}
-                      className="gap-1"
-                    >
-                      <Scan className="h-4 w-4" />
-                      Scan
-                    </Button>
-                  </div>
-                </div>
-                
-                <div>
-                  <Label htmlFor="product">Pilih Produk</Label>
-                  <Select value={selectedProduct} onValueChange={setSelectedProduct}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Pilih produk..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {isLoadingStock ? (
-                        <SelectItem value="loading" disabled>
-                          Memuat produk...
-                        </SelectItem>
-                      ) : filteredProducts.length === 0 ? (
-                        <SelectItem value="no-data" disabled>
-                          {searchQuery ? 'Tidak ada produk ditemukan' : 'Tidak ada produk'}
-                        </SelectItem>
-                      ) : (
-                        filteredProducts.map((product) => (
-                          <SelectItem key={product.id} value={product.id}>
-                            {product.nama} - Stok: {product.stok_saat_ini} {product.satuan}
-                            {product.barcode && ` (${product.barcode})`}
-                          </SelectItem>
-                        ))
-                      )}
-                    </SelectContent>
-                  </Select>
-                </div>
+                    
+                    <div>
+                      <Label htmlFor="product">Pilih Produk</Label>
+                      <Select value={selectedProduct} onValueChange={setSelectedProduct}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Pilih produk..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {isLoadingStock ? (
+                            <SelectItem value="loading" disabled>
+                              Memuat produk...
+                            </SelectItem>
+                          ) : filteredProducts.length === 0 ? (
+                            <SelectItem value="no-data" disabled>
+                              {searchQuery ? 'Tidak ada produk ditemukan' : 'Tidak ada produk'}
+                            </SelectItem>
+                          ) : (
+                            filteredProducts.map((product) => (
+                              <SelectItem key={product.id} value={product.id}>
+                                {product.nama} - Stok: {product.stok_saat_ini} {product.satuan}
+                                {product.barcode && ` (${product.barcode})`}
+                              </SelectItem>
+                            ))
+                          )}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </>
+                )}
                 
                 {selectedProductData && (
                   <div className="bg-gray-50 p-3 rounded-lg">
-                    <p className="text-sm font-medium">Stok Sistem Saat Ini</p>
+                    <p className="text-sm font-medium">
+                      {quickScanMode ? 'Produk dari Scan:' : 'Stok Sistem Saat Ini'}
+                    </p>
                     <p className="text-lg font-bold text-blue-600">
-                      {selectedProductData.stok_saat_ini} {selectedProductData.satuan}
+                      {selectedProductData.nama}
+                    </p>
+                    <p className="text-md text-blue-600">
+                      Stok: {selectedProductData.stok_saat_ini} {selectedProductData.satuan}
                     </p>
                     {selectedProductData.barcode && (
                       <p className="text-xs text-gray-500">Barcode: {selectedProductData.barcode}</p>
@@ -273,6 +308,7 @@ const StockOpname = () => {
                     onChange={(e) => setStokFisik(e.target.value)}
                     min="0"
                     placeholder="Masukkan stok fisik..."
+                    autoFocus={quickScanMode} // Auto-focus in quick scan mode
                   />
                 </div>
                 
@@ -301,7 +337,12 @@ const StockOpname = () => {
                 <div className="flex gap-2">
                   <Button
                     variant="outline"
-                    onClick={() => setShowDialog(false)}
+                    onClick={() => {
+                      setShowDialog(false);
+                      if (quickScanMode) {
+                        setQuickScanMode(false);
+                      }
+                    }}
                     className="flex-1"
                   >
                     Batal
@@ -314,6 +355,14 @@ const StockOpname = () => {
                     {createStockOpname.isPending ? 'Menyimpan...' : 'Simpan'}
                   </Button>
                 </div>
+                
+                {quickScanMode && (
+                  <div className="text-center">
+                    <p className="text-xs text-blue-600">
+                      Mode Quick Scan: Setelah simpan akan kembali ke scanner
+                    </p>
+                  </div>
+                )}
               </div>
             </DialogContent>
           </Dialog>
@@ -339,10 +388,21 @@ const StockOpname = () => {
               <CardTitle>Input Manual Stok Opname</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-gray-600">
-                Gunakan tombol "Input Manual" di atas untuk melakukan stok opname satu per satu produk.
-                Anda dapat menggunakan scanner barcode untuk mempercepat proses.
-              </p>
+              <div className="space-y-4">
+                <p className="text-gray-600">
+                  Gunakan tombol "Quick Scan" untuk scan barcode secara berulang dan mempercepat proses stok opname,
+                  atau "Input Manual" untuk input satu per satu produk.
+                </p>
+                <div className="bg-blue-50 p-4 rounded-lg">
+                  <h4 className="font-medium text-blue-900 mb-2">Mode Quick Scan:</h4>
+                  <ul className="text-sm text-blue-700 space-y-1">
+                    <li>• Scan barcode dengan kamera</li>
+                    <li>• Produk otomatis terpilih</li>
+                    <li>• Input stok fisik aktual</li>
+                    <li>• Setelah simpan, kembali ke scanner untuk item berikutnya</li>
+                  </ul>
+                </div>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
@@ -430,7 +490,12 @@ const StockOpname = () => {
       <CameraBarcodeScanner
         isOpen={showScanner}
         onScan={handleBarcodeScanned}
-        onClose={() => setShowScanner(false)}
+        onClose={() => {
+          setShowScanner(false);
+          if (quickScanMode) {
+            setQuickScanMode(false);
+          }
+        }}
       />
     </div>
   );

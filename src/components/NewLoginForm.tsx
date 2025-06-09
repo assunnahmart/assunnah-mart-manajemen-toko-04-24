@@ -21,17 +21,8 @@ const NewLoginForm = () => {
   // Auto redirect when authenticated (but not if showing welcome screen)
   useEffect(() => {
     if (isAuthenticated && !showWelcome && user) {
-      console.log('NewLoginForm: User is authenticated, redirecting based on role:', user.role);
-      
-      // Redirect based on user role
-      if (user.role === 'kasir') {
-        navigate('/pos', { replace: true });
-      } else if (user.role === 'admin') {
-        navigate('/dashboard', { replace: true });
-      } else {
-        // Default fallback
-        navigate('/', { replace: true });
-      }
+      console.log('NewLoginForm: User is authenticated, redirecting to POS system');
+      navigate('/pos', { replace: true });
     }
   }, [isAuthenticated, navigate, showWelcome, user]);
 
@@ -48,12 +39,12 @@ const NewLoginForm = () => {
     setError('');
 
     try {
-      const result = await signIn(username, password);
-      console.log('NewLoginForm: Sign in result:', result);
+      const success = await signIn(username, password);
+      console.log('NewLoginForm: Sign in result:', success);
       
-      if (result.error) {
-        console.log('NewLoginForm: Login failed:', result.error.message);
-        setError(result.error.message || 'Login gagal. Periksa username dan password Anda.');
+      if (!success) {
+        console.log('NewLoginForm: Login failed');
+        setError('Username atau password salah. Silakan coba lagi.');
       } else {
         console.log('NewLoginForm: Login successful, showing welcome screen');
         // Reset form
@@ -72,7 +63,7 @@ const NewLoginForm = () => {
 
   const handleWelcomeComplete = () => {
     setShowWelcome(false);
-    // Navigation will happen automatically via useEffect based on role
+    // Navigation will happen automatically via useEffect
   };
 
   // Show welcome screen if user just logged in
@@ -139,7 +130,7 @@ const NewLoginForm = () => {
               className="w-full h-12 text-base font-semibold bg-primary hover:bg-primary/90"
               disabled={loading}
             >
-              {loading ? 'Masuk...' : 'Masuk'}
+              {loading ? 'Memproses...' : 'Masuk'}
             </Button>
           </form>
           

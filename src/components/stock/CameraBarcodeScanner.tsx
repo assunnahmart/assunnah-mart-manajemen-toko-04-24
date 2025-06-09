@@ -16,7 +16,6 @@ const CameraBarcodeScanner = ({ isOpen, onScan, onClose }: CameraBarcodeScannerP
   const [manualBarcode, setManualBarcode] = useState('');
   const [isScanning, setIsScanning] = useState(false);
   const [scannerError, setScannerError] = useState('');
-  const [cameraPermission, setCameraPermission] = useState<'unknown' | 'granted' | 'denied'>('unknown');
   const scannerRef = useRef<Html5QrcodeScanner | null>(null);
   const scannerElementId = "qr-scanner";
   const inputRef = useRef<HTMLInputElement>(null);
@@ -42,7 +41,6 @@ const CameraBarcodeScanner = ({ isOpen, onScan, onClose }: CameraBarcodeScannerP
             experimentalFeatures: {
               useBarCodeDetectorIfSupported: true
             }
-            // Removed supportedScanTypes to use library defaults
           },
           false
         );
@@ -53,7 +51,7 @@ const CameraBarcodeScanner = ({ isOpen, onScan, onClose }: CameraBarcodeScannerP
             // Success callback
             console.log(`Barcode scanned successfully: ${decodedText}`);
             onScan(decodedText);
-            stopScanning();
+            // Don't close scanner here - let parent component handle the flow
           },
           (error) => {
             // Error callback - don't show errors for continuous scanning
@@ -68,11 +66,15 @@ const CameraBarcodeScanner = ({ isOpen, onScan, onClose }: CameraBarcodeScannerP
     }
 
     return () => {
-      if (isScanning) {
-        stopScanning();
+      if (isScanning && scannerRef.current) {
+        try {
+          scannerRef.current.clear().catch(console.error);
+        } catch (error) {
+          console.error('Error cleaning up scanner:', error);
+        }
       }
     };
-  }, [isOpen, isScanning]);
+  }, [isOpen, isScanning, onScan]);
 
   const stopScanning = () => {
     if (scannerRef.current) {
@@ -93,16 +95,12 @@ const CameraBarcodeScanner = ({ isOpen, onScan, onClose }: CameraBarcodeScannerP
       console.log('Manual barcode input:', manualBarcode.trim());
       onScan(manualBarcode.trim());
       setManualBarcode('');
-      onClose();
     }
   };
 
   const startCameraScanning = async () => {
     console.log('Starting camera scanning...');
     setScannerError('');
-    setCameraPermission('unknown');
-    
-    // Start scanning immediately - let the library handle permission requests
     setIsScanning(true);
   };
 
@@ -110,9 +108,18 @@ const CameraBarcodeScanner = ({ isOpen, onScan, onClose }: CameraBarcodeScannerP
     stopScanning();
     setManualBarcode('');
     setScannerError('');
-    setCameraPermission('unknown');
     onClose();
   };
+
+  // Auto-focus on manual input when not scanning
+  useEffect(() => {
+    if (isOpen && !isScanning && inputRef.current) {
+      const timer = setTimeout(() => {
+        inputRef.current?.focus();
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [isOpen, isScanning]);
 
   if (!isOpen) {
     return null;

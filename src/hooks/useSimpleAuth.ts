@@ -5,7 +5,7 @@ interface UserProfile {
   username: string;
   full_name: string;
   role: 'admin' | 'kasir';
-  kasir_id?: string; // Add kasir_id to the interface
+  kasir_id?: string;
 }
 
 interface AuthState {
@@ -72,7 +72,7 @@ export const useSimpleAuth = () => {
       
       if (!user) {
         console.log('useSimpleAuth: User not found or password incorrect');
-        return { error: { message: 'Username atau password salah' } };
+        return false;
       }
 
       const userProfile: UserProfile = {
@@ -87,21 +87,18 @@ export const useSimpleAuth = () => {
       // Save to localStorage
       localStorage.setItem('assunnah_auth_user', JSON.stringify(userProfile));
       
-      // Update state immediately with forced re-render
+      // Update state immediately
       setAuthState({
         isAuthenticated: true,
         user: userProfile,
         loading: false
       });
 
-      // Force a small delay to ensure state is updated before redirect
-      await new Promise(resolve => setTimeout(resolve, 100));
-
       console.log('useSimpleAuth: Auth state updated successfully');
-      return { data: userProfile, error: null };
+      return true;
     } catch (error) {
       console.error('useSimpleAuth: Login error:', error);
-      return { error: { message: 'Terjadi kesalahan saat login' } };
+      return false;
     }
   };
 

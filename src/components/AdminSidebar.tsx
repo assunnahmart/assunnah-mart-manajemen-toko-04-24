@@ -40,11 +40,8 @@ const AdminSidebar = () => {
     <div className={`bg-white shadow-lg border-r transition-all duration-300 ${
       isCollapsed ? 'w-16' : 'w-64'
     } flex flex-col h-full`}>
-      {/* Simplified Header - Single row */}
-      <div className="p-4 border-b flex items-center justify-between">
-        {!isCollapsed && (
-          <h2 className="text-lg font-bold text-gray-900">Assunnah Mart</h2>
-        )}
+      {/* Toggle Button Only */}
+      <div className="p-2 border-b flex justify-end">
         <Button
           variant="ghost"
           size="sm"

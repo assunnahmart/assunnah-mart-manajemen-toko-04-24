@@ -41,10 +41,6 @@ const POSSidebar = ({
   const { toast } = useToast();
   const navigate = useNavigate();
 
-  // Users who should not see the menu
-  const hiddenMenuUsers = ['Agus', 'Yadi', 'Nurohman', 'Jamhur2'];
-  const shouldHideMenuForUser = user?.username && hiddenMenuUsers.includes(user.username);
-
   const handleLogout = () => {
     signOut();
     toast({
@@ -98,10 +94,6 @@ const POSSidebar = ({
       description: 'Laporan harian'
     }
   ];
-
-  if (shouldHideMenuForUser) {
-    return null;
-  }
 
   return (
     <div className={`fixed left-0 top-0 h-full bg-white shadow-xl border-r border-gray-200 transition-all duration-300 z-50 ${

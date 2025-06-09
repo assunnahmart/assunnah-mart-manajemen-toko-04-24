@@ -54,10 +54,6 @@ const POSSystem = () => {
   const createTransaction = useCreatePOSTransaction();
   const { syncStock, syncCustomerDebt, isSyncingStock, isSyncingDebt } = usePOSTransactionSync();
 
-  // Users who should not see the sidebar
-  const hiddenMenuUsers = ['Agus', 'Yadi', 'Nurohman', 'Jamhur2'];
-  const shouldHideMenuForUser = user?.username && hiddenMenuUsers.includes(user.username);
-
   // Handle transaction synchronization
   const handleTransactionSync = async (transactionData: any, items: any[]) => {
     try {
@@ -258,7 +254,7 @@ const POSSystem = () => {
     <NewProtectedRoute>
       <POSTransactionSync onTransactionComplete={handleTransactionSync}>
         <div className="min-h-screen bg-gray-50 flex">
-          {/* Sidebar */}
+          {/* Sidebar - Always show */}
           <POSSidebar
             onQuickScan={() => setShowQuickScanner(true)}
             onTransactionHistory={() => setShowTransactionHistory(true)}
@@ -269,7 +265,7 @@ const POSSystem = () => {
           />
 
           {/* Main Content */}
-          <div className={`flex-1 transition-all duration-300 ${shouldHideMenuForUser ? 'ml-0' : 'ml-16'}`}>
+          <div className="flex-1 transition-all duration-300 ml-16">
             {/* Fixed Total Shopping Display */}
             <div className="sticky top-0 z-40 bg-gray-50 pb-4">
               <div className="container mx-auto p-4 max-w-7xl">

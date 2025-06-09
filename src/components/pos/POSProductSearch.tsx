@@ -142,7 +142,6 @@ const POSProductSearch = ({ searchQuery, onAddToCart, onProductAutoAdded, enable
               <TableHead className="font-semibold">Nama Produk</TableHead>
               <TableHead className="font-semibold">Harga</TableHead>
               <TableHead className="font-semibold">Stok</TableHead>
-              <TableHead className="font-semibold">Barcode</TableHead>
               <TableHead className="font-semibold text-center">Aksi</TableHead>
             </TableRow>
           </TableHeader>
@@ -174,11 +173,6 @@ const POSProductSearch = ({ searchQuery, onAddToCart, onProductAutoAdded, enable
                   <Badge variant={product.stok_saat_ini > 10 ? "secondary" : "destructive"}>
                     {product.stok_saat_ini} {product.satuan}
                   </Badge>
-                </TableCell>
-                <TableCell>
-                  <span className="text-sm text-gray-600">
-                    {product.barcode || '-'}
-                  </span>
                 </TableCell>
                 <TableCell className="text-center">
                   <Button

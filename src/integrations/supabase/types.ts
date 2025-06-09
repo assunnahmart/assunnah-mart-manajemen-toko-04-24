@@ -464,15 +464,7 @@ export type Database = {
           transaction_number?: string
           updated_at?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "kasir_kas_transactions_kasir_id_fkey"
-            columns: ["kasir_id"]
-            isOneToOne: false
-            referencedRelation: "kasir"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       kategori_barang: {
         Row: {

@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -19,13 +20,13 @@ import StockOpnameExportImport from './StockOpnameExportImport';
 
 const StockOpname = () => {
   const [selectedProduct, setSelectedProduct] = useState('');
-  const [stokFisik, setStokFisik] = useState(0);
+  const [stokFisik, setStokFisik] = useState('');
   const [keterangan, setKeterangan] = useState('');
   const [showDialog, setShowDialog] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [showScanner, setShowScanner] = useState(false);
   
-  const { data: stockData } = useStockData();
+  const { data: stockData, isLoading: isLoadingStock } = useStockData();
   const { data: opnameHistory } = useStockOpname();
   const { data: kasirData } = useKasir();
   const { user } = useSimpleAuth();
@@ -41,6 +42,8 @@ const StockOpname = () => {
   const userKasir = kasirData?.find(k => k.nama === user?.full_name);
 
   const handleBarcodeScanned = (barcode: string) => {
+    console.log('Barcode scanned:', barcode);
+    
     const product = stockData?.find(p => p.barcode === barcode);
     if (product) {
       setSelectedProduct(product.id);
@@ -48,7 +51,7 @@ const StockOpname = () => {
       setShowScanner(false);
       toast({
         title: "Produk ditemukan",
-        description: `${product.nama} berhasil dipilih`
+        description: `${product.nama} berhasil dipilih dari barcode scan`
       });
     } else {
       toast({
@@ -70,31 +73,49 @@ const StockOpname = () => {
       return;
     }
 
+    if (stokFisik === '' || isNaN(Number(stokFisik))) {
+      toast({
+        title: "Stok fisik tidak valid",
+        description: "Masukkan angka yang valid untuk stok fisik",
+        variant: "destructive"
+      });
+      return;
+    }
+
     try {
       await createStockOpname.mutateAsync({
         barang_id: selectedProduct,
-        stok_fisik: stokFisik,
+        stok_fisik: Number(stokFisik),
         kasir_id: userKasir.id,
         keterangan
       });
 
       toast({
         title: "Stok Opname berhasil",
-        description: `Stok ${selectedProductData?.nama} telah diperbarui`
+        description: `Stok ${selectedProductData?.nama} telah diperbarui ke ${stokFisik} ${selectedProductData?.satuan}`
       });
 
       // Reset form
       setSelectedProduct('');
-      setStokFisik(0);
+      setStokFisik('');
       setKeterangan('');
+      setSearchQuery('');
       setShowDialog(false);
     } catch (error) {
+      console.error('Error creating stock opname:', error);
       toast({
         title: "Gagal melakukan stok opname",
-        description: error.message,
+        description: error.message || "Terjadi kesalahan saat menyimpan data",
         variant: "destructive"
       });
     }
+  };
+
+  const resetForm = () => {
+    setSelectedProduct('');
+    setStokFisik('');
+    setKeterangan('');
+    setSearchQuery('');
   };
 
   return (
@@ -102,11 +123,16 @@ const StockOpname = () => {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold text-gray-900">Stok Opname</h2>
-          <p className="text-gray-600">Input dan monitoring stok fisik produk</p>
+          <p className="text-gray-600">Input dan monitoring stok fisik produk dengan scanner barcode</p>
         </div>
         
         <div className="flex gap-2">
-          <Dialog open={showDialog} onOpenChange={setShowDialog}>
+          <Dialog open={showDialog} onOpenChange={(open) => {
+            setShowDialog(open);
+            if (!open) {
+              resetForm();
+            }
+          }}>
             <DialogTrigger asChild>
               <Button className="gap-2">
                 <Plus className="h-4 w-4" />
@@ -115,7 +141,7 @@ const StockOpname = () => {
             </DialogTrigger>
             <DialogContent className="max-w-md">
               <DialogHeader>
-                <DialogTitle>Input Stok Opname</DialogTitle>
+                <DialogTitle>Input Stok Opname Manual</DialogTitle>
               </DialogHeader>
               
               <div className="space-y-4">
@@ -150,12 +176,22 @@ const StockOpname = () => {
                       <SelectValue placeholder="Pilih produk..." />
                     </SelectTrigger>
                     <SelectContent>
-                      {filteredProducts.map((product) => (
-                        <SelectItem key={product.id} value={product.id}>
-                          {product.nama} - Stok: {product.stok_saat_ini} {product.satuan}
-                          {product.barcode && ` (${product.barcode})`}
+                      {isLoadingStock ? (
+                        <SelectItem value="loading" disabled>
+                          Memuat produk...
                         </SelectItem>
-                      ))}
+                      ) : filteredProducts.length === 0 ? (
+                        <SelectItem value="no-data" disabled>
+                          {searchQuery ? 'Tidak ada produk ditemukan' : 'Tidak ada produk'}
+                        </SelectItem>
+                      ) : (
+                        filteredProducts.map((product) => (
+                          <SelectItem key={product.id} value={product.id}>
+                            {product.nama} - Stok: {product.stok_saat_ini} {product.satuan}
+                            {product.barcode && ` (${product.barcode})`}
+                          </SelectItem>
+                        ))
+                      )}
                     </SelectContent>
                   </Select>
                 </div>
@@ -178,20 +214,20 @@ const StockOpname = () => {
                     id="stokFisik"
                     type="number"
                     value={stokFisik}
-                    onChange={(e) => setStokFisik(Number(e.target.value))}
+                    onChange={(e) => setStokFisik(e.target.value)}
                     min="0"
                     placeholder="Masukkan stok fisik..."
                   />
                 </div>
                 
-                {selectedProductData && stokFisik !== selectedProductData.stok_saat_ini && (
+                {selectedProductData && stokFisik !== '' && !isNaN(Number(stokFisik)) && Number(stokFisik) !== selectedProductData.stok_saat_ini && (
                   <div className="bg-yellow-50 p-3 rounded-lg">
                     <p className="text-sm font-medium">Selisih Stok</p>
                     <p className={`text-lg font-bold ${
-                      stokFisik > selectedProductData.stok_saat_ini ? 'text-green-600' : 'text-red-600'
+                      Number(stokFisik) > selectedProductData.stok_saat_ini ? 'text-green-600' : 'text-red-600'
                     }`}>
-                      {stokFisik > selectedProductData.stok_saat_ini ? '+' : ''}
-                      {stokFisik - selectedProductData.stok_saat_ini} {selectedProductData.satuan}
+                      {Number(stokFisik) > selectedProductData.stok_saat_ini ? '+' : ''}
+                      {Number(stokFisik) - selectedProductData.stok_saat_ini} {selectedProductData.satuan}
                     </p>
                   </div>
                 )}
@@ -216,7 +252,7 @@ const StockOpname = () => {
                   </Button>
                   <Button
                     onClick={handleSubmitOpname}
-                    disabled={!selectedProduct || createStockOpname.isPending}
+                    disabled={!selectedProduct || stokFisik === '' || createStockOpname.isPending}
                     className="flex-1"
                   >
                     {createStockOpname.isPending ? 'Menyimpan...' : 'Simpan'}

@@ -48,33 +48,35 @@ const NewNavbar = () => {
     <nav className="bg-white shadow-lg border-b">
       <div className="max-w-full mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16">
-          {/* Left side - Logo and ALL menu items */}
-          <div className="flex items-center space-x-4 flex-1">
+          {/* Left side - Logo and ALL menu items for admin users */}
+          <div className="flex items-center space-x-1 flex-1">
             {/* Logo */}
-            <Link to="/dashboard" className="flex-shrink-0 flex items-center">
+            <Link to="/dashboard" className="flex-shrink-0 flex items-center mr-6">
               <div className="h-8 w-8 bg-gradient-to-br from-green-600 to-green-800 rounded-lg flex items-center justify-center">
                 <span className="text-white font-bold text-sm">AM</span>
               </div>
               <span className="ml-2 text-xl font-bold text-gray-900">Assunnah Mart</span>
             </Link>
 
-            {/* All Menu Items - Desktop Version */}
-            <div className="hidden lg:flex items-center space-x-1 ml-8 flex-1">
-              {menuItems.map((item) => (
-                <Link
-                  key={item.path}
-                  to={item.path}
-                  className={`flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors whitespace-nowrap ${
-                    isActive(item.path)
-                      ? 'bg-blue-100 text-blue-700'
-                      : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-                  }`}
-                >
-                  <item.icon className="h-4 w-4 mr-2" />
-                  {item.label}
-                </Link>
-              ))}
-            </div>
+            {/* All Menu Items in one horizontal row for admin users */}
+            {(user?.username === 'Jamhur' || user?.username === 'Ginanjar') && (
+              <div className="hidden lg:flex items-center space-x-1 flex-1 overflow-x-auto">
+                {menuItems.map((item) => (
+                  <Link
+                    key={item.path}
+                    to={item.path}
+                    className={`flex items-center px-2 py-2 rounded-md text-xs font-medium transition-colors whitespace-nowrap flex-shrink-0 ${
+                      isActive(item.path)
+                        ? 'bg-blue-100 text-blue-700'
+                        : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                    }`}
+                  >
+                    <item.icon className="h-3 w-3 mr-1" />
+                    {item.label}
+                  </Link>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Right side - User info and logout (desktop only) */}

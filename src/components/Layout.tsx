@@ -2,6 +2,7 @@
 import { ReactNode } from 'react';
 import { useSimpleAuth } from '@/hooks/useSimpleAuth';
 import NewNavbar from './NewNavbar';
+import { useLocation } from 'react-router-dom';
 
 interface LayoutProps {
   children: ReactNode;
@@ -9,11 +10,16 @@ interface LayoutProps {
 
 const Layout = ({ children }: LayoutProps) => {
   const { user } = useSimpleAuth();
+  const location = useLocation();
+
+  // Don't show navbar on login page or index page
+  const hideNavbarPaths = ['/login', '/'];
+  const shouldHideNavbar = hideNavbarPaths.includes(location.pathname);
 
   return (
     <div className="min-h-screen flex flex-col">
-      {/* Only show navbar if user is not kasir */}
-      {user?.role !== 'kasir' && <NewNavbar />}
+      {/* Only show navbar if user is not kasir and not on login/index page */}
+      {!shouldHideNavbar && user?.role !== 'kasir' && <NewNavbar />}
       
       <main className="flex-1">
         {children}

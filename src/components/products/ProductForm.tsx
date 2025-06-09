@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -54,12 +53,12 @@ const ProductForm = ({ product, onClose, onSuccess }: ProductFormProps) => {
   const [loading, setLoading] = useState(false);
   const [generatingBarcode, setGeneratingBarcode] = useState(false);
 
-  // Auto-set jenis_konsinyasi when kategori_pembelian changes
+  // Auto-set jenis_konsinyasi when kategori_pembelian changes to "pembelian"
   useEffect(() => {
     if (formData.kategori_pembelian === 'pembelian') {
       setFormData(prev => ({
         ...prev,
-        jenis_konsinyasi: 'harian'
+        jenis_konsinyasi: 'lainnya'
       }));
     }
   }, [formData.kategori_pembelian]);
@@ -108,10 +107,9 @@ const ProductForm = ({ product, onClose, onSuccess }: ProductFormProps) => {
         submitData.barcode = newBarcode;
       }
 
-      // IMPORTANT: Force jenis_konsinyasi to be "harian" for kategori_pembelian "pembelian"
-      // This fixes the constraint violation error
+      // IMPORTANT: Force jenis_konsinyasi to be "lainnya" for kategori_pembelian "pembelian"
       if (submitData.kategori_pembelian === 'pembelian') {
-        submitData.jenis_konsinyasi = 'harian';
+        submitData.jenis_konsinyasi = 'lainnya';
       }
 
       // Validation
@@ -119,9 +117,9 @@ const ProductForm = ({ product, onClose, onSuccess }: ProductFormProps) => {
         throw new Error('Nama produk dan jenis konsinyasi harus diisi');
       }
 
-      // Ensure jenis_konsinyasi is only "harian" or "mingguan" (allowed values)
-      if (!['harian', 'mingguan'].includes(submitData.jenis_konsinyasi)) {
-        submitData.jenis_konsinyasi = 'harian';
+      // Ensure jenis_konsinyasi is valid - add "lainnya" as allowed value
+      if (!['harian', 'mingguan', 'lainnya'].includes(submitData.jenis_konsinyasi)) {
+        submitData.jenis_konsinyasi = 'lainnya';
       }
 
       console.log('Submitting product data:', submitData);
@@ -259,6 +257,7 @@ const ProductForm = ({ product, onClose, onSuccess }: ProductFormProps) => {
               <SelectContent>
                 <SelectItem value="harian">Harian</SelectItem>
                 <SelectItem value="mingguan">Mingguan</SelectItem>
+                <SelectItem value="lainnya">Lainnya</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -267,7 +266,7 @@ const ProductForm = ({ product, onClose, onSuccess }: ProductFormProps) => {
           {formData.kategori_pembelian === 'pembelian' && (
             <div className="bg-blue-50 border border-blue-200 p-3 rounded-lg">
               <p className="text-blue-700 text-sm">
-                ✓ Produk dengan kategori "Pembelian" otomatis menggunakan jenis barang "Harian"
+                ✓ Produk dengan kategori "Pembelian" otomatis menggunakan jenis barang "Lainnya"
               </p>
             </div>
           )}

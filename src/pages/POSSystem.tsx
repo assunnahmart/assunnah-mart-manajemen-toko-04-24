@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -14,7 +15,10 @@ import {
   History,
   ClipboardList,
   FileText,
-  LogOut
+  LogOut,
+  Camera,
+  Save,
+  CreditCard
 } from 'lucide-react';
 import POSSidebar from '@/components/pos/POSSidebar';
 import POSProductSearch from '@/components/pos/POSProductSearch';
@@ -24,6 +28,14 @@ import POSBarcodeScanner from '@/components/pos/POSBarcodeScanner';
 import POSTransactionHistory from '@/components/pos/POSTransactionHistory';
 import POSKasirTransactionHistory from '@/components/pos/POSKasirTransactionHistory';
 import POSDailyReport from '@/components/pos/POSDailyReport';
+import POSCustomerSelect from '@/components/pos/POSCustomerSelect';
+import POSPaymentMethod from '@/components/pos/POSPaymentMethod';
+import CameraBarcodeScanner from '@/components/stock/CameraBarcodeScanner';
+import KonsinyasiHarianForm from '@/components/konsinyasi/KonsinyasiHarianForm';
+import KonsinyasiHarianHistory from '@/components/konsinyasi/KonsinyasiHarianHistory';
+import StockOpname from '@/components/stock/StockOpname';
+import KasirKasForm from '@/components/kas/KasirKasForm';
+import KasirKasHistory from '@/components/kas/KasirKasHistory';
 import { useCreatePOSTransaction } from '@/hooks/usePOSTransactions';
 import { useSimpleAuth } from '@/hooks/useSimpleAuth';
 import { useToast } from '@/hooks/use-toast';
@@ -42,6 +54,7 @@ const POSSystem = () => {
   const { user, signOut } = useSimpleAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
+  
   const [cartItems, setCartItems] = useState([]);
   const [showPayment, setShowPayment] = useState(false);
   const [showScanner, setShowScanner] = useState(false);

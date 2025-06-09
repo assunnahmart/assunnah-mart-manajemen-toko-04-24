@@ -48,8 +48,9 @@ const NewNavbar = () => {
     <nav className="bg-white shadow-lg border-b">
       <div className="max-w-full mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16">
-          {/* Logo and Menu Items in one row */}
-          <div className="flex items-center space-x-8">
+          {/* Logo and All Menu Items in Left Side */}
+          <div className="flex items-center space-x-4">
+            {/* Logo */}
             <Link to="/dashboard" className="flex-shrink-0 flex items-center">
               <div className="h-8 w-8 bg-gradient-to-br from-green-600 to-green-800 rounded-lg flex items-center justify-center">
                 <span className="text-white font-bold text-sm">AM</span>
@@ -57,27 +58,27 @@ const NewNavbar = () => {
               <span className="ml-2 text-xl font-bold text-gray-900">Assunnah Mart</span>
             </Link>
 
-            {/* Desktop Menu Items */}
-            <div className="hidden lg:flex items-center space-x-1">
+            {/* Desktop Menu Items - All in Left Side */}
+            <div className="hidden xl:flex items-center space-x-1 ml-8">
               {menuItems.map((item) => (
                 <Link
                   key={item.path}
                   to={item.path}
-                  className={`flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                  className={`flex items-center px-2 py-2 rounded-md text-xs font-medium transition-colors ${
                     isActive(item.path)
                       ? 'bg-blue-100 text-blue-700'
                       : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
                   }`}
                 >
-                  <item.icon className="h-4 w-4 mr-2" />
+                  <item.icon className="h-3 w-3 mr-1" />
                   {item.label}
                 </Link>
               ))}
             </div>
           </div>
 
-          {/* User Info and Logout */}
-          <div className="hidden lg:flex items-center space-x-4">
+          {/* User Info and Logout - Right Side */}
+          <div className="hidden xl:flex items-center space-x-4">
             <div className="flex items-center space-x-2">
               <User className="h-4 w-4 text-gray-600" />
               <span className="text-sm text-gray-600">{user?.full_name}</span>
@@ -93,7 +94,7 @@ const NewNavbar = () => {
           </div>
 
           {/* Mobile menu button */}
-          <div className="lg:hidden flex items-center">
+          <div className="xl:hidden flex items-center">
             <Button
               variant="ghost"
               size="sm"
@@ -107,7 +108,7 @@ const NewNavbar = () => {
 
       {/* Mobile Menu */}
       {isMenuOpen && (
-        <div className="lg:hidden">
+        <div className="xl:hidden">
           <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3 bg-white border-t">
             {menuItems.map((item) => (
               <Link

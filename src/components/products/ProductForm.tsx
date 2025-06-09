@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -98,10 +97,18 @@ const ProductForm = ({ product, onClose, onSuccess }: ProductFormProps) => {
         submitData.barcode = newBarcode;
       }
 
-      // Validation: Allow all types including "pembelian"
+      // Fix: Use only allowed values for jenis_konsinyasi based on database constraint
+      // If kategori_pembelian is "pembelian", force jenis_konsinyasi to "harian"
+      if (submitData.kategori_pembelian === 'pembelian') {
+        submitData.jenis_konsinyasi = 'harian';
+      }
+
+      // Validation
       if (!submitData.nama || !submitData.jenis_konsinyasi) {
         throw new Error('Nama produk dan jenis konsinyasi harus diisi');
       }
+
+      console.log('Submitting product data:', submitData);
 
       if (product?.id) {
         // Update existing product
@@ -218,7 +225,6 @@ const ProductForm = ({ product, onClose, onSuccess }: ProductFormProps) => {
                 <SelectContent>
                   <SelectItem value="harian">Harian</SelectItem>
                   <SelectItem value="mingguan">Mingguan</SelectItem>
-                  <SelectItem value="pembelian">Pembelian</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -236,10 +242,20 @@ const ProductForm = ({ product, onClose, onSuccess }: ProductFormProps) => {
                   <SelectItem value="retail">Retail</SelectItem>
                   <SelectItem value="grosir">Grosir</SelectItem>
                   <SelectItem value="khusus">Khusus</SelectItem>
+                  <SelectItem value="pembelian">Pembelian</SelectItem>
                 </SelectContent>
               </Select>
             </div>
           </div>
+
+          {/* Show info when pembelian is selected */}
+          {formData.kategori_pembelian === 'pembelian' && (
+            <div className="bg-blue-50 border border-blue-200 p-3 rounded-lg">
+              <p className="text-blue-700 text-sm">
+                Produk dengan kategori pembelian akan otomatis menggunakan jenis barang "Harian"
+              </p>
+            </div>
+          )}
 
           <div>
             <Label htmlFor="satuan">Satuan</Label>

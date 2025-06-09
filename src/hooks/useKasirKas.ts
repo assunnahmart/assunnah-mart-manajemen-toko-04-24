@@ -37,7 +37,9 @@ export const useCreateKasirKasTransaction = () => {
         ...data,
         transaction_number: transactionNumber,
         tanggal_transaksi: new Date().toISOString().split('T')[0],
-        sync_to_kas_umum: true
+        sync_to_kas_umum: true,
+        // Ensure kasir_id is properly handled as UUID
+        kasir_id: data.kasir_id // This should now be a proper UUID string
       };
 
       console.log('Final transaction data:', transactionData);

@@ -64,14 +64,14 @@ const KasirKasForm = () => {
     }
 
     try {
-      console.log('Submitting transaction with kasir ID:', userKasir.id);
+      console.log('Submitting transaction with kasir ID (UUID):', userKasir.id);
       
       await createTransaction.mutateAsync({
         jenis_transaksi: jenisTransaksi,
         kategori,
         jumlah,
         keterangan,
-        kasir_id: userKasir.id, // Use the kasir ID string directly
+        kasir_id: userKasir.id, // Now properly passing UUID
         kasir_name: user?.full_name || userKasir.nama,
         referensi_tipe: 'manual_entry'
       });

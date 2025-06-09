@@ -1,4 +1,3 @@
-
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -21,7 +20,7 @@ export const useKonsinyasiHarian = () => {
   });
 };
 
-// New hook to get suppliers with daily consignment products
+// Fixed hook to get suppliers with daily consignment products
 export const useKonsinyasiSuppliers = () => {
   return useQuery({
     queryKey: ['konsinyasi_suppliers'],
@@ -29,14 +28,43 @@ export const useKonsinyasiSuppliers = () => {
       const { data, error } = await supabase
         .from('supplier')
         .select(`
-          *,
-          barang_konsinyasi!inner (id, nama, jenis_konsinyasi)
+          id,
+          nama,
+          alamat,
+          telepon,
+          email,
+          jenis,
+          created_at
         `)
-        .eq('barang_konsinyasi.jenis_konsinyasi', 'harian')
         .order('nama');
       
       if (error) throw error;
-      return data;
+      
+      // Get suppliers that have daily consignment products
+      const suppliersWithProducts = await Promise.all(
+        data.map(async (supplier) => {
+          const { data: products, error: productsError } = await supabase
+            .from('barang_konsinyasi')
+            .select('id, nama, jenis_konsinyasi')
+            .eq('supplier_id', supplier.id)
+            .eq('jenis_konsinyasi', 'harian');
+          
+          if (productsError) {
+            console.error('Error fetching products for supplier:', supplier.id, productsError);
+            return { ...supplier, barang_konsinyasi: [] };
+          }
+          
+          return {
+            ...supplier,
+            barang_konsinyasi: products || []
+          };
+        })
+      );
+      
+      // Filter suppliers that have at least one daily consignment product
+      return suppliersWithProducts.filter(supplier => 
+        supplier.barang_konsinyasi && supplier.barang_konsinyasi.length > 0
+      );
     },
   });
 };

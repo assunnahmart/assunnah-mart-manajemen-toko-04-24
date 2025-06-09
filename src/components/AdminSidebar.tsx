@@ -40,15 +40,10 @@ const AdminSidebar = () => {
     <div className={`bg-white shadow-lg border-r transition-all duration-300 ${
       isCollapsed ? 'w-16' : 'w-64'
     } flex flex-col h-full`}>
-      {/* Sidebar Header */}
+      {/* Simplified Header - Single row */}
       <div className="p-4 border-b flex items-center justify-between">
         {!isCollapsed && (
-          <div className="flex items-center">
-            <div className="h-8 w-8 bg-gradient-to-br from-green-600 to-green-800 rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-sm">AM</span>
-            </div>
-            <span className="ml-2 text-lg font-bold text-gray-900">Assunnah Mart</span>
-          </div>
+          <h2 className="text-lg font-bold text-gray-900">Assunnah Mart</h2>
         )}
         <Button
           variant="ghost"

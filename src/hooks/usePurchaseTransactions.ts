@@ -94,6 +94,41 @@ export const useCreatePurchaseTransaction = () => {
         
         if (debtError) throw debtError;
       }
+
+      // ADDED: Sync with kas umum for cash transactions
+      if (transaction.jenis_pembayaran === 'cash') {
+        const { data: kasTransactionNumber, error: kasNumberError } = await supabase
+          .rpc('generate_kas_transaction_number');
+        
+        if (kasNumberError) throw kasNumberError;
+        
+        // Get kas account (Cash account)
+        const { data: kasAccount, error: kasAccountError } = await supabase
+          .from('chart_of_accounts')
+          .select('id')
+          .eq('kode_akun', '1001')
+          .single();
+        
+        if (kasAccountError) throw kasAccountError;
+        
+        // Create kas keluar entry for cash purchase
+        const { error: kasError } = await supabase
+          .from('kas_umum_transactions')
+          .insert({
+            transaction_number: kasTransactionNumber as string,
+            tanggal_transaksi: new Date().toISOString().split('T')[0],
+            jenis_transaksi: 'keluar',
+            akun_id: kasAccount.id,
+            jumlah: transaction.total,
+            keterangan: `Pembelian tunai - ${transactionNumber}`,
+            referensi_tipe: 'purchase_transaction',
+            referensi_id: insertedTransaction.id,
+            kasir_username: transaction.kasir_id ? 'system' : 'admin',
+            kasir_name: 'Admin'
+          });
+        
+        if (kasError) throw kasError;
+      }
       
       return { transaction: insertedTransaction, items: itemsData };
     },
@@ -101,6 +136,7 @@ export const useCreatePurchaseTransaction = () => {
       queryClient.invalidateQueries({ queryKey: ['purchase_transactions'] });
       queryClient.invalidateQueries({ queryKey: ['barang_konsinyasi'] });
       queryClient.invalidateQueries({ queryKey: ['hutang_supplier'] });
+      queryClient.invalidateQueries({ queryKey: ['kas_umum_transactions'] }); // Added to refresh kas umum
     },
   });
 };

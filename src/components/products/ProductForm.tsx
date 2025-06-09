@@ -107,7 +107,7 @@ const ProductForm = ({ product, onClose, onSuccess }: ProductFormProps) => {
         submitData.barcode = newBarcode;
       }
 
-      // IMPORTANT: Force jenis_konsinyasi to be "lainnya" for kategori_pembelian "pembelian"
+      // FIXED: Ensure jenis_konsinyasi accepts "lainnya" value
       if (submitData.kategori_pembelian === 'pembelian') {
         submitData.jenis_konsinyasi = 'lainnya';
       }
@@ -117,8 +117,9 @@ const ProductForm = ({ product, onClose, onSuccess }: ProductFormProps) => {
         throw new Error('Nama produk dan jenis konsinyasi harus diisi');
       }
 
-      // Ensure jenis_konsinyasi is valid - add "lainnya" as allowed value
-      if (!['harian', 'mingguan', 'lainnya'].includes(submitData.jenis_konsinyasi)) {
+      // FIXED: Allow "lainnya" as valid jenis_konsinyasi value
+      const validJenisKonsinyasi = ['harian', 'mingguan', 'lainnya'];
+      if (!validJenisKonsinyasi.includes(submitData.jenis_konsinyasi)) {
         submitData.jenis_konsinyasi = 'lainnya';
       }
 

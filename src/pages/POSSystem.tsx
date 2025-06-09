@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import NewProtectedRoute from '@/components/NewProtectedRoute';
 import NewNavbar from '@/components/NewNavbar';
@@ -26,6 +27,7 @@ import KonsinyasiHarianHistory from '@/components/konsinyasi/KonsinyasiHarianHis
 import KasirKasForm from '@/components/kas/KasirKasForm';
 import KasirKasHistory from '@/components/kas/KasirKasHistory';
 import StockOpname from '@/components/stock/StockOpname';
+import CameraBarcodeScanner from '@/components/stock/CameraBarcodeScanner';
 
 interface Customer {
   id: string;
@@ -41,6 +43,7 @@ const POSSystem = () => {
   const [cartItems, setCartItems] = useState([]);
   const [showPayment, setShowPayment] = useState(false);
   const [showScanner, setShowScanner] = useState(false);
+  const [showQuickScanner, setShowQuickScanner] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState('cash');
@@ -236,6 +239,18 @@ const POSSystem = () => {
     });
   };
 
+  const handleQuickScanBarcodeScanned = (barcode: string) => {
+    console.log('Quick scan barcode:', barcode);
+    
+    setSearchQuery(barcode);
+    setShowQuickScanner(false);
+    
+    toast({
+      title: "Produk ditemukan",
+      description: `Barcode ${barcode} berhasil di-scan`
+    });
+  };
+
   const handleProductAutoAdded = () => {
     setTimeout(() => {
       setSearchQuery('');
@@ -246,7 +261,7 @@ const POSSystem = () => {
     <NewProtectedRoute>
       <POSTransactionSync onTransactionComplete={handleTransactionSync}>
         <div className="min-h-screen bg-gray-50">
-          {/* Collapsible Navbar - Hidden by default, and completely hidden for specific users */}
+          {/* Single Row Header Menu - Hidden by default, and completely hidden for specific users */}
           {!shouldHideMenuForUser && (
             <div className={`transition-all duration-300 ${isMenuCollapsed ? 'h-0 overflow-hidden' : 'h-auto'}`}>
               <NewNavbar />
@@ -278,7 +293,97 @@ const POSSystem = () => {
             </div>
           )}
           
-          {/* Fixed Total Shopping Display at the very top */}
+          {/* Single Row Quick Action Header */}
+          <div className="bg-white border-b shadow-sm">
+            <div className="container mx-auto px-4 max-w-7xl">
+              <div className="flex items-center justify-between py-3">
+                <div className="flex items-center gap-2">
+                  <img 
+                    src="/lovable-uploads/163a7d14-7869-47b2-b33b-40be703e48e1.png" 
+                    alt="Assunnah Mart Logo" 
+                    className="h-8 w-8 object-contain"
+                  />
+                  <h1 className="text-lg font-bold text-gray-900">Assunnah Mart POS</h1>
+                  <Badge variant="outline" className="text-xs">
+                    {user?.full_name}
+                  </Badge>
+                </div>
+                
+                <div className="flex items-center gap-2">
+                  <Button
+                    size="sm"
+                    onClick={() => setShowQuickScanner(true)}
+                    className="bg-green-600 hover:bg-green-700 gap-1"
+                  >
+                    <Scan className="h-4 w-4" />
+                    Quick Scan
+                  </Button>
+                  
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowTransactionHistory(true)}
+                    className="gap-1"
+                  >
+                    <History className="h-4 w-4" />
+                    Riwayat
+                  </Button>
+                  
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowKonsinyasi(true)}
+                    className="gap-1"
+                  >
+                    <Package className="h-4 w-4" />
+                    Konsinyasi
+                  </Button>
+                  
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowStockOpname(true)}
+                    className="gap-1"
+                  >
+                    <ClipboardList className="h-4 w-4" />
+                    Stok Opname
+                  </Button>
+                  
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowKasirKas(true)}
+                    className="gap-1"
+                  >
+                    <Wallet className="h-4 w-4" />
+                    Kas
+                  </Button>
+                  
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowDailyReport(true)}
+                    className="gap-1"
+                  >
+                    <FileText className="h-4 w-4" />
+                    Laporan
+                  </Button>
+                  
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleLogout}
+                    className="gap-1 text-red-600 hover:text-red-700"
+                  >
+                    <LogOut className="h-4 w-4" />
+                    Keluar
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          {/* Fixed Total Shopping Display */}
           <div className="sticky top-0 z-40 bg-gray-50 pb-4">
             <div className="container mx-auto p-4 max-w-7xl">
               <div className="bg-gradient-to-r from-yellow-600 via-yellow-700 to-yellow-800 rounded-xl p-6 shadow-lg border-2 border-yellow-500">
@@ -320,58 +425,6 @@ const POSSystem = () => {
                     </div>
                   </div>
                 </div>
-              </div>
-
-              {/* Kasir Action Buttons */}
-              <div className="mt-4 flex justify-center gap-3">
-                <Button
-                  variant="outline"
-                  onClick={() => setShowTransactionHistory(true)}
-                  className="bg-white hover:bg-blue-50 border-blue-300 text-blue-700"
-                >
-                  <History className="h-4 w-4 mr-2" />
-                  Riwayat Transaksi
-                </Button>
-                <Button
-                  variant="outline"
-                  onClick={() => setShowKonsinyasi(true)}
-                  className="bg-white hover:bg-green-50 border-green-300 text-green-700"
-                >
-                  <Package className="h-4 w-4 mr-2" />
-                  Konsinyasi Harian
-                </Button>
-                <Button
-                  variant="outline"
-                  onClick={() => setShowStockOpname(true)}
-                  className="bg-white hover:bg-indigo-50 border-indigo-300 text-indigo-700"
-                >
-                  <Scan className="h-4 w-4 mr-2" />
-                  Stok Opname
-                </Button>
-                <Button
-                  variant="outline"
-                  onClick={() => setShowKasirKas(true)}
-                  className="bg-white hover:bg-orange-50 border-orange-300 text-orange-700"
-                >
-                  <Wallet className="h-4 w-4 mr-2" />
-                  Kas Kasir
-                </Button>
-                <Button
-                  variant="outline"
-                  onClick={() => setShowDailyReport(true)}
-                  className="bg-white hover:bg-purple-50 border-purple-300 text-purple-700"
-                >
-                  <FileText className="h-4 w-4 mr-2" />
-                  Cetak Laporan
-                </Button>
-                <Button
-                  variant="outline"
-                  onClick={handleLogout}
-                  className="bg-white hover:bg-red-50 border-red-300 text-red-700"
-                >
-                  <LogOut className="h-4 w-4 mr-2" />
-                  Keluar
-                </Button>
               </div>
             </div>
           </div>
@@ -624,11 +677,18 @@ const POSSystem = () => {
             />
           )}
 
-          {/* Barcode Scanner Modal */}
+          {/* Regular Barcode Scanner Modal */}
           <POSBarcodeScanner
             isOpen={showScanner}
             onScan={handleBarcodeScanned}
             onClose={() => setShowScanner(false)}
+          />
+
+          {/* Quick Scanner Modal - Direct Camera Access */}
+          <CameraBarcodeScanner
+            isOpen={showQuickScanner}
+            onScan={handleQuickScanBarcodeScanned}
+            onClose={() => setShowQuickScanner(false)}
           />
         </div>
       </POSTransactionSync>

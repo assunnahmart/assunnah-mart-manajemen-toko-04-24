@@ -20,6 +20,24 @@ const CameraBarcodeScanner = ({ isOpen, onScan, onClose }: CameraBarcodeScannerP
   const scannerElementId = "qr-scanner";
   const inputRef = useRef<HTMLInputElement>(null);
 
+  // Auto-start scanning when modal opens
+  useEffect(() => {
+    if (isOpen) {
+      console.log('Auto-starting camera scanner...');
+      startCameraScanning();
+    }
+    
+    return () => {
+      if (scannerRef.current) {
+        try {
+          scannerRef.current.clear().catch(console.error);
+        } catch (error) {
+          console.error('Error cleaning up scanner:', error);
+        }
+      }
+    };
+  }, [isOpen]);
+
   useEffect(() => {
     if (isOpen && isScanning) {
       console.log('Initializing barcode scanner...');
@@ -131,96 +149,22 @@ const CameraBarcodeScanner = ({ isOpen, onScan, onClose }: CameraBarcodeScannerP
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
           <CardTitle className="flex items-center gap-2">
             <Scan className="h-5 w-5" />
-            Scan Barcode Produk
+            Quick Scan Barcode
           </CardTitle>
           <Button variant="ghost" size="sm" onClick={handleClose}>
             <X className="h-4 w-4" />
           </Button>
         </CardHeader>
         <CardContent className="space-y-4">
-          {!isScanning ? (
-            <>
-              <div className="text-center space-y-4">
-                <p className="text-sm text-gray-600">
-                  Pilih metode untuk scan barcode produk
-                </p>
-                
-                <Button 
-                  onClick={startCameraScanning}
-                  className="w-full gap-2"
-                  variant="default"
-                >
-                  <Camera className="h-4 w-4" />
-                  Gunakan Kamera
-                </Button>
-                
-                <div className="bg-blue-50 p-3 rounded-lg">
-                  <p className="text-blue-700 text-sm">
-                    📱 Jika diminta izin kamera, silakan klik "Allow" atau "Izinkan"
-                  </p>
-                </div>
-                
-                {scannerError && (
-                  <div className="text-red-600 text-sm bg-red-50 p-3 rounded border border-red-200">
-                    <div className="flex items-start gap-2">
-                      <AlertCircle className="h-4 w-4 mt-0.5 flex-shrink-0" />
-                      <span>{scannerError}</span>
-                    </div>
-                  </div>
-                )}
-              </div>
-              
-              <div className="relative">
-                <div className="absolute inset-0 flex items-center">
-                  <span className="w-full border-t" />
-                </div>
-                <div className="relative flex justify-center text-xs uppercase">
-                  <span className="bg-background px-2 text-muted-foreground">
-                    Atau Input Manual
-                  </span>
-                </div>
-              </div>
-
-              <form onSubmit={handleManualSubmit} className="space-y-4">
-                <div>
-                  <label className="text-sm font-medium">Masukkan Barcode</label>
-                  <Input
-                    ref={inputRef}
-                    type="text"
-                    placeholder="Ketik atau scan barcode di sini..."
-                    value={manualBarcode}
-                    onChange={(e) => setManualBarcode(e.target.value)}
-                    autoFocus
-                    className="mt-1"
-                  />
-                  <p className="text-xs text-gray-500 mt-1">
-                    Arahkan scanner barcode ke kolom ini atau ketik manual
-                  </p>
-                </div>
-                <div className="flex gap-2">
-                  <Button 
-                    type="submit" 
-                    className="flex-1" 
-                    disabled={!manualBarcode.trim()}
-                  >
-                    <Scan className="h-4 w-4 mr-2" />
-                    Proses Barcode
-                  </Button>
-                  <Button type="button" variant="outline" onClick={handleClose}>
-                    Batal
-                  </Button>
-                </div>
-              </form>
-            </>
-          ) : (
+          {isScanning ? (
             <div className="space-y-4">
               <div className="text-center">
                 <p className="text-sm text-gray-600 mb-4">
-                  Arahkan kamera ke barcode produk
+                  🎯 Arahkan kamera ke barcode produk
                 </p>
-                <div className="bg-blue-50 p-3 rounded-lg mb-4">
-                  <p className="text-blue-700 text-sm">
-                    📱 Pastikan barcode berada dalam kotak scanner dan fokus dengan jelas
+                <div className="bg-green-50 p-3 rounded-lg mb-4">
+                  <p className="text-green-700 text-sm">
+                    ✅ Scanner aktif! Pastikan barcode berada dalam kotak dan fokus dengan jelas
                   </p>
                 </div>
               </div>
@@ -255,6 +199,101 @@ const CameraBarcodeScanner = ({ isOpen, onScan, onClose }: CameraBarcodeScannerP
                   Tutup
                 </Button>
               </div>
+              
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                  <span className="w-full border-t" />
+                </div>
+                <div className="relative flex justify-center text-xs uppercase">
+                  <span className="bg-background px-2 text-muted-foreground">
+                    Atau Input Manual
+                  </span>
+                </div>
+              </div>
+
+              <form onSubmit={handleManualSubmit} className="space-y-4">
+                <div>
+                  <Input
+                    ref={inputRef}
+                    type="text"
+                    placeholder="Ketik barcode manual..."
+                    value={manualBarcode}
+                    onChange={(e) => setManualBarcode(e.target.value)}
+                    className="mt-1"
+                  />
+                </div>
+                <Button 
+                  type="submit" 
+                  className="w-full" 
+                  disabled={!manualBarcode.trim()}
+                >
+                  <Scan className="h-4 w-4 mr-2" />
+                  Proses Barcode Manual
+                </Button>
+              </form>
+            </div>
+          ) : (
+            <div className="text-center space-y-4">
+              <div className="bg-blue-50 p-3 rounded-lg">
+                <p className="text-blue-700 text-sm">
+                  🚀 Memulai scanner kamera...
+                </p>
+              </div>
+              
+              {scannerError && (
+                <div className="text-red-600 text-sm bg-red-50 p-3 rounded border border-red-200">
+                  <div className="flex items-start gap-2">
+                    <AlertCircle className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                    <span>{scannerError}</span>
+                  </div>
+                  <Button 
+                    onClick={startCameraScanning}
+                    className="w-full mt-2"
+                    variant="outline"
+                  >
+                    <Camera className="h-4 w-4 mr-2" />
+                    Coba Lagi
+                  </Button>
+                </div>
+              )}
+              
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                  <span className="w-full border-t" />
+                </div>
+                <div className="relative flex justify-center text-xs uppercase">
+                  <span className="bg-background px-2 text-muted-foreground">
+                    Input Manual
+                  </span>
+                </div>
+              </div>
+
+              <form onSubmit={handleManualSubmit} className="space-y-4">
+                <div>
+                  <Input
+                    ref={inputRef}
+                    type="text"
+                    placeholder="Ketik barcode manual..."
+                    value={manualBarcode}
+                    onChange={(e) => setManualBarcode(e.target.value)}
+                    autoFocus
+                    className="mt-1"
+                  />
+                </div>
+                <div className="flex gap-2">
+                  <Button 
+                    type="submit" 
+                    className="flex-1" 
+                    disabled={!manualBarcode.trim()}
+                  >
+                    <Scan className="h-4 w-4 mr-2" />
+                    Proses Barcode
+                  </Button>
+                  <Button type="button" variant="outline" onClick={handleClose}>
+                    Batal
+                  </Button>
+                </div>
+              </form>
             </div>
           )}
         </CardContent>

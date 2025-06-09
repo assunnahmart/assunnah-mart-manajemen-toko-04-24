@@ -897,6 +897,65 @@ export type Database = {
         }
         Relationships: []
       }
+      produk_pembelian: {
+        Row: {
+          barcode: string | null
+          created_at: string | null
+          harga_beli: number | null
+          harga_jual: number | null
+          id: string
+          kategori: string | null
+          keterangan: string | null
+          nama_produk: string
+          satuan: string | null
+          status: string | null
+          stok_minimal: number | null
+          stok_saat_ini: number | null
+          supplier_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          barcode?: string | null
+          created_at?: string | null
+          harga_beli?: number | null
+          harga_jual?: number | null
+          id?: string
+          kategori?: string | null
+          keterangan?: string | null
+          nama_produk: string
+          satuan?: string | null
+          status?: string | null
+          stok_minimal?: number | null
+          stok_saat_ini?: number | null
+          supplier_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          barcode?: string | null
+          created_at?: string | null
+          harga_beli?: number | null
+          harga_jual?: number | null
+          id?: string
+          kategori?: string | null
+          keterangan?: string | null
+          nama_produk?: string
+          satuan?: string | null
+          status?: string | null
+          stok_minimal?: number | null
+          stok_saat_ini?: number | null
+          supplier_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "produk_pembelian_supplier_id_fkey"
+            columns: ["supplier_id"]
+            isOneToOne: false
+            referencedRelation: "supplier"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       stok_opname: {
         Row: {
           barang_id: string | null
@@ -1200,6 +1259,10 @@ export type Database = {
         Returns: string
       }
       generate_pos_transaction_number: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
+      generate_purchase_product_barcode: {
         Args: Record<PropertyKey, never>
         Returns: string
       }

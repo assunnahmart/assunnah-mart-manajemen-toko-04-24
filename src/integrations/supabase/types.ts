@@ -172,6 +172,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "detail_transaksi_pembelian_barang_id_fkey"
+            columns: ["barang_id"]
+            isOneToOne: false
+            referencedRelation: "stock_opname_recap"
+            referencedColumns: ["barang_id"]
+          },
+          {
             foreignKeyName: "detail_transaksi_pembelian_transaksi_id_fkey"
             columns: ["transaksi_id"]
             isOneToOne: false
@@ -218,6 +225,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "barang_konsinyasi"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "detail_transaksi_penjualan_barang_id_fkey"
+            columns: ["barang_id"]
+            isOneToOne: false
+            referencedRelation: "stock_opname_recap"
+            referencedColumns: ["barang_id"]
           },
           {
             foreignKeyName: "detail_transaksi_penjualan_transaksi_id_fkey"
@@ -527,6 +541,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "konsinyasi_detail_barang_id_fkey"
+            columns: ["barang_id"]
+            isOneToOne: false
+            referencedRelation: "stock_opname_recap"
+            referencedColumns: ["barang_id"]
+          },
+          {
             foreignKeyName: "konsinyasi_detail_laporan_id_fkey"
             columns: ["laporan_id"]
             isOneToOne: false
@@ -606,6 +627,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "barang_konsinyasi"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "konsinyasi_harian_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "stock_opname_recap"
+            referencedColumns: ["barang_id"]
           },
           {
             foreignKeyName: "konsinyasi_harian_supplier_id_fkey"
@@ -704,6 +732,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "barang_konsinyasi"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mutasi_stok_barang_id_fkey"
+            columns: ["barang_id"]
+            isOneToOne: false
+            referencedRelation: "stock_opname_recap"
+            referencedColumns: ["barang_id"]
           },
         ]
       }
@@ -994,6 +1029,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "stok_opname_barang_id_fkey"
+            columns: ["barang_id"]
+            isOneToOne: false
+            referencedRelation: "stock_opname_recap"
+            referencedColumns: ["barang_id"]
+          },
+          {
             foreignKeyName: "stok_opname_kasir_id_fkey"
             columns: ["kasir_id"]
             isOneToOne: false
@@ -1226,7 +1268,19 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      stock_opname_recap: {
+        Row: {
+          barang_id: string | null
+          detail_input_pengguna: Json | null
+          jumlah_pengguna_input: number | null
+          nama_barang: string | null
+          real_stok_total: number | null
+          satuan: string | null
+          selisih_stok: number | null
+          stok_sistem: number | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       create_supplier_debt: {
@@ -1265,6 +1319,20 @@ export type Database = {
       generate_transaction_number: {
         Args: Record<PropertyKey, never>
         Returns: string
+      }
+      get_stock_opname_recap: {
+        Args: { date_from?: string; date_to?: string }
+        Returns: {
+          barang_id: string
+          nama_barang: string
+          satuan: string
+          stok_sistem: number
+          real_stok_total: number
+          jumlah_pengguna_input: number
+          selisih_stok: number
+          detail_input_pengguna: Json
+          kategori_selisih: string
+        }[]
       }
       increment_personal_debt: {
         Args: { person_id: string; amount: number }

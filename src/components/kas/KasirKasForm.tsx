@@ -9,6 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Wallet } from 'lucide-react';
 import { useCreateKasirKasTransaction } from '@/hooks/useKasirKas';
 import { useSimpleAuth } from '@/hooks/useSimpleAuth';
+import { useKasir } from '@/hooks/useKasir';
 import { useToast } from '@/hooks/use-toast';
 
 const KasirKasForm = () => {
@@ -18,6 +19,7 @@ const KasirKasForm = () => {
   const [keterangan, setKeterangan] = useState('');
 
   const { user } = useSimpleAuth();
+  const { data: kasirData } = useKasir();
   const createTransaction = useCreateKasirKasTransaction();
   const { toast } = useToast();
 
@@ -34,6 +36,14 @@ const KasirKasForm = () => {
     ]
   };
 
+  // Find kasir by matching username or full_name
+  const userKasir = kasirData?.find(k => 
+    k.nama === user?.full_name || 
+    k.nama === user?.username ||
+    k.nama?.toLowerCase() === user?.full_name?.toLowerCase() ||
+    k.nama?.toLowerCase() === user?.username?.toLowerCase()
+  );
+
   const handleSubmit = async () => {
     if (!kategori || jumlah <= 0) {
       toast({
@@ -44,25 +54,25 @@ const KasirKasForm = () => {
       return;
     }
 
-    if (!user?.kasir_id) {
+    if (!userKasir) {
       toast({
         title: "Error",
-        description: "Kasir ID tidak ditemukan. Silakan login ulang.",
+        description: "Data kasir tidak ditemukan. Pastikan nama Anda terdaftar sebagai kasir.",
         variant: "destructive"
       });
       return;
     }
 
     try {
-      console.log('Submitting transaction with user:', user);
+      console.log('Submitting transaction with kasir ID:', userKasir.id);
       
       await createTransaction.mutateAsync({
         jenis_transaksi: jenisTransaksi,
         kategori,
         jumlah,
         keterangan,
-        kasir_id: user.kasir_id,
-        kasir_name: user.full_name || '',
+        kasir_id: userKasir.id, // Use the kasir ID string directly
+        kasir_name: user?.full_name || userKasir.nama,
         referensi_tipe: 'manual_entry'
       });
 
@@ -92,6 +102,16 @@ const KasirKasForm = () => {
           <Wallet className="h-5 w-5" />
           Input Transaksi Kas Kasir
         </CardTitle>
+        {user && (
+          <div className="text-sm text-gray-600">
+            <p>Login sebagai: {user.full_name} ({user.username})</p>
+            {userKasir ? (
+              <p className="text-green-600">Kasir ID: {userKasir.id}</p>
+            ) : (
+              <p className="text-red-600">Peringatan: Anda tidak terdaftar sebagai kasir</p>
+            )}
+          </div>
+        )}
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -152,7 +172,7 @@ const KasirKasForm = () => {
 
         <Button
           onClick={handleSubmit}
-          disabled={createTransaction.isPending}
+          disabled={createTransaction.isPending || !userKasir}
           className="w-full"
         >
           {createTransaction.isPending ? 'Menyimpan...' : 'Simpan Transaksi'}

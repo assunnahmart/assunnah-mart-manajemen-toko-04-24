@@ -70,7 +70,7 @@ const CameraBarcodeScanner = ({ isOpen, onScan, onClose }: CameraBarcodeScannerP
           scannerRef.current.clear().catch(console.error);
         }
 
-        // Initialize new scanner
+        // Initialize new scanner with simplified configuration
         scannerRef.current = new Html5QrcodeScanner(
           scannerElementId,
           {
@@ -79,27 +79,8 @@ const CameraBarcodeScanner = ({ isOpen, onScan, onClose }: CameraBarcodeScannerP
             aspectRatio: 1.0,
             experimentalFeatures: {
               useBarCodeDetectorIfSupported: true
-            },
-            supportedScanTypes: [
-              // @ts-ignore - Types might not be complete for Html5QrcodeScanner
-              0, // QR_CODE
-              1, // AZTEC
-              2, // CODABAR
-              3, // CODE_39
-              4, // CODE_93
-              5, // CODE_128
-              6, // DATA_MATRIX
-              7, // MAXICODE
-              8, // ITF
-              9, // EAN_13
-              10, // EAN_8
-              11, // PDF_417
-              12, // RSS_14
-              13, // RSS_EXPANDED
-              14, // UPC_A
-              15, // UPC_E
-              16, // UPC_EAN_EXTENSION
-            ]
+            }
+            // Removed supportedScanTypes to use library defaults
           },
           false
         );

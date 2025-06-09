@@ -44,13 +44,26 @@ const KasirKasForm = () => {
       return;
     }
 
+    if (!user?.kasir_id) {
+      toast({
+        title: "Error",
+        description: "Kasir ID tidak ditemukan. Silakan login ulang.",
+        variant: "destructive"
+      });
+      return;
+    }
+
     try {
+      console.log('Submitting transaction with user:', user);
+      
       await createTransaction.mutateAsync({
         jenis_transaksi: jenisTransaksi,
         kategori,
         jumlah,
         keterangan,
-        kasir_name: user?.full_name || ''
+        kasir_id: user.kasir_id,
+        kasir_name: user.full_name || '',
+        referensi_tipe: 'manual_entry'
       });
 
       toast({
@@ -62,10 +75,11 @@ const KasirKasForm = () => {
       setKategori('');
       setJumlah(0);
       setKeterangan('');
-    } catch (error) {
+    } catch (error: any) {
+      console.error('Error saving transaction:', error);
       toast({
         title: "Gagal menyimpan transaksi",
-        description: error.message,
+        description: error.message || "Terjadi kesalahan saat menyimpan transaksi",
         variant: "destructive"
       });
     }

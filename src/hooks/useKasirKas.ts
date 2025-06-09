@@ -22,24 +22,47 @@ export const useCreateKasirKasTransaction = () => {
 
   return useMutation({
     mutationFn: async (data: any) => {
+      console.log('Creating kasir kas transaction with data:', data);
+      
       // Generate transaction number
-      const { data: transactionNumber } = await supabase
+      const { data: transactionNumber, error: numberError } = await supabase
         .rpc('generate_kasir_kas_transaction_number');
+
+      if (numberError) {
+        console.error('Error generating transaction number:', numberError);
+        throw numberError;
+      }
 
       const transactionData = {
         ...data,
-        transaction_number: transactionNumber
+        transaction_number: transactionNumber,
+        tanggal_transaksi: new Date().toISOString().split('T')[0],
+        sync_to_kas_umum: true
       };
 
-      const { error } = await supabase
+      console.log('Final transaction data:', transactionData);
+
+      const { data: result, error } = await supabase
         .from('kasir_kas_transactions')
-        .insert(transactionData);
+        .insert(transactionData)
+        .select()
+        .single();
       
-      if (error) throw error;
+      if (error) {
+        console.error('Error inserting kasir kas transaction:', error);
+        throw error;
+      }
+      
+      console.log('Successfully created kasir kas transaction:', result);
+      return result;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['kasir_kas_transactions'] });
       queryClient.invalidateQueries({ queryKey: ['kas_umum_transactions'] });
+      queryClient.invalidateQueries({ queryKey: ['kasir_kas_balance'] });
+    },
+    onError: (error) => {
+      console.error('Mutation error:', error);
     },
   });
 };

@@ -8,12 +8,16 @@ import StockOpname from '@/components/stock/StockOpname';
 import StockDashboard from '@/components/stock/StockDashboard';
 import StockMovements from '@/components/stock/StockMovements';
 import StockSyncNotification from '@/components/stock/StockSyncNotification';
+import { useSimpleAuth } from '@/hooks/useSimpleAuth';
 
 const StockManagementPage = () => {
+  const { user } = useSimpleAuth();
+  const isAdmin = user?.username === 'Jamhur' || user?.username === 'Ginanjar';
+
   return (
     <NewProtectedRoute>
       <div className="min-h-screen bg-gray-50">
-        <NewNavbar />
+        {!isAdmin && <NewNavbar />}
         
         <div className="container mx-auto p-4">
           <div className="mb-6">

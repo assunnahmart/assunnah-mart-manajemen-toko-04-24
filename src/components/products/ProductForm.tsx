@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -97,15 +98,28 @@ const ProductForm = ({ product, onClose, onSuccess }: ProductFormProps) => {
         submitData.barcode = newBarcode;
       }
 
+      // Validation: Allow all types including "pembelian"
+      if (!submitData.nama || !submitData.jenis_konsinyasi) {
+        throw new Error('Nama produk dan jenis konsinyasi harus diisi');
+      }
+
       if (product?.id) {
         // Update existing product
         await updateProduct.mutateAsync({
           id: product.id,
           updates: submitData
         });
+        toast({
+          title: "Produk berhasil diupdate",
+          description: `Produk ${submitData.nama} telah diperbarui`
+        });
       } else {
         // Create new product
         await createProduct.mutateAsync(submitData);
+        toast({
+          title: "Produk berhasil ditambahkan",
+          description: `Produk ${submitData.nama} telah ditambahkan ke sistem`
+        });
       }
       
       onSuccess();

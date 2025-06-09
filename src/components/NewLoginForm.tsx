@@ -46,12 +46,12 @@ const NewLoginForm = () => {
         console.log('NewLoginForm: Login failed');
         setError('Username atau password salah. Silakan coba lagi.');
       } else {
-        console.log('NewLoginForm: Login successful, showing welcome screen');
+        console.log('NewLoginForm: Login successful, navigating immediately');
         // Reset form
         setUsername('');
         setPassword('');
-        // Show welcome screen instead of immediate redirect
-        setShowWelcome(true);
+        // Navigate immediately without welcome screen to avoid refresh
+        navigate('/pos', { replace: true });
       }
     } catch (error) {
       console.error('NewLoginForm: Unexpected error during login:', error);

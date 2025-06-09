@@ -1,31 +1,35 @@
 import { useState, useEffect } from 'react';
-import NewProtectedRoute from '@/components/NewProtectedRoute';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Search, ShoppingCart, Save, CreditCard, Camera, DollarSign } from 'lucide-react';
-import { useSimpleAuth } from '@/hooks/useSimpleAuth';
-import { useCreatePOSTransaction } from '@/hooks/usePOSTransactions';
-import { usePOSTransactionSync } from '@/hooks/usePOSTransactionSync';
-import { useToast } from '@/hooks/use-toast';
-import { useNavigate } from 'react-router-dom';
-import POSCart from '@/components/pos/POSCart';
+import { 
+  Plus, 
+  Search, 
+  Package, 
+  ShoppingCart, 
+  X, 
+  Scan, 
+  Wallet,
+  History,
+  ClipboardList,
+  FileText,
+  LogOut
+} from 'lucide-react';
+import POSSidebar from '@/components/pos/POSSidebar';
 import POSProductSearch from '@/components/pos/POSProductSearch';
+import POSCart from '@/components/pos/POSCart';
 import POSPayment from '@/components/pos/POSPayment';
 import POSBarcodeScanner from '@/components/pos/POSBarcodeScanner';
-import POSTransactionSync from '@/components/pos/POSTransactionSync';
-import POSCustomerSelect from '@/components/pos/POSCustomerSelect';
-import POSPaymentMethod from '@/components/pos/POSPaymentMethod';
+import POSTransactionHistory from '@/components/pos/POSTransactionHistory';
 import POSKasirTransactionHistory from '@/components/pos/POSKasirTransactionHistory';
 import POSDailyReport from '@/components/pos/POSDailyReport';
-import KonsinyasiHarianForm from '@/components/konsinyasi/KonsinyasiHarianForm';
-import KonsinyasiHarianHistory from '@/components/konsinyasi/KonsinyasiHarianHistory';
-import KasirKasForm from '@/components/kas/KasirKasForm';
-import KasirKasHistory from '@/components/kas/KasirKasHistory';
-import StockOpname from '@/components/stock/StockOpname';
-import CameraBarcodeScanner from '@/components/stock/CameraBarcodeScanner';
-import POSSidebar from '@/components/pos/POSSidebar';
+import { useCreatePOSTransaction } from '@/hooks/usePOSTransactions';
+import { useSimpleAuth } from '@/hooks/useSimpleAuth';
+import { useToast } from '@/hooks/use-toast';
+import NewProtectedRoute from '@/components/NewProtectedRoute';
+import POSTransactionSync from '@/components/pos/POSTransactionSync';
+import { usePOSTransactionSync } from '@/hooks/usePOSTransactionSync';
 
 interface Customer {
   id: string;

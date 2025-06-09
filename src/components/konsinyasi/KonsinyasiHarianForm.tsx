@@ -27,13 +27,20 @@ const KonsinyasiHarianForm = () => {
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   const [processPayment, setProcessPayment] = useState(false);
 
-  const { data: suppliers } = useKonsinyasiSuppliers();
+  const { data: suppliers, isLoading: suppliersLoading, error: suppliersError } = useKonsinyasiSuppliers();
   const { data: products } = useKonsinyasiProductsBySupplier(supplierId);
   const { data: posSales, refetch: refetchPOSSales } = usePOSSalesForProduct(productId, selectedDate);
   const { user } = useSimpleAuth();
   const createKonsinyasi = useCreateKonsinyasiHarian();
   const processPaymentMutation = useKonsinyasiPayment();
   const { toast } = useToast();
+
+  // Debug logging
+  useEffect(() => {
+    console.log('Suppliers data:', suppliers);
+    console.log('Suppliers loading:', suppliersLoading);
+    console.log('Suppliers error:', suppliersError);
+  }, [suppliers, suppliersLoading, suppliersError]);
 
   const selectedProduct = products?.find(p => p.id === productId);
   const selectedSupplier = suppliers?.find(s => s.id === supplierId);
@@ -159,16 +166,42 @@ const KonsinyasiHarianForm = () => {
             <Label htmlFor="supplier">Supplier (Produk Konsinyasi Harian)</Label>
             <Select value={supplierId} onValueChange={setSupplierId}>
               <SelectTrigger>
-                <SelectValue placeholder="Pilih supplier..." />
+                <SelectValue placeholder={
+                  suppliersLoading 
+                    ? "Memuat supplier..." 
+                    : suppliers?.length === 0 
+                      ? "Tidak ada supplier konsinyasi harian"
+                      : "Pilih supplier..."
+                } />
               </SelectTrigger>
               <SelectContent>
                 {suppliers?.map((supplier) => (
                   <SelectItem key={supplier.id} value={supplier.id}>
                     {supplier.nama}
+                    {supplier.barang_konsinyasi && (
+                      <span className="text-sm text-gray-500 ml-2">
+                        ({supplier.barang_konsinyasi.length} produk)
+                      </span>
+                    )}
                   </SelectItem>
                 ))}
+                {suppliers?.length === 0 && !suppliersLoading && (
+                  <SelectItem value="no-suppliers" disabled>
+                    Belum ada supplier dengan produk konsinyasi harian
+                  </SelectItem>
+                )}
               </SelectContent>
             </Select>
+            {suppliersError && (
+              <p className="text-sm text-red-500 mt-1">
+                Error memuat supplier: {suppliersError.message}
+              </p>
+            )}
+            {suppliers?.length === 0 && !suppliersLoading && (
+              <p className="text-sm text-gray-500 mt-1">
+                Untuk menampilkan supplier, pastikan ada produk dengan jenis konsinyasi "harian"
+              </p>
+            )}
           </div>
 
           <div>

@@ -39,7 +39,22 @@ const StockOpname = () => {
   ) || [];
 
   const selectedProductData = stockData?.find(p => p.id === selectedProduct);
-  const userKasir = kasirData?.find(k => k.nama === user?.full_name);
+  
+  // Find kasir by matching username or full_name
+  const userKasir = kasirData?.find(k => 
+    k.nama === user?.full_name || 
+    k.nama === user?.username ||
+    k.nama?.toLowerCase() === user?.full_name?.toLowerCase() ||
+    k.nama?.toLowerCase() === user?.username?.toLowerCase()
+  );
+
+  console.log('Debug info:', {
+    user: user,
+    kasirData: kasirData,
+    userKasir: userKasir,
+    selectedProduct: selectedProduct,
+    stokFisik: stokFisik
+  });
 
   const handleBarcodeScanned = (barcode: string) => {
     console.log('Barcode scanned:', barcode);
@@ -64,10 +79,36 @@ const StockOpname = () => {
   };
 
   const handleSubmitOpname = async () => {
-    if (!selectedProduct || !userKasir) {
+    console.log('Submitting opname with data:', {
+      selectedProduct,
+      stokFisik,
+      user,
+      userKasir,
+      kasirData
+    });
+
+    if (!selectedProduct) {
       toast({
-        title: "Data tidak lengkap",
-        description: "Pilih produk dan pastikan data kasir tersedia",
+        title: "Produk belum dipilih",
+        description: "Silakan pilih produk terlebih dahulu",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (!userKasir && !kasirData?.length) {
+      toast({
+        title: "Data kasir tidak tersedia",
+        description: "Tidak ada data kasir di sistem. Hubungi administrator.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (!userKasir) {
+      toast({
+        title: "Kasir tidak ditemukan",
+        description: `User ${user?.full_name || user?.username} tidak ditemukan dalam data kasir. Hubungi administrator untuk menambahkan data kasir.`,
         variant: "destructive"
       });
       return;
@@ -124,6 +165,21 @@ const StockOpname = () => {
         <div>
           <h2 className="text-2xl font-bold text-gray-900">Stok Opname</h2>
           <p className="text-gray-600">Input dan monitoring stok fisik produk dengan scanner barcode</p>
+          {user && (
+            <p className="text-sm text-blue-600 mt-1">
+              Login sebagai: {user.full_name} ({user.username})
+            </p>
+          )}
+          {userKasir && (
+            <p className="text-sm text-green-600">
+              Data kasir: {userKasir.nama} (ID: {userKasir.id})
+            </p>
+          )}
+          {!userKasir && kasirData?.length && (
+            <p className="text-sm text-red-600">
+              Peringatan: User tidak ditemukan dalam data kasir. Kasir tersedia: {kasirData.map(k => k.nama).join(', ')}
+            </p>
+          )}
         </div>
         
         <div className="flex gap-2">

@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Search, ShoppingCart, Save, CreditCard, Camera, DollarSign, ChevronUp, ChevronDown, Clock, FileText, History, Package, Wallet, ClipboardList, LogOut } from 'lucide-react';
+import { Search, ShoppingCart, Save, CreditCard, Camera, DollarSign, ChevronUp, ChevronDown, Clock, FileText, History, Package, Wallet, ClipboardList, LogOut, Scan } from 'lucide-react';
 import { useSimpleAuth } from '@/hooks/useSimpleAuth';
 import { useCreatePOSTransaction } from '@/hooks/usePOSTransactions';
 import { usePOSTransactionSync } from '@/hooks/usePOSTransactionSync';
@@ -44,7 +44,7 @@ const POSSystem = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState('cash');
-  const [isMenuCollapsed, setIsMenuCollapsed] = useState(true); // Changed to true to hide by default
+  const [isMenuCollapsed, setIsMenuCollapsed] = useState(true);
   const [showTransactionHistory, setShowTransactionHistory] = useState(false);
   const [showDailyReport, setShowDailyReport] = useState(false);
   const [showKonsinyasi, setShowKonsinyasi] = useState(false);
@@ -345,7 +345,7 @@ const POSSystem = () => {
                   onClick={() => setShowStockOpname(true)}
                   className="bg-white hover:bg-indigo-50 border-indigo-300 text-indigo-700"
                 >
-                  <ClipboardList className="h-4 w-4 mr-2" />
+                  <Scan className="h-4 w-4 mr-2" />
                   Stok Opname
                 </Button>
                 <Button
@@ -554,8 +554,8 @@ const POSSystem = () => {
               <div className="bg-white rounded-lg max-w-6xl w-full max-h-[90vh] overflow-hidden">
                 <div className="flex items-center justify-between p-6 border-b">
                   <h2 className="text-xl font-semibold flex items-center gap-2">
-                    <ClipboardList className="h-5 w-4" />
-                    Stok Opname
+                    <Scan className="h-5 w-4" />
+                    Stok Opname dengan Scanner Barcode
                   </h2>
                   <Button
                     variant="ghost"

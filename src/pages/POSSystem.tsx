@@ -1,13 +1,10 @@
-
 import { useState, useEffect } from 'react';
 import NewProtectedRoute from '@/components/NewProtectedRoute';
-import NewNavbar from '@/components/NewNavbar';
-import Layout from '@/components/Layout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Search, ShoppingCart, Save, CreditCard, Camera, DollarSign, ChevronUp, ChevronDown, Clock, FileText, History, Package, Wallet, ClipboardList, LogOut, Scan } from 'lucide-react';
+import { Search, ShoppingCart, Save, CreditCard, Camera, DollarSign } from 'lucide-react';
 import { useSimpleAuth } from '@/hooks/useSimpleAuth';
 import { useCreatePOSTransaction } from '@/hooks/usePOSTransactions';
 import { usePOSTransactionSync } from '@/hooks/usePOSTransactionSync';
@@ -28,6 +25,7 @@ import KasirKasForm from '@/components/kas/KasirKasForm';
 import KasirKasHistory from '@/components/kas/KasirKasHistory';
 import StockOpname from '@/components/stock/StockOpname';
 import CameraBarcodeScanner from '@/components/stock/CameraBarcodeScanner';
+import POSSidebar from '@/components/pos/POSSidebar';
 
 interface Customer {
   id: string;
@@ -47,7 +45,6 @@ const POSSystem = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState('cash');
-  const [isMenuCollapsed, setIsMenuCollapsed] = useState(true);
   const [showTransactionHistory, setShowTransactionHistory] = useState(false);
   const [showDailyReport, setShowDailyReport] = useState(false);
   const [showKonsinyasi, setShowKonsinyasi] = useState(false);
@@ -57,7 +54,7 @@ const POSSystem = () => {
   const createTransaction = useCreatePOSTransaction();
   const { syncStock, syncCustomerDebt, isSyncingStock, isSyncingDebt } = usePOSTransactionSync();
 
-  // Users who should not see the menu header
+  // Users who should not see the sidebar
   const hiddenMenuUsers = ['Agus', 'Yadi', 'Nurohman', 'Jamhur2'];
   const shouldHideMenuForUser = user?.username && hiddenMenuUsers.includes(user.username);
 
@@ -260,309 +257,200 @@ const POSSystem = () => {
   return (
     <NewProtectedRoute>
       <POSTransactionSync onTransactionComplete={handleTransactionSync}>
-        <div className="min-h-screen bg-gray-50">
-          {/* Single Row Header Menu - Hidden by default, and completely hidden for specific users */}
-          {!shouldHideMenuForUser && (
-            <div className={`transition-all duration-300 ${isMenuCollapsed ? 'h-0 overflow-hidden' : 'h-auto'}`}>
-              <NewNavbar />
-            </div>
-          )}
-          
-          {/* Menu Toggle Button - Only show for users who can access the menu */}
-          {!shouldHideMenuForUser && (
-            <div className="bg-white border-b shadow-sm">
-              <div className="container mx-auto px-4 max-w-7xl">
-                <Button
-                  variant="ghost"
-                  onClick={() => setIsMenuCollapsed(!isMenuCollapsed)}
-                  className="w-full py-2 flex items-center justify-center gap-2 text-gray-600 hover:text-gray-900"
-                >
-                  {isMenuCollapsed ? (
-                    <>
-                      <ChevronDown className="h-4 w-4" />
-                      Tampilkan Menu
-                    </>
-                  ) : (
-                    <>
-                      <ChevronUp className="h-4 w-4" />
-                      Sembunyikan Menu
-                    </>
-                  )}
-                </Button>
-              </div>
-            </div>
-          )}
-          
-          {/* Single Row Quick Action Header */}
-          <div className="bg-white border-b shadow-sm">
-            <div className="container mx-auto px-4 max-w-7xl">
-              <div className="flex items-center justify-between py-3">
-                <div className="flex items-center gap-2">
-                  <img 
-                    src="/lovable-uploads/163a7d14-7869-47b2-b33b-40be703e48e1.png" 
-                    alt="Assunnah Mart Logo" 
-                    className="h-8 w-8 object-contain"
-                  />
-                  <h1 className="text-lg font-bold text-gray-900">Assunnah Mart POS</h1>
-                  <Badge variant="outline" className="text-xs">
-                    {user?.full_name}
-                  </Badge>
-                </div>
-                
-                <div className="flex items-center gap-2">
-                  <Button
-                    size="sm"
-                    onClick={() => setShowQuickScanner(true)}
-                    className="bg-green-600 hover:bg-green-700 gap-1"
-                  >
-                    <Scan className="h-4 w-4" />
-                    Quick Scan
-                  </Button>
-                  
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setShowTransactionHistory(true)}
-                    className="gap-1"
-                  >
-                    <History className="h-4 w-4" />
-                    Riwayat
-                  </Button>
-                  
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setShowKonsinyasi(true)}
-                    className="gap-1"
-                  >
-                    <Package className="h-4 w-4" />
-                    Konsinyasi
-                  </Button>
-                  
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setShowStockOpname(true)}
-                    className="gap-1"
-                  >
-                    <ClipboardList className="h-4 w-4" />
-                    Stok Opname
-                  </Button>
-                  
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setShowKasirKas(true)}
-                    className="gap-1"
-                  >
-                    <Wallet className="h-4 w-4" />
-                    Kas
-                  </Button>
-                  
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setShowDailyReport(true)}
-                    className="gap-1"
-                  >
-                    <FileText className="h-4 w-4" />
-                    Laporan
-                  </Button>
-                  
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handleLogout}
-                    className="gap-1 text-red-600 hover:text-red-700"
-                  >
-                    <LogOut className="h-4 w-4" />
-                    Keluar
-                  </Button>
+        <div className="min-h-screen bg-gray-50 flex">
+          {/* Sidebar */}
+          <POSSidebar
+            onQuickScan={() => setShowQuickScanner(true)}
+            onTransactionHistory={() => setShowTransactionHistory(true)}
+            onKonsinyasi={() => setShowKonsinyasi(true)}
+            onStockOpname={() => setShowStockOpname(true)}
+            onKasirKas={() => setShowKasirKas(true)}
+            onDailyReport={() => setShowDailyReport(true)}
+          />
+
+          {/* Main Content */}
+          <div className={`flex-1 transition-all duration-300 ${shouldHideMenuForUser ? 'ml-0' : 'ml-16'}`}>
+            {/* Fixed Total Shopping Display */}
+            <div className="sticky top-0 z-40 bg-gray-50 pb-4">
+              <div className="container mx-auto p-4 max-w-7xl">
+                <div className="bg-gradient-to-r from-yellow-600 via-yellow-700 to-yellow-800 rounded-xl p-6 shadow-lg border-2 border-yellow-500">
+                  <div className="flex items-center justify-between text-white">
+                    <div className="flex items-center gap-4">
+                      <div className="bg-red-500 p-3 rounded-lg shadow-lg">
+                        <img 
+                          src="/lovable-uploads/163a7d14-7869-47b2-b33b-40be703e48e1.png" 
+                          alt="Assunnah Mart Logo" 
+                          className="h-8 w-8 object-contain"
+                        />
+                      </div>
+                      <div>
+                        <p className="text-yellow-100 text-xl font-bold mb-2">Assunnah Mart</p>
+                        <p className="text-yellow-100 text-sm font-medium mb-1">Total Belanja Saat Ini</p>
+                        <p className="text-3xl font-bold text-white drop-shadow-md">
+                          Rp {getTotalAmount().toLocaleString('id-ID')}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <Badge variant="secondary" className="text-lg px-4 py-2 bg-red-500 text-white border-red-400 shadow-lg">
+                        <ShoppingCart className="h-4 w-4 mr-2" />
+                        {cartItems.length} Item{cartItems.length !== 1 ? 's' : ''}
+                      </Badge>
+                      <p className="text-yellow-100 text-sm mt-2">Program by Abu Mughiroh Junaedi</p>
+                      <div className="text-yellow-100 text-xs mt-1">
+                        <Badge variant="outline" className="border-yellow-300 text-yellow-200 bg-transparent mr-2">
+                          Kasir: {user?.full_name}
+                        </Badge>
+                        <Badge variant="outline" className="border-yellow-300 text-yellow-200 bg-transparent">
+                          {new Date().toLocaleDateString('id-ID', { 
+                            weekday: 'long', 
+                            year: 'numeric', 
+                            month: 'long', 
+                            day: 'numeric' 
+                          })}
+                        </Badge>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-          
-          {/* Fixed Total Shopping Display */}
-          <div className="sticky top-0 z-40 bg-gray-50 pb-4">
+            
+            {/* Main Content Layout - Product Search and Cart */}
             <div className="container mx-auto p-4 max-w-7xl">
-              <div className="bg-gradient-to-r from-yellow-600 via-yellow-700 to-yellow-800 rounded-xl p-6 shadow-lg border-2 border-yellow-500">
-                <div className="flex items-center justify-between text-white">
-                  <div className="flex items-center gap-4">
-                    <div className="bg-red-500 p-3 rounded-lg shadow-lg">
-                      <img 
-                        src="/lovable-uploads/163a7d14-7869-47b2-b33b-40be703e48e1.png" 
-                        alt="Assunnah Mart Logo" 
-                        className="h-8 w-8 object-contain"
-                      />
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                {/* Product Search */}
+                <Card className="h-[700px] border-red-200">
+                  <CardHeader className="pb-4 bg-gradient-to-r from-red-50 to-yellow-50 rounded-t-lg">
+                    <CardTitle className="flex items-center gap-2 text-red-700">
+                      <Search className="h-5 w-5" />
+                      Cari Produk
+                    </CardTitle>
+                    <div className="flex gap-2">
+                      <div className="relative flex-1">
+                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                        <Input
+                          placeholder="Cari nama produk atau scan barcode..."
+                          value={searchQuery}
+                          onChange={(e) => setSearchQuery(e.target.value)}
+                          className="pl-10 border-red-200 focus:border-red-400"
+                        />
+                      </div>
+                      <Button
+                        variant="outline"
+                        onClick={() => setShowScanner(true)}
+                        className="shrink-0 border-red-300 text-red-700 hover:bg-red-50"
+                      >
+                        <Camera className="h-4 w-4 mr-2" />
+                        Scan
+                      </Button>
                     </div>
-                    <div>
-                      <p className="text-yellow-100 text-xl font-bold mb-2">Assunnah Mart</p>
-                      <p className="text-yellow-100 text-sm font-medium mb-1">Total Belanja Saat Ini</p>
-                      <p className="text-3xl font-bold text-white drop-shadow-md">
-                        Rp {getTotalAmount().toLocaleString('id-ID')}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <Badge variant="secondary" className="text-lg px-4 py-2 bg-red-500 text-white border-red-400 shadow-lg">
-                      <ShoppingCart className="h-4 w-4 mr-2" />
-                      {cartItems.length} Item{cartItems.length !== 1 ? 's' : ''}
-                    </Badge>
-                    <p className="text-yellow-100 text-sm mt-2">Program by Abu Mughiroh Junaedi</p>
-                    <div className="text-yellow-100 text-xs mt-1">
-                      <Badge variant="outline" className="border-yellow-300 text-yellow-200 bg-transparent mr-2">
-                        Kasir: {user?.full_name}
-                      </Badge>
-                      <Badge variant="outline" className="border-yellow-300 text-yellow-200 bg-transparent">
-                        {new Date().toLocaleDateString('id-ID', { 
-                          weekday: 'long', 
-                          year: 'numeric', 
-                          month: 'long', 
-                          day: 'numeric' 
-                        })}
-                      </Badge>
-                    </div>
-                  </div>
+                  </CardHeader>
+                  <CardContent className="h-[calc(100%-120px)] overflow-hidden">
+                    <POSProductSearch 
+                      searchQuery={searchQuery}
+                      onAddToCart={addToCart}
+                      onProductAutoAdded={handleProductAutoAdded}
+                      enableEnterToAdd={true}
+                    />
+                  </CardContent>
+                </Card>
+
+                {/* Shopping Cart */}
+                <Card className="h-[700px] border-yellow-200">
+                  <CardHeader className="pb-4 bg-gradient-to-r from-yellow-50 to-orange-50 rounded-t-lg">
+                    <CardTitle className="flex items-center justify-between text-yellow-800">
+                      <span className="flex items-center gap-2">
+                        <ShoppingCart className="h-5 w-5" />
+                        Keranjang Belanja
+                      </span>
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={clearCart}
+                        disabled={cartItems.length === 0}
+                        className="border-red-300 text-red-700 hover:bg-red-50"
+                      >
+                        Clear
+                      </Button>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="h-[calc(100%-80px)] overflow-hidden">
+                    <POSCart 
+                      items={cartItems}
+                      onUpdateQuantity={updateCartQuantity}
+                    />
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Customer and Payment Method below Cart */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                {/* Customer Selection */}
+                <div>
+                  <POSCustomerSelect
+                    selectedCustomer={selectedCustomer}
+                    onCustomerSelect={setSelectedCustomer}
+                  />
+                </div>
+
+                {/* Payment Method */}
+                <div>
+                  <POSPaymentMethod
+                    selectedMethod={selectedPaymentMethod}
+                    onMethodSelect={setSelectedPaymentMethod}
+                  />
                 </div>
               </div>
-            </div>
-          </div>
-          
-          {/* Main Content Layout - Product Search and Cart */}
-          <div className="container mx-auto p-4 max-w-7xl">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-              {/* Product Search */}
-              <Card className="h-[700px] border-red-200">
-                <CardHeader className="pb-4 bg-gradient-to-r from-red-50 to-yellow-50 rounded-t-lg">
-                  <CardTitle className="flex items-center gap-2 text-red-700">
-                    <Search className="h-5 w-5" />
-                    Cari Produk
-                  </CardTitle>
-                  <div className="flex gap-2">
-                    <div className="relative flex-1">
-                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                      <Input
-                        placeholder="Cari nama produk atau scan barcode..."
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        className="pl-10 border-red-200 focus:border-red-400"
-                      />
+
+              {/* Action Buttons */}
+              <div className="mb-6">
+                <Card className="border-blue-200">
+                  <CardContent className="pt-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      <Button
+                        onClick={handleQuickSave}
+                        disabled={cartItems.length === 0 || createTransaction.isPending}
+                        className="bg-green-600 hover:bg-green-700 shadow-lg"
+                        size="lg"
+                      >
+                        <Save className="h-4 w-4 mr-2" />
+                        {createTransaction.isPending ? 'Menyimpan...' : 'Simpan ke Database (F2)'}
+                      </Button>
+
+                      <Button
+                        onClick={handleRegularPayment}
+                        disabled={cartItems.length === 0 || (selectedPaymentMethod === 'credit' && !selectedCustomer)}
+                        size="lg"
+                        className="bg-red-500 hover:bg-red-600 shadow-lg"
+                      >
+                        <CreditCard className="h-4 w-4 mr-2" />
+                        {selectedPaymentMethod === 'credit' ? 'Proses Kredit' : 'Bayar & Cetak'}
+                      </Button>
                     </div>
-                    <Button
-                      variant="outline"
-                      onClick={() => setShowScanner(true)}
-                      className="shrink-0 border-red-300 text-red-700 hover:bg-red-50"
-                    >
-                      <Camera className="h-4 w-4 mr-2" />
-                      Scan
-                    </Button>
-                  </div>
-                </CardHeader>
-                <CardContent className="h-[calc(100%-120px)] overflow-hidden">
-                  <POSProductSearch 
-                    searchQuery={searchQuery}
-                    onAddToCart={addToCart}
-                    onProductAutoAdded={handleProductAutoAdded}
-                    enableEnterToAdd={true}
-                  />
-                </CardContent>
-              </Card>
+                  </CardContent>
+                </Card>
+              </div>
 
-              {/* Shopping Cart */}
-              <Card className="h-[700px] border-yellow-200">
-                <CardHeader className="pb-4 bg-gradient-to-r from-yellow-50 to-orange-50 rounded-t-lg">
-                  <CardTitle className="flex items-center justify-between text-yellow-800">
-                    <span className="flex items-center gap-2">
-                      <ShoppingCart className="h-5 w-5" />
-                      Keranjang Belanja
-                    </span>
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      onClick={clearCart}
-                      disabled={cartItems.length === 0}
-                      className="border-red-300 text-red-700 hover:bg-red-50"
-                    >
-                      Clear
-                    </Button>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="h-[calc(100%-80px)] overflow-hidden">
-                  <POSCart 
-                    items={cartItems}
-                    onUpdateQuantity={updateCartQuantity}
-                  />
-                </CardContent>
-              </Card>
+              {/* Warning messages */}
+              {selectedPaymentMethod === 'credit' && !selectedCustomer && (
+                <div className="bg-orange-50 border border-orange-200 p-3 rounded-lg mb-4">
+                  <p className="text-orange-700 text-sm flex items-center gap-2">
+                    <CreditCard className="h-4 w-4" />
+                    Pembayaran kredit memerlukan pemilihan pelanggan
+                  </p>
+                </div>
+              )}
+
+              {(isSyncingStock || isSyncingDebt) && (
+                <div className="bg-blue-50 border border-blue-200 p-3 rounded-lg mb-4">
+                  <p className="text-blue-700 text-sm flex items-center gap-2">
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-700"></div>
+                    Menyinkronisasi data transaksi dengan database...
+                  </p>
+                </div>
+              )}
             </div>
-
-            {/* Customer and Payment Method below Cart */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-              {/* Customer Selection */}
-              <div>
-                <POSCustomerSelect
-                  selectedCustomer={selectedCustomer}
-                  onCustomerSelect={setSelectedCustomer}
-                />
-              </div>
-
-              {/* Payment Method */}
-              <div>
-                <POSPaymentMethod
-                  selectedMethod={selectedPaymentMethod}
-                  onMethodSelect={setSelectedPaymentMethod}
-                />
-              </div>
-            </div>
-
-            {/* Action Buttons */}
-            <div className="mb-6">
-              <Card className="border-blue-200">
-                <CardContent className="pt-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    <Button
-                      onClick={handleQuickSave}
-                      disabled={cartItems.length === 0 || createTransaction.isPending}
-                      className="bg-green-600 hover:bg-green-700 shadow-lg"
-                      size="lg"
-                    >
-                      <Save className="h-4 w-4 mr-2" />
-                      {createTransaction.isPending ? 'Menyimpan...' : 'Simpan ke Database (F2)'}
-                    </Button>
-
-                    <Button
-                      onClick={handleRegularPayment}
-                      disabled={cartItems.length === 0 || (selectedPaymentMethod === 'credit' && !selectedCustomer)}
-                      size="lg"
-                      className="bg-red-500 hover:bg-red-600 shadow-lg"
-                    >
-                      <CreditCard className="h-4 w-4 mr-2" />
-                      {selectedPaymentMethod === 'credit' ? 'Proses Kredit' : 'Bayar & Cetak'}
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-
-            {/* Warning messages */}
-            {selectedPaymentMethod === 'credit' && !selectedCustomer && (
-              <div className="bg-orange-50 border border-orange-200 p-3 rounded-lg mb-4">
-                <p className="text-orange-700 text-sm flex items-center gap-2">
-                  <CreditCard className="h-4 w-4" />
-                  Pembayaran kredit memerlukan pemilihan pelanggan
-                </p>
-              </div>
-            )}
-
-            {(isSyncingStock || isSyncingDebt) && (
-              <div className="bg-blue-50 border border-blue-200 p-3 rounded-lg mb-4">
-                <p className="text-blue-700 text-sm flex items-center gap-2">
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-700"></div>
-                  Menyinkronisasi data transaksi dengan database...
-                </p>
-              </div>
-            )}
           </div>
 
           {/* Transaction History Modal */}

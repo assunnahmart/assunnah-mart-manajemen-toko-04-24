@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -53,6 +54,16 @@ const ProductForm = ({ product, onClose, onSuccess }: ProductFormProps) => {
   const [loading, setLoading] = useState(false);
   const [generatingBarcode, setGeneratingBarcode] = useState(false);
 
+  // Auto-set jenis_konsinyasi when kategori_pembelian changes
+  useEffect(() => {
+    if (formData.kategori_pembelian === 'pembelian') {
+      setFormData(prev => ({
+        ...prev,
+        jenis_konsinyasi: 'harian'
+      }));
+    }
+  }, [formData.kategori_pembelian]);
+
   const generateBarcode = async () => {
     setGeneratingBarcode(true);
     try {
@@ -97,8 +108,8 @@ const ProductForm = ({ product, onClose, onSuccess }: ProductFormProps) => {
         submitData.barcode = newBarcode;
       }
 
-      // Fix: Use only allowed values for jenis_konsinyasi based on database constraint
-      // If kategori_pembelian is "pembelian", force jenis_konsinyasi to "harian"
+      // IMPORTANT: Force jenis_konsinyasi to be "harian" for kategori_pembelian "pembelian"
+      // This fixes the constraint violation error
       if (submitData.kategori_pembelian === 'pembelian') {
         submitData.jenis_konsinyasi = 'harian';
       }
@@ -106,6 +117,11 @@ const ProductForm = ({ product, onClose, onSuccess }: ProductFormProps) => {
       // Validation
       if (!submitData.nama || !submitData.jenis_konsinyasi) {
         throw new Error('Nama produk dan jenis konsinyasi harus diisi');
+      }
+
+      // Ensure jenis_konsinyasi is only "harian" or "mingguan" (allowed values)
+      if (!['harian', 'mingguan'].includes(submitData.jenis_konsinyasi)) {
+        submitData.jenis_konsinyasi = 'harian';
       }
 
       console.log('Submitting product data:', submitData);
@@ -212,47 +228,46 @@ const ProductForm = ({ product, onClose, onSuccess }: ProductFormProps) => {
             </p>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="jenis_konsinyasi">Jenis Barang</Label>
-              <Select
-                value={formData.jenis_konsinyasi}
-                onValueChange={(value) => handleInputChange('jenis_konsinyasi', value)}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="harian">Harian</SelectItem>
-                  <SelectItem value="mingguan">Mingguan</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+          <div>
+            <Label htmlFor="kategori_pembelian">Kategori Pembelian</Label>
+            <Select
+              value={formData.kategori_pembelian}
+              onValueChange={(value) => handleInputChange('kategori_pembelian', value)}
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="retail">Retail</SelectItem>
+                <SelectItem value="grosir">Grosir</SelectItem>
+                <SelectItem value="khusus">Khusus</SelectItem>
+                <SelectItem value="pembelian">Pembelian</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
 
-            <div>
-              <Label htmlFor="kategori_pembelian">Kategori Pembelian</Label>
-              <Select
-                value={formData.kategori_pembelian}
-                onValueChange={(value) => handleInputChange('kategori_pembelian', value)}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="retail">Retail</SelectItem>
-                  <SelectItem value="grosir">Grosir</SelectItem>
-                  <SelectItem value="khusus">Khusus</SelectItem>
-                  <SelectItem value="pembelian">Pembelian</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+          <div>
+            <Label htmlFor="jenis_konsinyasi">Jenis Barang</Label>
+            <Select
+              value={formData.jenis_konsinyasi}
+              onValueChange={(value) => handleInputChange('jenis_konsinyasi', value)}
+              disabled={formData.kategori_pembelian === 'pembelian'}
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="harian">Harian</SelectItem>
+                <SelectItem value="mingguan">Mingguan</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           {/* Show info when pembelian is selected */}
           {formData.kategori_pembelian === 'pembelian' && (
             <div className="bg-blue-50 border border-blue-200 p-3 rounded-lg">
               <p className="text-blue-700 text-sm">
-                Produk dengan kategori pembelian akan otomatis menggunakan jenis barang "Harian"
+                ✓ Produk dengan kategori "Pembelian" otomatis menggunakan jenis barang "Harian"
               </p>
             </div>
           )}

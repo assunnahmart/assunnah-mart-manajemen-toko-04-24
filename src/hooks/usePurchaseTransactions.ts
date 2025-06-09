@@ -1,3 +1,4 @@
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Tables, TablesInsert } from '@/integrations/supabase/types';
@@ -97,14 +98,6 @@ export const useCreatePurchaseTransaction = () => {
       // Sync with kas umum for cash transactions
       if (transaction.jenis_pembayaran === 'cash') {
         try {
-          const { data: kasTransactionNumber, error: kasNumberError } = await supabase
-            .rpc('generate_kas_transaction_number');
-          
-          if (kasNumberError) {
-            console.error('Error generating kas transaction number:', kasNumberError);
-            throw kasNumberError;
-          }
-          
           // Get kas account (Cash account) - ensure it exists
           const { data: kasAccount, error: kasAccountError } = await supabase
             .from('chart_of_accounts')
@@ -116,6 +109,15 @@ export const useCreatePurchaseTransaction = () => {
           if (kasAccountError || !kasAccount) {
             console.error('Kas account not found or error:', kasAccountError);
             throw new Error('Akun kas (1001) tidak ditemukan. Pastikan chart of accounts sudah disetup.');
+          }
+          
+          // Generate kas transaction number
+          const { data: kasTransactionNumber, error: kasNumberError } = await supabase
+            .rpc('generate_kas_transaction_number');
+          
+          if (kasNumberError) {
+            console.error('Error generating kas transaction number:', kasNumberError);
+            throw kasNumberError;
           }
           
           // Create kas keluar entry for cash purchase
@@ -139,8 +141,8 @@ export const useCreatePurchaseTransaction = () => {
             throw kasError;
           }
         } catch (kasErr) {
-          console.error('Cash sync error (non-critical):', kasErr);
-          // Don't fail the entire transaction if kas sync fails
+          console.error('Cash sync error:', kasErr);
+          throw kasErr; // Throw error to prevent incomplete transaction
         }
       }
       

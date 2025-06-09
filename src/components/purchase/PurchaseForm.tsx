@@ -12,7 +12,6 @@ import { useCreatePurchaseTransaction } from '@/hooks/usePurchaseTransactions';
 import { useBarang } from '@/hooks/useBarang';
 import { useSimpleAuth } from '@/hooks/useSimpleAuth';
 import { useKasir } from '@/hooks/useKasir';
-import { useCreateKasTransaction } from '@/hooks/useKasUmum';
 import { useToast } from '@/hooks/use-toast';
 
 interface PurchaseItem {
@@ -42,7 +41,6 @@ const PurchaseForm = ({ suppliers }: PurchaseFormProps) => {
   const { data: kasirData } = useKasir();
   const { user } = useSimpleAuth();
   const createPurchase = useCreatePurchaseTransaction();
-  const createKasTransaction = useCreateKasTransaction();
   const { toast } = useToast();
 
   const userKasir = kasirData?.find(k => k.nama === user?.full_name);
@@ -131,7 +129,7 @@ const PurchaseForm = ({ suppliers }: PurchaseFormProps) => {
     }
 
     try {
-      const purchaseResult = await createPurchase.mutateAsync({
+      await createPurchase.mutateAsync({
         transaction: {
           supplier_id: supplierId,
           subtotal: totalAmount,
@@ -150,21 +148,6 @@ const PurchaseForm = ({ suppliers }: PurchaseFormProps) => {
           subtotal: item.subtotal
         }))
       });
-
-      // Jika transaksi tunai, otomatis buat entri kas keluar
-      if (jenisTransaksi === 'cash') {
-        await createKasTransaction.mutateAsync({
-          tanggal_transaksi: new Date().toISOString().split('T')[0],
-          jenis_transaksi: 'keluar',
-          akun_id: '00000000-0000-0000-0000-000000000001', // Akun kas
-          jumlah: totalAmount,
-          keterangan: `Pengeluaran kas untuk pembelian - ${purchaseResult.transaction.nomor_transaksi}`,
-          referensi_tipe: 'purchase_transaction',
-          referensi_id: purchaseResult.transaction.id,
-          kasir_username: user?.username || '',
-          kasir_name: user?.full_name || ''
-        });
-      }
 
       toast({
         title: "Transaksi pembelian berhasil",

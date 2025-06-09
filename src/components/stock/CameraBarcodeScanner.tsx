@@ -21,46 +21,8 @@ const CameraBarcodeScanner = ({ isOpen, onScan, onClose }: CameraBarcodeScannerP
   const scannerElementId = "qr-scanner";
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Check camera permission on mount
   useEffect(() => {
-    const checkCameraPermission = async () => {
-      try {
-        if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-          const devices = await navigator.mediaDevices.enumerateDevices();
-          const hasCamera = devices.some(device => device.kind === 'videoinput');
-          
-          if (hasCamera) {
-            // Try to access camera to check permission
-            try {
-              const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-              stream.getTracks().forEach(track => track.stop());
-              setCameraPermission('granted');
-            } catch (error) {
-              setCameraPermission('denied');
-              setScannerError('Akses kamera ditolak. Silakan gunakan input manual atau izinkan akses kamera.');
-            }
-          } else {
-            setScannerError('Kamera tidak tersedia pada perangkat ini.');
-            setCameraPermission('denied');
-          }
-        } else {
-          setScannerError('Browser tidak mendukung akses kamera.');
-          setCameraPermission('denied');
-        }
-      } catch (error) {
-        console.error('Error checking camera:', error);
-        setScannerError('Gagal mengakses kamera.');
-        setCameraPermission('denied');
-      }
-    };
-
-    if (isOpen) {
-      checkCameraPermission();
-    }
-  }, [isOpen]);
-
-  useEffect(() => {
-    if (isOpen && isScanning && cameraPermission === 'granted') {
+    if (isOpen && isScanning) {
       console.log('Initializing barcode scanner...');
       setScannerError('');
       
@@ -110,7 +72,7 @@ const CameraBarcodeScanner = ({ isOpen, onScan, onClose }: CameraBarcodeScannerP
         stopScanning();
       }
     };
-  }, [isOpen, isScanning, cameraPermission]);
+  }, [isOpen, isScanning]);
 
   const stopScanning = () => {
     if (scannerRef.current) {
@@ -138,17 +100,9 @@ const CameraBarcodeScanner = ({ isOpen, onScan, onClose }: CameraBarcodeScannerP
   const startCameraScanning = async () => {
     console.log('Starting camera scanning...');
     setScannerError('');
+    setCameraPermission('unknown');
     
-    if (cameraPermission === 'denied') {
-      setScannerError('Akses kamera ditolak. Silakan izinkan akses kamera atau gunakan input manual.');
-      return;
-    }
-    
-    if (cameraPermission === 'unknown') {
-      setScannerError('Memeriksa akses kamera...');
-      return;
-    }
-    
+    // Start scanning immediately - let the library handle permission requests
     setIsScanning(true);
   };
 
@@ -184,28 +138,20 @@ const CameraBarcodeScanner = ({ isOpen, onScan, onClose }: CameraBarcodeScannerP
                   Pilih metode untuk scan barcode produk
                 </p>
                 
-                {cameraPermission === 'granted' && (
-                  <Button 
-                    onClick={startCameraScanning}
-                    className="w-full gap-2"
-                    variant="default"
-                  >
-                    <Camera className="h-4 w-4" />
-                    Gunakan Kamera
-                  </Button>
-                )}
+                <Button 
+                  onClick={startCameraScanning}
+                  className="w-full gap-2"
+                  variant="default"
+                >
+                  <Camera className="h-4 w-4" />
+                  Gunakan Kamera
+                </Button>
                 
-                {cameraPermission === 'denied' && (
-                  <div className="text-center space-y-2">
-                    <div className="flex items-center justify-center gap-2 text-orange-600">
-                      <AlertCircle className="h-4 w-4" />
-                      <span className="text-sm">Kamera tidak tersedia</span>
-                    </div>
-                    <p className="text-xs text-gray-500">
-                      Gunakan input manual untuk memasukkan barcode
-                    </p>
-                  </div>
-                )}
+                <div className="bg-blue-50 p-3 rounded-lg">
+                  <p className="text-blue-700 text-sm">
+                    📱 Jika diminta izin kamera, silakan klik "Allow" atau "Izinkan"
+                  </p>
+                </div>
                 
                 {scannerError && (
                   <div className="text-red-600 text-sm bg-red-50 p-3 rounded border border-red-200">

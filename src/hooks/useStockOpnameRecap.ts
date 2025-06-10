@@ -24,13 +24,19 @@ export const useStockOpnameRecap = (dateFrom?: string, dateTo?: string) => {
   return useQuery({
     queryKey: ['stock_opname_recap', dateFrom, dateTo],
     queryFn: async () => {
+      console.log('Fetching stock opname recap with dates:', { dateFrom, dateTo });
+      
       const { data, error } = await supabase.rpc('get_stock_opname_recap', {
         date_from: dateFrom || new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
         date_to: dateTo || new Date().toISOString().split('T')[0]
       });
       
-      if (error) throw error;
+      if (error) {
+        console.error('Stock opname recap error:', error);
+        throw error;
+      }
       
+      console.log('Stock opname recap data:', data);
       return data as StockOpnameRecapItem[];
     },
   });
@@ -40,12 +46,18 @@ export const useStockOpnameRecapView = () => {
   return useQuery({
     queryKey: ['stock_opname_recap_view'],
     queryFn: async () => {
+      console.log('Fetching stock opname recap from view');
+      
       const { data, error } = await supabase
         .from('stock_opname_recap')
         .select('*');
       
-      if (error) throw error;
+      if (error) {
+        console.error('Stock opname recap view error:', error);
+        throw error;
+      }
       
+      console.log('Stock opname recap view data:', data);
       return data as StockOpnameRecapItem[];
     },
   });

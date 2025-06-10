@@ -44,7 +44,19 @@ const KasirKasForm = () => {
     k.nama?.toLowerCase() === user?.username?.toLowerCase()
   );
 
+  console.log('KasirKasForm - User:', user);
+  console.log('KasirKasForm - Kasir data:', kasirData);
+  console.log('KasirKasForm - Found user kasir:', userKasir);
+
   const handleSubmit = async () => {
+    console.log('KasirKasForm - Submit started with data:', {
+      jenisTransaksi,
+      kategori,
+      jumlah,
+      keterangan,
+      userKasir: userKasir?.id
+    });
+
     if (!kategori || jumlah <= 0) {
       toast({
         title: "Data tidak lengkap",
@@ -55,6 +67,7 @@ const KasirKasForm = () => {
     }
 
     if (!userKasir) {
+      console.error('KasirKasForm - No kasir found for user:', user);
       toast({
         title: "Error",
         description: "Data kasir tidak ditemukan. Pastikan nama Anda terdaftar sebagai kasir.",
@@ -64,17 +77,21 @@ const KasirKasForm = () => {
     }
 
     try {
-      console.log('Submitting transaction with kasir ID (UUID):', userKasir.id);
+      console.log('KasirKasForm - Submitting transaction with kasir ID (UUID):', userKasir.id);
       
-      await createTransaction.mutateAsync({
+      const transactionData = {
         jenis_transaksi: jenisTransaksi,
         kategori,
         jumlah,
         keterangan,
-        kasir_id: userKasir.id, // Now properly passing UUID
+        kasir_id: userKasir.id, // UUID from kasir table
         kasir_name: user?.full_name || userKasir.nama,
         referensi_tipe: 'manual_entry'
-      });
+      };
+
+      console.log('KasirKasForm - Transaction data to submit:', transactionData);
+
+      await createTransaction.mutateAsync(transactionData);
 
       toast({
         title: "Transaksi kas berhasil",
@@ -85,8 +102,10 @@ const KasirKasForm = () => {
       setKategori('');
       setJumlah(0);
       setKeterangan('');
+      
+      console.log('KasirKasForm - Transaction completed successfully');
     } catch (error: any) {
-      console.error('Error saving transaction:', error);
+      console.error('KasirKasForm - Error saving transaction:', error);
       toast({
         title: "Gagal menyimpan transaksi",
         description: error.message || "Terjadi kesalahan saat menyimpan transaksi",

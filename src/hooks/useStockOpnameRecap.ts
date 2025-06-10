@@ -26,19 +26,27 @@ export const useStockOpnameRecap = (dateFrom?: string, dateTo?: string) => {
     queryFn: async () => {
       console.log('Fetching stock opname recap with dates:', { dateFrom, dateTo });
       
-      const { data, error } = await supabase.rpc('get_stock_opname_recap', {
-        date_from: dateFrom || new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-        date_to: dateTo || new Date().toISOString().split('T')[0]
-      });
-      
-      if (error) {
-        console.error('Stock opname recap error:', error);
+      try {
+        const { data, error } = await supabase.rpc('get_stock_opname_recap', {
+          date_from: dateFrom || new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+          date_to: dateTo || new Date().toISOString().split('T')[0]
+        });
+        
+        if (error) {
+          console.error('Stock opname recap RPC error:', error);
+          throw new Error(`Database error: ${error.message}`);
+        }
+        
+        console.log('Stock opname recap RPC success, data length:', data?.length || 0);
+        console.log('Sample data:', data?.[0]);
+        return data as StockOpnameRecapItem[];
+      } catch (error) {
+        console.error('Stock opname recap fetch error:', error);
         throw error;
       }
-      
-      console.log('Stock opname recap data:', data);
-      return data as StockOpnameRecapItem[];
     },
+    retry: 2,
+    staleTime: 5 * 60 * 1000, // 5 minutes
   });
 };
 
@@ -48,17 +56,24 @@ export const useStockOpnameRecapView = () => {
     queryFn: async () => {
       console.log('Fetching stock opname recap from view');
       
-      const { data, error } = await supabase
-        .from('stock_opname_recap')
-        .select('*');
-      
-      if (error) {
-        console.error('Stock opname recap view error:', error);
+      try {
+        const { data, error } = await supabase
+          .from('stock_opname_recap')
+          .select('*');
+        
+        if (error) {
+          console.error('Stock opname recap view error:', error);
+          throw new Error(`View error: ${error.message}`);
+        }
+        
+        console.log('Stock opname recap view success, data length:', data?.length || 0);
+        return data as StockOpnameRecapItem[];
+      } catch (error) {
+        console.error('Stock opname recap view fetch error:', error);
         throw error;
       }
-      
-      console.log('Stock opname recap view data:', data);
-      return data as StockOpnameRecapItem[];
     },
+    retry: 2,
+    staleTime: 5 * 60 * 1000, // 5 minutes
   });
 };

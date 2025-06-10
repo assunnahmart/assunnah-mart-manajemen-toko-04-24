@@ -7,8 +7,8 @@ import { Label } from '@/components/ui/label';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { BarChart3, Users, AlertTriangle, Eye, Calendar } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { BarChart3, Users, AlertTriangle, Eye, Calendar, RefreshCw } from 'lucide-react';
 import { useStockOpnameRecap, StockOpnameRecapItem } from '@/hooks/useStockOpnameRecap';
 import { format } from 'date-fns';
 
@@ -19,7 +19,15 @@ const StockOpnameRecap = () => {
   const [dateTo, setDateTo] = useState(new Date().toISOString().split('T')[0]);
   const [selectedItem, setSelectedItem] = useState<StockOpnameRecapItem | null>(null);
 
-  const { data: recapData, isLoading, error } = useStockOpnameRecap(dateFrom, dateTo);
+  const { data: recapData, isLoading, error, refetch } = useStockOpnameRecap(dateFrom, dateTo);
+
+  console.log('StockOpnameRecap render:', { 
+    recapData: recapData?.length, 
+    isLoading, 
+    error: error?.message,
+    dateFrom,
+    dateTo 
+  });
 
   const getVarianceCategory = (selisih: number) => {
     if (selisih > 0) return { label: 'Lebih Sistem', color: 'bg-yellow-500' };
@@ -46,7 +54,10 @@ const StockOpnameRecap = () => {
     return (
       <Card>
         <CardContent className="py-8">
-          <div className="text-center">Memuat data rekap stok opname...</div>
+          <div className="text-center flex items-center justify-center gap-2">
+            <RefreshCw className="h-4 w-4 animate-spin" />
+            Memuat data rekap stok opname...
+          </div>
         </CardContent>
       </Card>
     );
@@ -56,9 +67,23 @@ const StockOpnameRecap = () => {
     return (
       <Card>
         <CardContent className="py-8">
-          <div className="text-center text-red-600">
-            Error: {error.message}
-          </div>
+          <Alert variant="destructive">
+            <AlertTriangle className="h-4 w-4" />
+            <AlertDescription>
+              <div className="space-y-2">
+                <p className="font-medium">Error: {error.message}</p>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => refetch()}
+                  className="flex items-center gap-2"
+                >
+                  <RefreshCw className="h-4 w-4" />
+                  Coba Lagi
+                </Button>
+              </div>
+            </AlertDescription>
+          </Alert>
         </CardContent>
       </Card>
     );
@@ -73,6 +98,15 @@ const StockOpnameRecap = () => {
             Analisis selisih antara stok sistem dan stok fisik berdasarkan input pengguna
           </p>
         </div>
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={() => refetch()}
+          className="flex items-center gap-2"
+        >
+          <RefreshCw className="h-4 w-4" />
+          Refresh
+        </Button>
       </div>
 
       {/* Date Filter */}
@@ -180,9 +214,15 @@ const StockOpnameRecap = () => {
         </CardHeader>
         <CardContent>
           {recapData?.length === 0 ? (
-            <p className="text-center text-gray-500 py-8">
-              Belum ada data stok opname untuk periode yang dipilih
-            </p>
+            <div className="text-center py-8">
+              <AlertTriangle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+              <p className="text-gray-500 mb-2">
+                Belum ada data stok opname untuk periode yang dipilih
+              </p>
+              <p className="text-sm text-gray-400">
+                Silakan ubah periode atau pastikan ada data stok opname yang sudah diapprove
+              </p>
+            </div>
           ) : (
             <div className="overflow-x-auto">
               <Table>
@@ -265,22 +305,26 @@ const StockOpnameRecap = () => {
                                 <div>
                                   <Label>Detail Input Per Pengguna</Label>
                                   <div className="mt-2 space-y-2">
-                                    {item.detail_input_pengguna.map((detail, index) => (
-                                      <div key={index} className="bg-gray-50 p-3 rounded-lg">
-                                        <div className="flex items-center justify-between">
-                                          <span className="font-medium">{detail.nama_kasir}</span>
-                                          <span className="text-lg font-bold text-blue-600">
-                                            {detail.stok_fisik} {item.satuan}
-                                          </span>
+                                    {item.detail_input_pengguna?.length > 0 ? (
+                                      item.detail_input_pengguna.map((detail, index) => (
+                                        <div key={index} className="bg-gray-50 p-3 rounded-lg">
+                                          <div className="flex items-center justify-between">
+                                            <span className="font-medium">{detail.nama_kasir}</span>
+                                            <span className="text-lg font-bold text-blue-600">
+                                              {detail.stok_fisik} {item.satuan}
+                                            </span>
+                                          </div>
+                                          <div className="text-sm text-gray-600">
+                                            <p>Tanggal: {format(new Date(detail.tanggal_opname), 'dd/MM/yyyy')}</p>
+                                            {detail.keterangan && (
+                                              <p>Keterangan: {detail.keterangan}</p>
+                                            )}
+                                          </div>
                                         </div>
-                                        <div className="text-sm text-gray-600">
-                                          <p>Tanggal: {format(new Date(detail.tanggal_opname), 'dd/MM/yyyy')}</p>
-                                          {detail.keterangan && (
-                                            <p>Keterangan: {detail.keterangan}</p>
-                                          )}
-                                        </div>
-                                      </div>
-                                    ))}
+                                      ))
+                                    ) : (
+                                      <p className="text-gray-500 text-sm">Tidak ada detail input</p>
+                                    )}
                                   </div>
                                 </div>
                               </div>

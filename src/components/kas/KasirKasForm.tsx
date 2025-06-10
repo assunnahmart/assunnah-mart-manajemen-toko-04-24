@@ -9,7 +9,6 @@ import { Textarea } from '@/components/ui/textarea';
 import { Wallet } from 'lucide-react';
 import { useCreateKasirKasTransaction } from '@/hooks/useKasirKas';
 import { useSimpleAuth } from '@/hooks/useSimpleAuth';
-import { useKasir } from '@/hooks/useKasir';
 import { useToast } from '@/hooks/use-toast';
 
 const KasirKasForm = () => {
@@ -19,7 +18,6 @@ const KasirKasForm = () => {
   const [keterangan, setKeterangan] = useState('');
 
   const { user } = useSimpleAuth();
-  const { data: kasirData } = useKasir();
   const createTransaction = useCreateKasirKasTransaction();
   const { toast } = useToast();
 
@@ -36,17 +34,7 @@ const KasirKasForm = () => {
     ]
   };
 
-  // Find kasir by matching username or full_name
-  const userKasir = kasirData?.find(k => 
-    k.nama === user?.full_name || 
-    k.nama === user?.username ||
-    k.nama?.toLowerCase() === user?.full_name?.toLowerCase() ||
-    k.nama?.toLowerCase() === user?.username?.toLowerCase()
-  );
-
   console.log('KasirKasForm - User:', user);
-  console.log('KasirKasForm - Kasir data:', kasirData);
-  console.log('KasirKasForm - Found user kasir:', userKasir);
 
   const handleSubmit = async () => {
     console.log('KasirKasForm - Submit started with data:', {
@@ -54,7 +42,7 @@ const KasirKasForm = () => {
       kategori,
       jumlah,
       keterangan,
-      userKasir: userKasir?.id
+      userKasirId: user?.kasir_id
     });
 
     if (!kategori || jumlah <= 0) {
@@ -66,26 +54,26 @@ const KasirKasForm = () => {
       return;
     }
 
-    if (!userKasir) {
-      console.error('KasirKasForm - No kasir found for user:', user);
+    if (!user?.kasir_id) {
+      console.error('KasirKasForm - No kasir_id found for user:', user);
       toast({
         title: "Error",
-        description: "Data kasir tidak ditemukan. Pastikan nama Anda terdaftar sebagai kasir.",
+        description: "Kasir ID tidak ditemukan. Silakan login ulang.",
         variant: "destructive"
       });
       return;
     }
 
     try {
-      console.log('KasirKasForm - Submitting transaction with kasir ID (UUID):', userKasir.id);
+      console.log('KasirKasForm - Submitting transaction with kasir_id:', user.kasir_id);
       
       const transactionData = {
         jenis_transaksi: jenisTransaksi,
         kategori,
         jumlah,
         keterangan,
-        kasir_id: userKasir.id, // UUID from kasir table
-        kasir_name: user?.full_name || userKasir.nama,
+        kasir_id: user.kasir_id, // Use the authenticated user's kasir_id
+        kasir_name: user.full_name || user.username,
         referensi_tipe: 'manual_entry'
       };
 
@@ -124,11 +112,7 @@ const KasirKasForm = () => {
         {user && (
           <div className="text-sm text-gray-600">
             <p>Login sebagai: {user.full_name} ({user.username})</p>
-            {userKasir ? (
-              <p className="text-green-600">Kasir ID: {userKasir.id}</p>
-            ) : (
-              <p className="text-red-600">Peringatan: Anda tidak terdaftar sebagai kasir</p>
-            )}
+            <p className="text-green-600">Kasir ID: {user.kasir_id}</p>
           </div>
         )}
       </CardHeader>
@@ -191,7 +175,7 @@ const KasirKasForm = () => {
 
         <Button
           onClick={handleSubmit}
-          disabled={createTransaction.isPending || !userKasir}
+          disabled={createTransaction.isPending || !user?.kasir_id}
           className="w-full"
         >
           {createTransaction.isPending ? 'Menyimpan...' : 'Simpan Transaksi'}

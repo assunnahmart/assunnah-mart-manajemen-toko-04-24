@@ -1,82 +1,28 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { Tables, TablesInsert, TablesUpdate } from '@/integrations/supabase/types';
-
-type Supplier = Tables<'supplier'>;
-type SupplierInsert = TablesInsert<'supplier'>;
-type SupplierUpdate = TablesUpdate<'supplier'>;
 
 export const useSupplier = () => {
   return useQuery({
-    queryKey: ['supplier'],
+    queryKey: ['suppliers'],
     queryFn: async () => {
+      // Get unique suppliers from barang_konsinyasi table
       const { data, error } = await supabase
-        .from('supplier')
-        .select('*')
-        .order('nama', { ascending: true });
+        .from('barang_konsinyasi')
+        .select('supplier')
+        .not('supplier', 'is', null);
       
-      if (error) throw error;
-      return data;
-    },
-  });
-};
-
-export const useCreateSupplier = () => {
-  const queryClient = useQueryClient();
-  
-  return useMutation({
-    mutationFn: async (supplier: SupplierInsert) => {
-      const { data, error } = await supabase
-        .from('supplier')
-        .insert(supplier)
-        .select()
-        .single();
+      if (error) {
+        console.error('Error fetching suppliers:', error);
+        throw error;
+      }
       
-      if (error) throw error;
-      return data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['supplier'] });
-    },
-  });
-};
-
-export const useUpdateSupplier = () => {
-  const queryClient = useQueryClient();
-  
-  return useMutation({
-    mutationFn: async ({ id, updates }: { id: string; updates: SupplierUpdate }) => {
-      const { data, error } = await supabase
-        .from('supplier')
-        .update(updates)
-        .eq('id', id)
-        .select()
-        .single();
-      
-      if (error) throw error;
-      return data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['supplier'] });
-    },
-  });
-};
-
-export const useDeleteSupplier = () => {
-  const queryClient = useQueryClient();
-  
-  return useMutation({
-    mutationFn: async (id: string) => {
-      const { error } = await supabase
-        .from('supplier')
-        .delete()
-        .eq('id', id);
-      
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['supplier'] });
+      // Extract unique suppliers
+      const uniqueSuppliers = [...new Set(data?.map(item => item.supplier).filter(Boolean))];
+      return uniqueSuppliers.map((supplier, index) => ({
+        id: `supplier-${index}`,
+        nama: supplier
+      }));
     },
   });
 };

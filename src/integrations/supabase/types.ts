@@ -9,6 +9,54 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      barang_konsinyasi: {
+        Row: {
+          barcode: string | null
+          created_at: string
+          harga_beli: number
+          harga_jual: number
+          id: string
+          kategori: string | null
+          nama: string
+          satuan: string
+          status: string
+          stok_minimal: number
+          stok_saat_ini: number
+          supplier: string | null
+          updated_at: string
+        }
+        Insert: {
+          barcode?: string | null
+          created_at?: string
+          harga_beli?: number
+          harga_jual?: number
+          id?: string
+          kategori?: string | null
+          nama: string
+          satuan?: string
+          status?: string
+          stok_minimal?: number
+          stok_saat_ini?: number
+          supplier?: string | null
+          updated_at?: string
+        }
+        Update: {
+          barcode?: string | null
+          created_at?: string
+          harga_beli?: number
+          harga_jual?: number
+          id?: string
+          kategori?: string | null
+          nama?: string
+          satuan?: string
+          status?: string
+          stok_minimal?: number
+          stok_saat_ini?: number
+          supplier?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       bills: {
         Row: {
           buku: number | null
@@ -345,6 +393,140 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      pelanggan: {
+        Row: {
+          alamat: string | null
+          created_at: string
+          id: string
+          jabatan: string | null
+          jenis_pembayaran: string | null
+          limit_kredit: number | null
+          nama: string
+          nama_unit: string | null
+          phone: string | null
+          sisa_piutang: number | null
+          status: string
+          total_tagihan: number | null
+          updated_at: string
+        }
+        Insert: {
+          alamat?: string | null
+          created_at?: string
+          id?: string
+          jabatan?: string | null
+          jenis_pembayaran?: string | null
+          limit_kredit?: number | null
+          nama: string
+          nama_unit?: string | null
+          phone?: string | null
+          sisa_piutang?: number | null
+          status?: string
+          total_tagihan?: number | null
+          updated_at?: string
+        }
+        Update: {
+          alamat?: string | null
+          created_at?: string
+          id?: string
+          jabatan?: string | null
+          jenis_pembayaran?: string | null
+          limit_kredit?: number | null
+          nama?: string
+          nama_unit?: string | null
+          phone?: string | null
+          sisa_piutang?: number | null
+          status?: string
+          total_tagihan?: number | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      pos_transaction_items: {
+        Row: {
+          created_at: string
+          id: string
+          product_id: string
+          product_name: string
+          quantity: number
+          subtotal: number
+          transaction_id: string
+          unit: string
+          unit_price: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          product_id: string
+          product_name: string
+          quantity: number
+          subtotal: number
+          transaction_id: string
+          unit?: string
+          unit_price: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          product_id?: string
+          product_name?: string
+          quantity?: number
+          subtotal?: number
+          transaction_id?: string
+          unit?: string
+          unit_price?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pos_transaction_items_transaction_id_fkey"
+            columns: ["transaction_id"]
+            isOneToOne: false
+            referencedRelation: "pos_transactions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pos_transactions: {
+        Row: {
+          amount_paid: number
+          change_amount: number
+          created_at: string
+          id: string
+          items_count: number
+          kasir_name: string
+          kasir_username: string
+          notes: string | null
+          payment_method: string
+          status: string
+          total_amount: number
+        }
+        Insert: {
+          amount_paid: number
+          change_amount?: number
+          created_at?: string
+          id?: string
+          items_count?: number
+          kasir_name: string
+          kasir_username: string
+          notes?: string | null
+          payment_method?: string
+          status?: string
+          total_amount: number
+        }
+        Update: {
+          amount_paid?: number
+          change_amount?: number
+          created_at?: string
+          id?: string
+          items_count?: number
+          kasir_name?: string
+          kasir_username?: string
+          notes?: string | null
+          payment_method?: string
+          status?: string
+          total_amount?: number
+        }
+        Relationships: []
       }
       registration_fees: {
         Row: {

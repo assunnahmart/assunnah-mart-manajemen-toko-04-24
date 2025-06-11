@@ -6,83 +6,30 @@ export const usePiutangPelanggan = () => {
   return useQuery({
     queryKey: ['piutang_pelanggan'],
     queryFn: async () => {
-      const today = new Date().toISOString().split('T')[0];
-      
-      // Get POS credit transactions
-      const { data: posCredit, error: posError } = await supabase
-        .from('pos_transactions')
+      const { data: pelangganData, error } = await supabase
+        .from('pelanggan')
         .select('*')
-        .eq('payment_method', 'credit')
-        .in('status', ['credit', 'completed']);
+        .eq('status', 'aktif');
       
-      if (posError) throw posError;
+      if (error) {
+        console.error('Error fetching pelanggan:', error);
+        throw error;
+      }
       
-      // Get regular credit transactions
-      const { data: regularCredit, error: regularError } = await supabase
-        .from('transaksi_penjualan')
-        .select(`
-          *,
-          pelanggan_unit(nama_unit, total_tagihan),
-          pelanggan_perorangan(nama, sisa_piutang)
-        `)
-        .eq('jenis_pembayaran', 'credit')
-        .in('status', ['kredit', 'selesai']);
+      // Separate unit and individual customers
+      const pelangganUnit = pelangganData?.filter(p => p.nama_unit && p.nama_unit.trim() !== '') || [];
+      const pelangganPerorangan = pelangganData?.filter(p => !p.nama_unit || p.nama_unit.trim() === '') || [];
       
-      if (regularError) throw regularError;
-      
-      // Get pelanggan unit with outstanding debt
-      const { data: pelangganUnit, error: unitError } = await supabase
-        .from('pelanggan_unit')
-        .select('*')
-        .gt('total_tagihan', 0)
-        .order('total_tagihan', { ascending: false });
-      
-      if (unitError) throw unitError;
-      
-      // Get pelanggan perorangan with outstanding debt
-      const { data: pelangganPerorangan, error: peroranganError } = await supabase
-        .from('pelanggan_perorangan')
-        .select('*')
-        .gt('sisa_piutang', 0)
-        .order('sisa_piutang', { ascending: false });
-      
-      if (peroranganError) throw peroranganError;
-      
-      // Calculate totals including POS transactions
       const totalPiutangUnit = pelangganUnit.reduce((sum, p) => sum + (p.total_tagihan || 0), 0);
       const totalPiutangPerorangan = pelangganPerorangan.reduce((sum, p) => sum + (p.sisa_piutang || 0), 0);
       
-      // Add credit from POS transactions that might not be reflected in pelanggan tables yet
-      const additionalPOSCredit = posCredit
-        .filter(t => new Date(t.created_at).toDateString() === new Date().toDateString())
-        .reduce((sum, t) => sum + t.total_amount, 0);
-      
-      const totalPiutang = totalPiutangUnit + totalPiutangPerorangan + additionalPOSCredit;
-      
-      // Calculate today's credit sales from both sources
-      const todayPosCredit = posCredit.filter(t => 
-        new Date(t.created_at).toDateString() === new Date().toDateString()
-      );
-      const todayRegularCredit = regularCredit.filter(t => 
-        new Date(t.created_at).toDateString() === new Date().toDateString()
-      );
-      
-      const todayCreditAmount = [
-        ...todayPosCredit.map(t => t.total_amount),
-        ...todayRegularCredit.map(t => t.total)
-      ].reduce((sum, amount) => sum + amount, 0);
-      
       return {
-        pelangganUnit,
-        pelangganPerorangan,
+        totalPiutang: totalPiutangUnit + totalPiutangPerorangan,
         totalPiutangUnit,
         totalPiutangPerorangan,
-        totalPiutang,
-        todayCreditAmount,
-        totalCreditCustomers: pelangganUnit.length + pelangganPerorangan.length,
-        recentCreditTransactions: [...todayPosCredit, ...todayRegularCredit],
-        posCredit,
-        regularCredit
+        totalCreditCustomers: pelangganData?.length || 0,
+        pelangganUnit: pelangganUnit.sort((a, b) => (b.total_tagihan || 0) - (a.total_tagihan || 0)),
+        pelangganPerorangan: pelangganPerorangan.sort((a, b) => (b.sisa_piutang || 0) - (a.sisa_piutang || 0))
       };
     },
   });
@@ -94,40 +41,24 @@ export const useTodayCreditSales = () => {
     queryFn: async () => {
       const today = new Date().toISOString().split('T')[0];
       
-      // Get today's credit transactions from both sources
-      const [posResult, regularResult] = await Promise.all([
-        supabase
-          .from('pos_transactions')
-          .select('*')
-          .eq('payment_method', 'credit')
-          .gte('created_at', `${today}T00:00:00`)
-          .lt('created_at', `${today}T23:59:59`),
-        supabase
-          .from('transaksi_penjualan')
-          .select('*')
-          .eq('jenis_pembayaran', 'credit')
-          .gte('created_at', `${today}T00:00:00`)
-          .lt('created_at', `${today}T23:59:59`)
-      ]);
+      const { data, error } = await supabase
+        .from('pos_transactions')
+        .select('*')
+        .eq('payment_method', 'credit')
+        .gte('created_at', `${today}T00:00:00`)
+        .lt('created_at', `${today}T23:59:59`);
       
-      if (posResult.error) throw posResult.error;
-      if (regularResult.error) throw regularResult.error;
+      if (error) {
+        console.error('Error fetching credit sales:', error);
+        throw error;
+      }
       
-      const posTransactions = posResult.data || [];
-      const regularTransactions = regularResult.data || [];
-      
-      const totalCreditSales = [
-        ...posTransactions.map(t => t.total_amount),
-        ...regularTransactions.map(t => t.total)
-      ].reduce((sum, amount) => sum + amount, 0);
-      
-      const totalCreditTransactions = posTransactions.length + regularTransactions.length;
+      const totalCreditTransactions = data?.length || 0;
+      const totalCreditSales = data?.reduce((sum, t) => sum + (t.total_amount || 0), 0) || 0;
       
       return {
-        totalCreditSales,
         totalCreditTransactions,
-        posTransactions,
-        regularTransactions
+        totalCreditSales
       };
     },
   });

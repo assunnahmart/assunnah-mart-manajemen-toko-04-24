@@ -1,24 +1,20 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { Tables, TablesInsert, TablesUpdate } from '@/integrations/supabase/types';
-
-type PelangganUnit = Tables<'pelanggan_unit'>;
-type PelangganPerorangan = Tables<'pelanggan_perorangan'>;
-type PelangganUnitInsert = TablesInsert<'pelanggan_unit'>;
-type PelangganPeroranganInsert = TablesInsert<'pelanggan_perorangan'>;
 
 export const usePelangganUnit = () => {
   return useQuery({
     queryKey: ['pelanggan_unit'],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('pelanggan_unit')
+        .from('pelanggan')
         .select('*')
-        .order('nama_unit');
+        .not('nama_unit', 'is', null)
+        .neq('nama_unit', '')
+        .eq('status', 'aktif');
       
       if (error) throw error;
-      return data as PelangganUnit[];
+      return data || [];
     },
   });
 };
@@ -28,40 +24,13 @@ export const usePelangganPerorangan = () => {
     queryKey: ['pelanggan_perorangan'],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('pelanggan_perorangan')
+        .from('pelanggan')
         .select('*')
-        .order('nama');
+        .or('nama_unit.is.null,nama_unit.eq.')
+        .eq('status', 'aktif');
       
       if (error) throw error;
-      return data as PelangganPerorangan[];
-    },
-  });
-};
-
-export const usePelangganKredit = () => {
-  return useQuery({
-    queryKey: ['pelanggan_kredit'],
-    queryFn: async () => {
-      const [unitResult, peroranganResult] = await Promise.all([
-        supabase
-          .from('pelanggan_unit')
-          .select('*')
-          .gt('total_tagihan', 0)
-          .order('total_tagihan', { ascending: false }),
-        supabase
-          .from('pelanggan_perorangan')
-          .select('*')
-          .gt('sisa_piutang', 0)
-          .order('sisa_piutang', { ascending: false })
-      ]);
-      
-      if (unitResult.error) throw unitResult.error;
-      if (peroranganResult.error) throw peroranganResult.error;
-      
-      return {
-        unit: unitResult.data as PelangganUnit[],
-        perorangan: peroranganResult.data as PelangganPerorangan[]
-      };
+      return data || [];
     },
   });
 };
@@ -70,19 +39,19 @@ export const useCreatePelangganUnit = () => {
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: async (pelanggan: PelangganUnitInsert) => {
-      const { data, error } = await supabase
-        .from('pelanggan_unit')
-        .insert(pelanggan)
+    mutationFn: async (data: any) => {
+      const { data: result, error } = await supabase
+        .from('pelanggan')
+        .insert(data)
         .select()
         .single();
       
       if (error) throw error;
-      return data;
+      return result;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['pelanggan_unit'] });
-      queryClient.invalidateQueries({ queryKey: ['pelanggan_kredit'] });
+      queryClient.invalidateQueries({ queryKey: ['piutang_pelanggan'] });
     },
   });
 };
@@ -91,19 +60,19 @@ export const useCreatePelangganPerorangan = () => {
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: async (pelanggan: PelangganPeroranganInsert) => {
-      const { data, error } = await supabase
-        .from('pelanggan_perorangan')
-        .insert(pelanggan)
+    mutationFn: async (data: any) => {
+      const { data: result, error } = await supabase
+        .from('pelanggan')
+        .insert(data)
         .select()
         .single();
       
       if (error) throw error;
-      return data;
+      return result;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['pelanggan_perorangan'] });
-      queryClient.invalidateQueries({ queryKey: ['pelanggan_kredit'] });
+      queryClient.invalidateQueries({ queryKey: ['piutang_pelanggan'] });
     },
   });
 };

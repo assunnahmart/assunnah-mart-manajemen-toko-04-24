@@ -9,1355 +9,682 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      barang_konsinyasi: {
+      bills: {
         Row: {
-          barcode: string | null
-          created_at: string | null
-          harga_beli: number | null
-          harga_jual: number | null
-          id: string
-          jenis_konsinyasi: string
-          kategori_id: string | null
-          kategori_pembelian: string | null
-          nama: string
-          satuan: string | null
-          status: string | null
-          stok_minimal: number | null
-          stok_saat_ini: number | null
-          supplier_id: string | null
-          updated_at: string | null
-        }
-        Insert: {
-          barcode?: string | null
-          created_at?: string | null
-          harga_beli?: number | null
-          harga_jual?: number | null
-          id?: string
-          jenis_konsinyasi: string
-          kategori_id?: string | null
-          kategori_pembelian?: string | null
-          nama: string
-          satuan?: string | null
-          status?: string | null
-          stok_minimal?: number | null
-          stok_saat_ini?: number | null
-          supplier_id?: string | null
-          updated_at?: string | null
-        }
-        Update: {
-          barcode?: string | null
-          created_at?: string | null
-          harga_beli?: number | null
-          harga_jual?: number | null
-          id?: string
-          jenis_konsinyasi?: string
-          kategori_id?: string | null
-          kategori_pembelian?: string | null
-          nama?: string
-          satuan?: string | null
-          status?: string | null
-          stok_minimal?: number | null
-          stok_saat_ini?: number | null
-          supplier_id?: string | null
-          updated_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "barang_konsinyasi_kategori_id_fkey"
-            columns: ["kategori_id"]
-            isOneToOne: false
-            referencedRelation: "kategori_barang"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "barang_konsinyasi_supplier_id_fkey"
-            columns: ["supplier_id"]
-            isOneToOne: false
-            referencedRelation: "supplier"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "fk_barang_konsinyasi_supplier"
-            columns: ["supplier_id"]
-            isOneToOne: false
-            referencedRelation: "supplier"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      chart_of_accounts: {
-        Row: {
-          created_at: string | null
-          id: string
-          is_active: boolean | null
-          jenis_akun: string
-          kategori: string | null
-          kode_akun: string
-          nama_akun: string
-          parent_id: string | null
-          saldo_normal: string
-          updated_at: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          id?: string
-          is_active?: boolean | null
-          jenis_akun: string
-          kategori?: string | null
-          kode_akun: string
-          nama_akun: string
-          parent_id?: string | null
-          saldo_normal?: string
-          updated_at?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          id?: string
-          is_active?: boolean | null
-          jenis_akun?: string
-          kategori?: string | null
-          kode_akun?: string
-          nama_akun?: string
-          parent_id?: string | null
-          saldo_normal?: string
-          updated_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "chart_of_accounts_parent_id_fkey"
-            columns: ["parent_id"]
-            isOneToOne: false
-            referencedRelation: "chart_of_accounts"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      detail_transaksi_pembelian: {
-        Row: {
-          barang_id: string | null
-          created_at: string | null
-          harga_satuan: number
-          id: string
-          jumlah: number
-          nama_barang: string
-          subtotal: number
-          transaksi_id: string | null
-        }
-        Insert: {
-          barang_id?: string | null
-          created_at?: string | null
-          harga_satuan: number
-          id?: string
-          jumlah: number
-          nama_barang: string
-          subtotal: number
-          transaksi_id?: string | null
-        }
-        Update: {
-          barang_id?: string | null
-          created_at?: string | null
-          harga_satuan?: number
-          id?: string
-          jumlah?: number
-          nama_barang?: string
-          subtotal?: number
-          transaksi_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "detail_transaksi_pembelian_barang_id_fkey"
-            columns: ["barang_id"]
-            isOneToOne: false
-            referencedRelation: "barang_konsinyasi"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "detail_transaksi_pembelian_barang_id_fkey"
-            columns: ["barang_id"]
-            isOneToOne: false
-            referencedRelation: "stock_opname_recap"
-            referencedColumns: ["barang_id"]
-          },
-          {
-            foreignKeyName: "detail_transaksi_pembelian_transaksi_id_fkey"
-            columns: ["transaksi_id"]
-            isOneToOne: false
-            referencedRelation: "transaksi_pembelian"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      detail_transaksi_penjualan: {
-        Row: {
-          barang_id: string | null
-          created_at: string | null
-          harga_satuan: number
-          id: string
-          jumlah: number
-          nama_barang: string
-          subtotal: number
-          transaksi_id: string | null
-        }
-        Insert: {
-          barang_id?: string | null
-          created_at?: string | null
-          harga_satuan: number
-          id?: string
-          jumlah: number
-          nama_barang: string
-          subtotal: number
-          transaksi_id?: string | null
-        }
-        Update: {
-          barang_id?: string | null
-          created_at?: string | null
-          harga_satuan?: number
-          id?: string
-          jumlah?: number
-          nama_barang?: string
-          subtotal?: number
-          transaksi_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "detail_transaksi_penjualan_barang_id_fkey"
-            columns: ["barang_id"]
-            isOneToOne: false
-            referencedRelation: "barang_konsinyasi"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "detail_transaksi_penjualan_barang_id_fkey"
-            columns: ["barang_id"]
-            isOneToOne: false
-            referencedRelation: "stock_opname_recap"
-            referencedColumns: ["barang_id"]
-          },
-          {
-            foreignKeyName: "detail_transaksi_penjualan_transaksi_id_fkey"
-            columns: ["transaksi_id"]
-            isOneToOne: false
-            referencedRelation: "transaksi_penjualan"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      hutang_supplier: {
-        Row: {
-          created_at: string | null
-          id: string
-          jumlah_hutang: number
-          sisa_hutang: number
-          status: string | null
-          supplier_id: string | null
-          tanggal_jatuh_tempo: string | null
-          transaksi_pembelian_id: string | null
-          updated_at: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          id?: string
-          jumlah_hutang: number
-          sisa_hutang: number
-          status?: string | null
-          supplier_id?: string | null
-          tanggal_jatuh_tempo?: string | null
-          transaksi_pembelian_id?: string | null
-          updated_at?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          id?: string
-          jumlah_hutang?: number
-          sisa_hutang?: number
-          status?: string | null
-          supplier_id?: string | null
-          tanggal_jatuh_tempo?: string | null
-          transaksi_pembelian_id?: string | null
-          updated_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "hutang_supplier_supplier_id_fkey"
-            columns: ["supplier_id"]
-            isOneToOne: false
-            referencedRelation: "supplier"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "hutang_supplier_transaksi_pembelian_id_fkey"
-            columns: ["transaksi_pembelian_id"]
-            isOneToOne: false
-            referencedRelation: "transaksi_pembelian"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      jadwal_kasir: {
-        Row: {
-          created_at: string | null
-          hari: string
-          id: string
-          jam_mulai: string
-          jam_selesai: string
-          kasir_id: string | null
-          minggu_ke: number | null
-          shift: string
-          tahun: number | null
-        }
-        Insert: {
-          created_at?: string | null
-          hari: string
-          id?: string
-          jam_mulai: string
-          jam_selesai: string
-          kasir_id?: string | null
-          minggu_ke?: number | null
-          shift: string
-          tahun?: number | null
-        }
-        Update: {
-          created_at?: string | null
-          hari?: string
-          id?: string
-          jam_mulai?: string
-          jam_selesai?: string
-          kasir_id?: string | null
-          minggu_ke?: number | null
-          shift?: string
-          tahun?: number | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "jadwal_kasir_kasir_id_fkey"
-            columns: ["kasir_id"]
-            isOneToOne: false
-            referencedRelation: "kasir"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      kas_umum_transactions: {
-        Row: {
-          akun_id: string | null
-          created_at: string | null
-          id: string
-          jenis_transaksi: string
-          jumlah: number
-          kasir_name: string | null
-          kasir_username: string | null
-          keterangan: string | null
-          referensi_id: string | null
-          referensi_tipe: string | null
-          tanggal_transaksi: string
-          transaction_number: string
-          updated_at: string | null
-        }
-        Insert: {
-          akun_id?: string | null
-          created_at?: string | null
-          id?: string
-          jenis_transaksi: string
-          jumlah: number
-          kasir_name?: string | null
-          kasir_username?: string | null
-          keterangan?: string | null
-          referensi_id?: string | null
-          referensi_tipe?: string | null
-          tanggal_transaksi?: string
-          transaction_number: string
-          updated_at?: string | null
-        }
-        Update: {
-          akun_id?: string | null
-          created_at?: string | null
-          id?: string
-          jenis_transaksi?: string
-          jumlah?: number
-          kasir_name?: string | null
-          kasir_username?: string | null
-          keterangan?: string | null
-          referensi_id?: string | null
-          referensi_tipe?: string | null
-          tanggal_transaksi?: string
-          transaction_number?: string
-          updated_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "kas_umum_transactions_akun_id_fkey"
-            columns: ["akun_id"]
-            isOneToOne: false
-            referencedRelation: "chart_of_accounts"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      kasir: {
-        Row: {
-          created_at: string | null
-          email: string | null
-          id: string
-          nama: string
-          shift: string | null
-          status: string | null
-          telepon: string | null
-          updated_at: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          email?: string | null
-          id?: string
-          nama: string
-          shift?: string | null
-          status?: string | null
-          telepon?: string | null
-          updated_at?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          email?: string | null
-          id?: string
-          nama?: string
-          shift?: string | null
-          status?: string | null
-          telepon?: string | null
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
-      kasir_kas_transactions: {
-        Row: {
-          created_at: string | null
-          id: string
-          jenis_transaksi: string
-          jumlah: number
-          kas_umum_id: string | null
-          kasir_id: string | null
-          kasir_name: string | null
-          kategori: string
-          keterangan: string | null
-          referensi_id: string | null
-          referensi_tipe: string | null
-          sync_to_kas_umum: boolean | null
-          tanggal_transaksi: string
-          transaction_number: string
-          updated_at: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          id?: string
-          jenis_transaksi: string
-          jumlah: number
-          kas_umum_id?: string | null
-          kasir_id?: string | null
-          kasir_name?: string | null
-          kategori: string
-          keterangan?: string | null
-          referensi_id?: string | null
-          referensi_tipe?: string | null
-          sync_to_kas_umum?: boolean | null
-          tanggal_transaksi?: string
-          transaction_number: string
-          updated_at?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          id?: string
-          jenis_transaksi?: string
-          jumlah?: number
-          kas_umum_id?: string | null
-          kasir_id?: string | null
-          kasir_name?: string | null
-          kategori?: string
-          keterangan?: string | null
-          referensi_id?: string | null
-          referensi_tipe?: string | null
-          sync_to_kas_umum?: boolean | null
-          tanggal_transaksi?: string
-          transaction_number?: string
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
-      kategori_barang: {
-        Row: {
-          created_at: string | null
-          deskripsi: string | null
-          id: string
-          nama: string
-        }
-        Insert: {
-          created_at?: string | null
-          deskripsi?: string | null
-          id?: string
-          nama: string
-        }
-        Update: {
-          created_at?: string | null
-          deskripsi?: string | null
-          id?: string
-          nama?: string
-        }
-        Relationships: []
-      }
-      konsinyasi_detail: {
-        Row: {
-          barang_id: string | null
-          created_at: string | null
-          harga_beli: number
-          id: string
-          jumlah_terjual: number
-          laporan_id: string | null
-          nama_barang: string
-          total_nilai: number
-        }
-        Insert: {
-          barang_id?: string | null
-          created_at?: string | null
-          harga_beli: number
-          id?: string
-          jumlah_terjual: number
-          laporan_id?: string | null
-          nama_barang: string
-          total_nilai: number
-        }
-        Update: {
-          barang_id?: string | null
-          created_at?: string | null
-          harga_beli?: number
-          id?: string
-          jumlah_terjual?: number
-          laporan_id?: string | null
-          nama_barang?: string
-          total_nilai?: number
-        }
-        Relationships: [
-          {
-            foreignKeyName: "konsinyasi_detail_barang_id_fkey"
-            columns: ["barang_id"]
-            isOneToOne: false
-            referencedRelation: "barang_konsinyasi"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "konsinyasi_detail_barang_id_fkey"
-            columns: ["barang_id"]
-            isOneToOne: false
-            referencedRelation: "stock_opname_recap"
-            referencedColumns: ["barang_id"]
-          },
-          {
-            foreignKeyName: "konsinyasi_detail_laporan_id_fkey"
-            columns: ["laporan_id"]
-            isOneToOne: false
-            referencedRelation: "konsinyasi_laporan"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      konsinyasi_harian: {
-        Row: {
-          created_at: string | null
-          harga_beli: number
-          id: string
-          jumlah_real_terjual: number
-          jumlah_terjual_sistem: number
-          jumlah_titipan: number
-          kasir_id: string | null
-          kasir_name: string | null
-          keterangan: string | null
-          product_id: string | null
-          product_name: string
-          selisih_stok: number
-          sisa_stok: number
-          status: string | null
-          supplier_id: string | null
-          supplier_name: string
-          tanggal_konsinyasi: string
-          total_pembayaran: number
-          updated_at: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          harga_beli?: number
-          id?: string
-          jumlah_real_terjual?: number
-          jumlah_terjual_sistem?: number
-          jumlah_titipan?: number
-          kasir_id?: string | null
-          kasir_name?: string | null
-          keterangan?: string | null
-          product_id?: string | null
-          product_name: string
-          selisih_stok?: number
-          sisa_stok?: number
-          status?: string | null
-          supplier_id?: string | null
-          supplier_name: string
-          tanggal_konsinyasi?: string
-          total_pembayaran?: number
-          updated_at?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          harga_beli?: number
-          id?: string
-          jumlah_real_terjual?: number
-          jumlah_terjual_sistem?: number
-          jumlah_titipan?: number
-          kasir_id?: string | null
-          kasir_name?: string | null
-          keterangan?: string | null
-          product_id?: string | null
-          product_name?: string
-          selisih_stok?: number
-          sisa_stok?: number
-          status?: string | null
-          supplier_id?: string | null
-          supplier_name?: string
-          tanggal_konsinyasi?: string
-          total_pembayaran?: number
-          updated_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "konsinyasi_harian_product_id_fkey"
-            columns: ["product_id"]
-            isOneToOne: false
-            referencedRelation: "barang_konsinyasi"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "konsinyasi_harian_product_id_fkey"
-            columns: ["product_id"]
-            isOneToOne: false
-            referencedRelation: "stock_opname_recap"
-            referencedColumns: ["barang_id"]
-          },
-          {
-            foreignKeyName: "konsinyasi_harian_supplier_id_fkey"
-            columns: ["supplier_id"]
-            isOneToOne: false
-            referencedRelation: "supplier"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      konsinyasi_laporan: {
-        Row: {
-          created_at: string | null
-          id: string
-          periode_mulai: string
-          periode_selesai: string
-          status: string | null
-          supplier_id: string | null
-          total_komisi: number | null
-          total_penjualan: number | null
-          updated_at: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          id?: string
-          periode_mulai: string
-          periode_selesai: string
-          status?: string | null
-          supplier_id?: string | null
-          total_komisi?: number | null
-          total_penjualan?: number | null
-          updated_at?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          id?: string
-          periode_mulai?: string
-          periode_selesai?: string
-          status?: string | null
-          supplier_id?: string | null
-          total_komisi?: number | null
-          total_penjualan?: number | null
-          updated_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "konsinyasi_laporan_supplier_id_fkey"
-            columns: ["supplier_id"]
-            isOneToOne: false
-            referencedRelation: "supplier"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      mutasi_stok: {
-        Row: {
-          barang_id: string | null
-          created_at: string | null
-          id: string
-          jenis_mutasi: string
-          jumlah: number
-          keterangan: string | null
-          referensi_id: string | null
-          referensi_tipe: string | null
-          stok_sebelum: number
-          stok_sesudah: number
-        }
-        Insert: {
-          barang_id?: string | null
-          created_at?: string | null
-          id?: string
-          jenis_mutasi: string
-          jumlah: number
-          keterangan?: string | null
-          referensi_id?: string | null
-          referensi_tipe?: string | null
-          stok_sebelum: number
-          stok_sesudah: number
-        }
-        Update: {
-          barang_id?: string | null
-          created_at?: string | null
-          id?: string
-          jenis_mutasi?: string
-          jumlah?: number
-          keterangan?: string | null
-          referensi_id?: string | null
-          referensi_tipe?: string | null
-          stok_sebelum?: number
-          stok_sesudah?: number
-        }
-        Relationships: [
-          {
-            foreignKeyName: "mutasi_stok_barang_id_fkey"
-            columns: ["barang_id"]
-            isOneToOne: false
-            referencedRelation: "barang_konsinyasi"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "mutasi_stok_barang_id_fkey"
-            columns: ["barang_id"]
-            isOneToOne: false
-            referencedRelation: "stock_opname_recap"
-            referencedColumns: ["barang_id"]
-          },
-        ]
-      }
-      pelanggan_perorangan: {
-        Row: {
-          alamat: string | null
-          batas_potong_gaji: number | null
-          created_at: string | null
-          departemen: string | null
-          gaji_pokok: number | null
-          id: string
-          jabatan: string | null
-          nama: string
-          nik: string | null
-          sisa_piutang: number | null
-          status: string | null
-          telepon: string | null
-          updated_at: string | null
-        }
-        Insert: {
-          alamat?: string | null
-          batas_potong_gaji?: number | null
-          created_at?: string | null
-          departemen?: string | null
-          gaji_pokok?: number | null
-          id?: string
-          jabatan?: string | null
-          nama: string
-          nik?: string | null
-          sisa_piutang?: number | null
-          status?: string | null
-          telepon?: string | null
-          updated_at?: string | null
-        }
-        Update: {
-          alamat?: string | null
-          batas_potong_gaji?: number | null
-          created_at?: string | null
-          departemen?: string | null
-          gaji_pokok?: number | null
-          id?: string
-          jabatan?: string | null
-          nama?: string
-          nik?: string | null
-          sisa_piutang?: number | null
-          status?: string | null
-          telepon?: string | null
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
-      pelanggan_unit: {
-        Row: {
-          alamat: string | null
-          created_at: string | null
-          id: string
-          jenis_pembayaran: string | null
-          kontak_person: string | null
-          limit_kredit: number | null
-          nama_unit: string
-          status: string | null
-          telepon: string | null
-          total_tagihan: number | null
-          updated_at: string | null
-        }
-        Insert: {
-          alamat?: string | null
-          created_at?: string | null
-          id?: string
-          jenis_pembayaran?: string | null
-          kontak_person?: string | null
-          limit_kredit?: number | null
-          nama_unit: string
-          status?: string | null
-          telepon?: string | null
-          total_tagihan?: number | null
-          updated_at?: string | null
-        }
-        Update: {
-          alamat?: string | null
-          created_at?: string | null
-          id?: string
-          jenis_pembayaran?: string | null
-          kontak_person?: string | null
-          limit_kredit?: number | null
-          nama_unit?: string
-          status?: string | null
-          telepon?: string | null
-          total_tagihan?: number | null
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
-      pos_transaction_items: {
-        Row: {
+          buku: number | null
           created_at: string
+          ekstrakurikuler_bulanan: number | null
+          eskul_agustus: number | null
+          eskul_april: number | null
+          eskul_desember: number | null
+          eskul_februari: number | null
+          eskul_januari: number | null
+          eskul_juli: number | null
+          eskul_juni: number | null
+          eskul_maret: number | null
+          eskul_mei: number | null
+          eskul_november: number | null
+          eskul_oktober: number | null
+          eskul_september: number | null
           id: string
-          product_id: string
-          product_name: string
-          quantity: number
-          subtotal: number
-          transaction_id: string
-          unit: string
-          unit_price: number
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          product_id: string
-          product_name: string
-          quantity: number
-          subtotal: number
-          transaction_id: string
-          unit?: string
-          unit_price: number
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          product_id?: string
-          product_name?: string
-          quantity?: number
-          subtotal?: number
-          transaction_id?: string
-          unit?: string
-          unit_price?: number
-        }
-        Relationships: [
-          {
-            foreignKeyName: "pos_transaction_items_transaction_id_fkey"
-            columns: ["transaction_id"]
-            isOneToOne: false
-            referencedRelation: "pos_transactions"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      pos_transactions: {
-        Row: {
-          amount_paid: number
-          change_amount: number
-          created_at: string
-          id: string
-          items_count: number
-          kasir_name: string
-          kasir_username: string
-          notes: string | null
-          payment_method: string
-          status: string
-          total_amount: number
-          transaction_number: string
+          kegiatan: number | null
+          pmb: number | null
+          spp_agustus: number | null
+          spp_april: number | null
+          spp_bulanan: number | null
+          spp_desember: number | null
+          spp_februari: number | null
+          spp_januari: number | null
+          spp_juli: number | null
+          spp_juni: number | null
+          spp_maret: number | null
+          spp_mei: number | null
+          spp_november: number | null
+          spp_oktober: number | null
+          spp_september: number | null
+          student_id: string
+          tagihan_lama: number | null
           updated_at: string
         }
         Insert: {
-          amount_paid?: number
-          change_amount?: number
+          buku?: number | null
           created_at?: string
+          ekstrakurikuler_bulanan?: number | null
+          eskul_agustus?: number | null
+          eskul_april?: number | null
+          eskul_desember?: number | null
+          eskul_februari?: number | null
+          eskul_januari?: number | null
+          eskul_juli?: number | null
+          eskul_juni?: number | null
+          eskul_maret?: number | null
+          eskul_mei?: number | null
+          eskul_november?: number | null
+          eskul_oktober?: number | null
+          eskul_september?: number | null
           id?: string
-          items_count?: number
-          kasir_name: string
-          kasir_username: string
-          notes?: string | null
-          payment_method?: string
-          status?: string
-          total_amount?: number
-          transaction_number: string
+          kegiatan?: number | null
+          pmb?: number | null
+          spp_agustus?: number | null
+          spp_april?: number | null
+          spp_bulanan?: number | null
+          spp_desember?: number | null
+          spp_februari?: number | null
+          spp_januari?: number | null
+          spp_juli?: number | null
+          spp_juni?: number | null
+          spp_maret?: number | null
+          spp_mei?: number | null
+          spp_november?: number | null
+          spp_oktober?: number | null
+          spp_september?: number | null
+          student_id: string
+          tagihan_lama?: number | null
           updated_at?: string
         }
         Update: {
-          amount_paid?: number
-          change_amount?: number
+          buku?: number | null
+          created_at?: string
+          ekstrakurikuler_bulanan?: number | null
+          eskul_agustus?: number | null
+          eskul_april?: number | null
+          eskul_desember?: number | null
+          eskul_februari?: number | null
+          eskul_januari?: number | null
+          eskul_juli?: number | null
+          eskul_juni?: number | null
+          eskul_maret?: number | null
+          eskul_mei?: number | null
+          eskul_november?: number | null
+          eskul_oktober?: number | null
+          eskul_september?: number | null
+          id?: string
+          kegiatan?: number | null
+          pmb?: number | null
+          spp_agustus?: number | null
+          spp_april?: number | null
+          spp_bulanan?: number | null
+          spp_desember?: number | null
+          spp_februari?: number | null
+          spp_januari?: number | null
+          spp_juli?: number | null
+          spp_juni?: number | null
+          spp_maret?: number | null
+          spp_mei?: number | null
+          spp_november?: number | null
+          spp_oktober?: number | null
+          spp_september?: number | null
+          student_id?: string
+          tagihan_lama?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bills_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: true
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      jenis_rekening: {
+        Row: {
+          created_at: string
+          id: string
+          jenis_tagihan: string | null
+          kategori: string
+          kode_rekening: string
+          nama_rekening: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
           created_at?: string
           id?: string
-          items_count?: number
-          kasir_name?: string
-          kasir_username?: string
-          notes?: string | null
-          payment_method?: string
+          jenis_tagihan?: string | null
+          kategori: string
+          kode_rekening: string
+          nama_rekening: string
           status?: string
-          total_amount?: number
-          transaction_number?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          jenis_tagihan?: string | null
+          kategori?: string
+          kode_rekening?: string
+          nama_rekening?: string
+          status?: string
           updated_at?: string
         }
         Relationships: []
       }
-      produk_pembelian: {
+      jurnal_umum: {
         Row: {
-          barcode: string | null
-          created_at: string | null
-          harga_beli: number | null
-          harga_jual: number | null
+          created_at: string
+          debet: number
           id: string
-          kategori: string | null
-          keterangan: string | null
-          nama_produk: string
-          satuan: string | null
-          status: string | null
-          stok_minimal: number | null
-          stok_saat_ini: number | null
-          supplier_id: string | null
-          updated_at: string | null
+          jenis_transaksi: string
+          keterangan: string
+          kode_akun: string
+          kredit: number
+          nama_akun: string
+          referensi: string | null
+          tanggal: string
+          transaksi_id: string | null
         }
         Insert: {
-          barcode?: string | null
-          created_at?: string | null
-          harga_beli?: number | null
-          harga_jual?: number | null
+          created_at?: string
+          debet?: number
           id?: string
-          kategori?: string | null
-          keterangan?: string | null
-          nama_produk: string
-          satuan?: string | null
-          status?: string | null
-          stok_minimal?: number | null
-          stok_saat_ini?: number | null
-          supplier_id?: string | null
-          updated_at?: string | null
+          jenis_transaksi: string
+          keterangan: string
+          kode_akun: string
+          kredit?: number
+          nama_akun: string
+          referensi?: string | null
+          tanggal: string
+          transaksi_id?: string | null
         }
         Update: {
-          barcode?: string | null
-          created_at?: string | null
-          harga_beli?: number | null
-          harga_jual?: number | null
+          created_at?: string
+          debet?: number
           id?: string
-          kategori?: string | null
+          jenis_transaksi?: string
+          keterangan?: string
+          kode_akun?: string
+          kredit?: number
+          nama_akun?: string
+          referensi?: string | null
+          tanggal?: string
+          transaksi_id?: string | null
+        }
+        Relationships: []
+      }
+      kas_pengeluaran: {
+        Row: {
+          bukti_pengeluaran_url: string | null
+          created_at: string
+          id: string
+          jumlah: number
+          kategori_pengeluaran: string
+          keterangan: string | null
+          metode_pembayaran: string
+          tanggal: string
+          updated_at: string
+        }
+        Insert: {
+          bukti_pengeluaran_url?: string | null
+          created_at?: string
+          id?: string
+          jumlah: number
+          kategori_pengeluaran: string
           keterangan?: string | null
-          nama_produk?: string
-          satuan?: string | null
-          status?: string | null
-          stok_minimal?: number | null
-          stok_saat_ini?: number | null
-          supplier_id?: string | null
-          updated_at?: string | null
+          metode_pembayaran?: string
+          tanggal?: string
+          updated_at?: string
+        }
+        Update: {
+          bukti_pengeluaran_url?: string | null
+          created_at?: string
+          id?: string
+          jumlah?: number
+          kategori_pengeluaran?: string
+          keterangan?: string | null
+          metode_pembayaran?: string
+          tanggal?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      new_student_registrations: {
+        Row: {
+          alamat: string
+          asal_sekolah: string
+          bukti_transfer_url: string | null
+          created_at: string
+          id: string
+          jenjang: string
+          jumlah_bayar: number
+          jumlah_transfer: number
+          nama_ayah: string
+          nama_ibu: string
+          nama_siswa: string
+          no_hp: string
+          nomor_pendaftaran: string
+          photo_siswa_url: string | null
+          status_pendaftaran: string
+          tanggal_lahir: string
+          tempat_lahir: string
+          updated_at: string
+        }
+        Insert: {
+          alamat: string
+          asal_sekolah: string
+          bukti_transfer_url?: string | null
+          created_at?: string
+          id?: string
+          jenjang?: string
+          jumlah_bayar?: number
+          jumlah_transfer?: number
+          nama_ayah: string
+          nama_ibu: string
+          nama_siswa: string
+          no_hp: string
+          nomor_pendaftaran: string
+          photo_siswa_url?: string | null
+          status_pendaftaran?: string
+          tanggal_lahir: string
+          tempat_lahir: string
+          updated_at?: string
+        }
+        Update: {
+          alamat?: string
+          asal_sekolah?: string
+          bukti_transfer_url?: string | null
+          created_at?: string
+          id?: string
+          jenjang?: string
+          jumlah_bayar?: number
+          jumlah_transfer?: number
+          nama_ayah?: string
+          nama_ibu?: string
+          nama_siswa?: string
+          no_hp?: string
+          nomor_pendaftaran?: string
+          photo_siswa_url?: string | null
+          status_pendaftaran?: string
+          tanggal_lahir?: string
+          tempat_lahir?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      payment_history: {
+        Row: {
+          cara_bayar: string | null
+          created_at: string
+          id: string
+          jenis_tagihan: string
+          jumlah_dibayar: number
+          kategori_penerimaan: string | null
+          keterangan: string | null
+          student_id: string
+          tanggal_pembayaran: string
+        }
+        Insert: {
+          cara_bayar?: string | null
+          created_at?: string
+          id?: string
+          jenis_tagihan: string
+          jumlah_dibayar: number
+          kategori_penerimaan?: string | null
+          keterangan?: string | null
+          student_id: string
+          tanggal_pembayaran?: string
+        }
+        Update: {
+          cara_bayar?: string | null
+          created_at?: string
+          id?: string
+          jenis_tagihan?: string
+          jumlah_dibayar?: number
+          kategori_penerimaan?: string | null
+          keterangan?: string | null
+          student_id?: string
+          tanggal_pembayaran?: string
         }
         Relationships: [
           {
-            foreignKeyName: "produk_pembelian_supplier_id_fkey"
-            columns: ["supplier_id"]
+            foreignKeyName: "payment_history_student_id_fkey"
+            columns: ["student_id"]
             isOneToOne: false
-            referencedRelation: "supplier"
+            referencedRelation: "students"
             referencedColumns: ["id"]
           },
         ]
       }
-      stok_opname: {
+      registration_fees: {
         Row: {
-          barang_id: string | null
-          created_at: string | null
+          created_at: string
           id: string
-          kasir_id: string | null
+          jenjang: string | null
+          jumlah: number
           keterangan: string | null
-          selisih: number | null
-          status: string | null
-          stok_fisik: number
-          stok_sistem: number
-          tanggal_opname: string
+          nama_biaya: string
+          updated_at: string
+          wajib: boolean
         }
         Insert: {
-          barang_id?: string | null
-          created_at?: string | null
+          created_at?: string
           id?: string
-          kasir_id?: string | null
+          jenjang?: string | null
+          jumlah?: number
           keterangan?: string | null
-          selisih?: number | null
-          status?: string | null
-          stok_fisik: number
-          stok_sistem: number
-          tanggal_opname: string
+          nama_biaya: string
+          updated_at?: string
+          wajib?: boolean
         }
         Update: {
-          barang_id?: string | null
-          created_at?: string | null
+          created_at?: string
           id?: string
-          kasir_id?: string | null
+          jenjang?: string | null
+          jumlah?: number
           keterangan?: string | null
-          selisih?: number | null
-          status?: string | null
-          stok_fisik?: number
-          stok_sistem?: number
-          tanggal_opname?: string
+          nama_biaya?: string
+          updated_at?: string
+          wajib?: boolean
+        }
+        Relationships: []
+      }
+      rekap_penerimaan: {
+        Row: {
+          created_at: string
+          id: string
+          jenis_tagihan: string | null
+          jenjang: string | null
+          jumlah_transaksi: number
+          kelas: string | null
+          tanggal_mulai: string
+          tanggal_selesai: string
+          total_penerimaan: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          jenis_tagihan?: string | null
+          jenjang?: string | null
+          jumlah_transaksi?: number
+          kelas?: string | null
+          tanggal_mulai: string
+          tanggal_selesai: string
+          total_penerimaan?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          jenis_tagihan?: string | null
+          jenjang?: string | null
+          jumlah_transaksi?: number
+          kelas?: string | null
+          tanggal_mulai?: string
+          tanggal_selesai?: string
+          total_penerimaan?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      spp_automation_log: {
+        Row: {
+          created_at: string
+          execution_date: string
+          id: string
+          students_affected: number | null
+          total_amount_added: number | null
+        }
+        Insert: {
+          created_at?: string
+          execution_date?: string
+          id?: string
+          students_affected?: number | null
+          total_amount_added?: number | null
+        }
+        Update: {
+          created_at?: string
+          execution_date?: string
+          id?: string
+          students_affected?: number | null
+          total_amount_added?: number | null
+        }
+        Relationships: []
+      }
+      spp_config: {
+        Row: {
+          biaya_per_bulan: number
+          created_at: string
+          id: string
+          kelas: string
+          updated_at: string
+        }
+        Insert: {
+          biaya_per_bulan: number
+          created_at?: string
+          id?: string
+          kelas: string
+          updated_at?: string
+        }
+        Update: {
+          biaya_per_bulan?: number
+          created_at?: string
+          id?: string
+          kelas?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      student_registration_fees: {
+        Row: {
+          created_at: string
+          id: string
+          jumlah: number
+          registration_fee_id: string
+          status: string
+          student_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          jumlah?: number
+          registration_fee_id: string
+          status?: string
+          student_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          jumlah?: number
+          registration_fee_id?: string
+          status?: string
+          student_id?: string
+          updated_at?: string
         }
         Relationships: [
           {
-            foreignKeyName: "stok_opname_barang_id_fkey"
-            columns: ["barang_id"]
+            foreignKeyName: "fk_student_registration_fee"
+            columns: ["registration_fee_id"]
             isOneToOne: false
-            referencedRelation: "barang_konsinyasi"
+            referencedRelation: "registration_fees"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "stok_opname_barang_id_fkey"
-            columns: ["barang_id"]
+            foreignKeyName: "fk_student_registration_student"
+            columns: ["student_id"]
             isOneToOne: false
-            referencedRelation: "stock_opname_recap"
-            referencedColumns: ["barang_id"]
-          },
-          {
-            foreignKeyName: "stok_opname_kasir_id_fkey"
-            columns: ["kasir_id"]
-            isOneToOne: false
-            referencedRelation: "kasir"
+            referencedRelation: "students"
             referencedColumns: ["id"]
           },
         ]
       }
-      supplier: {
+      students: {
         Row: {
-          alamat: string | null
-          created_at: string | null
+          beban_ekstrakurikuler_perbulan: number | null
+          beban_spp_perbulan: number | null
+          created_at: string
           email: string | null
           id: string
-          jenis: string | null
+          jenjang: string | null
+          kelas: string
           nama: string
-          telepon: string | null
+          nama_ekstrakurikuler: string | null
+          nisn: string | null
+          nomor_hp: string | null
+          nomor_induk: number | null
+          status: string | null
+          updated_at: string
         }
         Insert: {
-          alamat?: string | null
-          created_at?: string | null
+          beban_ekstrakurikuler_perbulan?: number | null
+          beban_spp_perbulan?: number | null
+          created_at?: string
           email?: string | null
           id?: string
-          jenis?: string | null
+          jenjang?: string | null
+          kelas: string
           nama: string
-          telepon?: string | null
+          nama_ekstrakurikuler?: string | null
+          nisn?: string | null
+          nomor_hp?: string | null
+          nomor_induk?: number | null
+          status?: string | null
+          updated_at?: string
         }
         Update: {
-          alamat?: string | null
-          created_at?: string | null
+          beban_ekstrakurikuler_perbulan?: number | null
+          beban_spp_perbulan?: number | null
+          created_at?: string
           email?: string | null
           id?: string
-          jenis?: string | null
+          jenjang?: string | null
+          kelas?: string
           nama?: string
-          telepon?: string | null
+          nama_ekstrakurikuler?: string | null
+          nisn?: string | null
+          nomor_hp?: string | null
+          nomor_induk?: number | null
+          status?: string | null
+          updated_at?: string
         }
         Relationships: []
       }
-      transaksi_pembelian: {
+      tagihan_auto_send: {
         Row: {
-          catatan: string | null
-          created_at: string | null
-          diskon: number | null
+          created_at: string
+          email_enabled: boolean
           id: string
-          jatuh_tempo: string | null
-          jenis_pembayaran: string
-          kasir_id: string | null
-          nomor_transaksi: string
-          pajak: number | null
-          status: string | null
-          subtotal: number
-          supplier_id: string | null
-          tanggal_pembelian: string
-          total: number
-          updated_at: string | null
+          is_enabled: boolean
+          last_sent_date: string | null
+          updated_at: string
+          whatsapp_enabled: boolean
         }
         Insert: {
-          catatan?: string | null
-          created_at?: string | null
-          diskon?: number | null
+          created_at?: string
+          email_enabled?: boolean
           id?: string
-          jatuh_tempo?: string | null
-          jenis_pembayaran?: string
-          kasir_id?: string | null
-          nomor_transaksi: string
-          pajak?: number | null
-          status?: string | null
-          subtotal?: number
-          supplier_id?: string | null
-          tanggal_pembelian?: string
-          total: number
-          updated_at?: string | null
+          is_enabled?: boolean
+          last_sent_date?: string | null
+          updated_at?: string
+          whatsapp_enabled?: boolean
         }
         Update: {
-          catatan?: string | null
-          created_at?: string | null
-          diskon?: number | null
+          created_at?: string
+          email_enabled?: boolean
           id?: string
-          jatuh_tempo?: string | null
-          jenis_pembayaran?: string
-          kasir_id?: string | null
-          nomor_transaksi?: string
-          pajak?: number | null
-          status?: string | null
-          subtotal?: number
-          supplier_id?: string | null
-          tanggal_pembelian?: string
-          total?: number
-          updated_at?: string | null
+          is_enabled?: boolean
+          last_sent_date?: string | null
+          updated_at?: string
+          whatsapp_enabled?: boolean
         }
-        Relationships: [
-          {
-            foreignKeyName: "transaksi_pembelian_kasir_id_fkey"
-            columns: ["kasir_id"]
-            isOneToOne: false
-            referencedRelation: "kasir"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "transaksi_pembelian_supplier_id_fkey"
-            columns: ["supplier_id"]
-            isOneToOne: false
-            referencedRelation: "supplier"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
-      transaksi_penjualan: {
+      transaksi_admin: {
         Row: {
-          bayar: number | null
-          catatan: string | null
-          created_at: string | null
-          diskon: number | null
+          cara_bayar: string
+          created_at: string
           id: string
-          jenis_pembayaran: string
-          kasir_id: string | null
-          kembalian: number | null
-          nomor_transaksi: string
-          pajak: number | null
-          pelanggan_perorangan_id: string | null
-          pelanggan_unit_id: string | null
-          status: string | null
-          subtotal: number
-          tanggal_transaksi: string | null
-          total: number
+          jenis_rekening_id: string
+          jumlah: number
+          keterangan: string | null
+          nama_penerima: string
+          tanggal: string
+          tipe_transaksi: string
+          updated_at: string
         }
         Insert: {
-          bayar?: number | null
-          catatan?: string | null
-          created_at?: string | null
-          diskon?: number | null
+          cara_bayar?: string
+          created_at?: string
           id?: string
-          jenis_pembayaran: string
-          kasir_id?: string | null
-          kembalian?: number | null
-          nomor_transaksi: string
-          pajak?: number | null
-          pelanggan_perorangan_id?: string | null
-          pelanggan_unit_id?: string | null
-          status?: string | null
-          subtotal: number
-          tanggal_transaksi?: string | null
-          total: number
+          jenis_rekening_id: string
+          jumlah: number
+          keterangan?: string | null
+          nama_penerima: string
+          tanggal?: string
+          tipe_transaksi: string
+          updated_at?: string
         }
         Update: {
-          bayar?: number | null
-          catatan?: string | null
-          created_at?: string | null
-          diskon?: number | null
+          cara_bayar?: string
+          created_at?: string
           id?: string
-          jenis_pembayaran?: string
-          kasir_id?: string | null
-          kembalian?: number | null
-          nomor_transaksi?: string
-          pajak?: number | null
-          pelanggan_perorangan_id?: string | null
-          pelanggan_unit_id?: string | null
-          status?: string | null
-          subtotal?: number
-          tanggal_transaksi?: string | null
-          total?: number
+          jenis_rekening_id?: string
+          jumlah?: number
+          keterangan?: string | null
+          nama_penerima?: string
+          tanggal?: string
+          tipe_transaksi?: string
+          updated_at?: string
         }
         Relationships: [
           {
-            foreignKeyName: "transaksi_penjualan_kasir_id_fkey"
-            columns: ["kasir_id"]
+            foreignKeyName: "transaksi_admin_jenis_rekening_id_fkey"
+            columns: ["jenis_rekening_id"]
             isOneToOne: false
-            referencedRelation: "kasir"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "transaksi_penjualan_pelanggan_perorangan_id_fkey"
-            columns: ["pelanggan_perorangan_id"]
-            isOneToOne: false
-            referencedRelation: "pelanggan_perorangan"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "transaksi_penjualan_pelanggan_unit_id_fkey"
-            columns: ["pelanggan_unit_id"]
-            isOneToOne: false
-            referencedRelation: "pelanggan_unit"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      user_profiles: {
-        Row: {
-          created_at: string | null
-          full_name: string
-          id: string
-          is_active: boolean | null
-          kasir_id: string | null
-          role: string
-          updated_at: string | null
-          user_id: string | null
-          username: string
-        }
-        Insert: {
-          created_at?: string | null
-          full_name: string
-          id?: string
-          is_active?: boolean | null
-          kasir_id?: string | null
-          role: string
-          updated_at?: string | null
-          user_id?: string | null
-          username: string
-        }
-        Update: {
-          created_at?: string | null
-          full_name?: string
-          id?: string
-          is_active?: boolean | null
-          kasir_id?: string | null
-          role?: string
-          updated_at?: string | null
-          user_id?: string | null
-          username?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "user_profiles_kasir_id_fkey"
-            columns: ["kasir_id"]
-            isOneToOne: false
-            referencedRelation: "kasir"
+            referencedRelation: "jenis_rekening"
             referencedColumns: ["id"]
           },
         ]
       }
     }
     Views: {
-      stock_opname_recap: {
-        Row: {
-          barang_id: string | null
-          detail_input_pengguna: Json | null
-          jumlah_pengguna_input: number | null
-          nama_barang: string | null
-          real_stok_total: number | null
-          satuan: string | null
-          selisih_stok: number | null
-          stok_sistem: number | null
-        }
-        Relationships: []
-      }
+      [_ in never]: never
     }
     Functions: {
-      create_supplier_debt: {
+      auto_add_monthly_ekstrakurikuler: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
+      auto_add_monthly_spp: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
+      auto_add_monthly_spp_and_ekstrakurikuler: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
+      auto_add_monthly_spp_with_log: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
+      generate_monthly_spp: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
+      generate_registration_number: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
+      process_payment: {
         Args: {
-          p_supplier_id: string
-          p_transaksi_id: string
-          p_jumlah: number
-          p_jatuh_tempo: string
-        }
-        Returns: undefined
-      }
-      generate_barcode: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
-      generate_kas_transaction_number: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
-      generate_kasir_kas_transaction_number: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
-      generate_pos_transaction_number: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
-      generate_purchase_product_barcode: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
-      generate_purchase_transaction_number: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
-      generate_transaction_number: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
-      get_stock_opname_recap: {
-        Args: { date_from?: string; date_to?: string }
-        Returns: {
-          barang_id: string
-          nama_barang: string
-          satuan: string
-          stok_sistem: number
-          real_stok_total: number
-          jumlah_pengguna_input: number
-          selisih_stok: number
-          detail_input_pengguna: Json
-          kategori_selisih: string
-        }[]
-      }
-      increment_personal_debt: {
-        Args: { person_id: string; amount: number }
-        Returns: undefined
-      }
-      increment_unit_debt: {
-        Args: { unit_id: string; amount: number }
-        Returns: undefined
-      }
-      update_stok_barang: {
-        Args: { barang_id: string; jumlah_keluar: number }
-        Returns: undefined
-      }
-      update_stok_from_opname: {
-        Args: {
-          p_barang_id: string
-          p_stok_fisik: number
-          p_kasir_id: string
+          p_student_id: string
+          p_jenis_tagihan: string
+          p_jumlah_dibayar: number
           p_keterangan?: string
         }
-        Returns: undefined
+        Returns: boolean
       }
-      update_stok_from_pembelian: {
-        Args: { p_barang_id: string; p_jumlah: number; p_transaksi_id: string }
-        Returns: undefined
+      process_payment_with_reduction: {
+        Args: {
+          p_student_id: string
+          p_jenis_tagihan: string
+          p_jumlah_dibayar: number
+          p_keterangan?: string
+        }
+        Returns: boolean
       }
     }
     Enums: {

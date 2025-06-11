@@ -2,7 +2,6 @@
 import { ReactNode } from 'react';
 import { useSimpleAuth } from '@/hooks/useSimpleAuth';
 import NewNavbar from './NewNavbar';
-import AdminSidebar from './AdminSidebar';
 import AdminNavbar from './AdminNavbar';
 import { useLocation } from 'react-router-dom';
 
@@ -26,15 +25,12 @@ const Layout = ({ children }: LayoutProps) => {
       {!shouldHideNavbar && (
         <>
           {isAdmin ? (
-            // Admin layout with sidebar
-            <div className="flex h-screen">
-              <AdminSidebar />
-              <div className="flex-1 flex flex-col">
-                <AdminNavbar />
-                <main className="flex-1 overflow-auto p-6">
-                  {children}
-                </main>
-              </div>
+            // Admin layout without sidebar - just navbar and content
+            <div className="flex flex-col h-screen">
+              <AdminNavbar />
+              <main className="flex-1 overflow-auto p-6">
+                {children}
+              </main>
             </div>
           ) : (
             // Regular layout for other users

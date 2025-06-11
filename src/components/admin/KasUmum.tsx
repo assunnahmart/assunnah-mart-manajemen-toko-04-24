@@ -1,196 +1,318 @@
 
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { useKasUmum } from '@/hooks/useAdminReports';
-import { DollarSign, TrendingUp, Download, Banknote } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Search, Plus, ArrowUpCircle, ArrowDownCircle, Wallet, TrendingUp, TrendingDown } from 'lucide-react';
+import { useKasUmumTransactions, useCreateKasTransaction, useKasUmumSummary } from '@/hooks/useKasUmum';
+import { useChartOfAccounts } from '@/hooks/useChartOfAccounts';
+import { useToast } from '@/hooks/use-toast';
 
 const KasUmum = () => {
-  const { data: kasData, isLoading } = useKasUmum();
+  const [searchTerm, setSearchTerm] = useState('');
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [newTransaction, setNewTransaction] = useState({
+    jenis_transaksi: 'masuk',
+    akun_id: '',
+    jumlah: 0,
+    keterangan: '',
+    kasir_username: 'admin',
+    kasir_name: 'Administrator'
+  });
 
-  const exportKasData = () => {
-    if (!kasData) return;
-    
-    const data = {
-      tanggal_cetak: new Date().toLocaleDateString('id-ID'),
-      total_kas_masuk: kasData.totalKasMasuk,
-      kas_hari_ini: kasData.todayKasMasuk,
-      total_transaksi: kasData.totalTransaksiKas,
-      transaksi_hari_ini: kasData.todayTransaksiKas,
-      detail_transaksi: kasData.detailTransaksi
-    };
-    
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `kas-umum-${new Date().toISOString().split('T')[0]}.json`;
-    a.click();
-    URL.revokeObjectURL(url);
+  const { data: transactions } = useKasUmumTransactions();
+  const { data: accounts } = useChartOfAccounts();
+  const { data: summary } = useKasUmumSummary();
+  const createTransaction = useCreateKasTransaction();
+  const { toast } = useToast();
+
+  const handleCreateTransaction = async () => {
+    try {
+      await createTransaction.mutateAsync({
+        ...newTransaction,
+        tanggal_transaksi: new Date().toISOString().split('T')[0]
+      });
+
+      toast({
+        title: "Berhasil",
+        description: "Transaksi kas berhasil ditambahkan"
+      });
+
+      setIsDialogOpen(false);
+      setNewTransaction({
+        jenis_transaksi: 'masuk',
+        akun_id: '',
+        jumlah: 0,
+        keterangan: '',
+        kasir_username: 'admin',
+        kasir_name: 'Administrator'
+      });
+    } catch (error) {
+      toast({
+        title: "Gagal",
+        description: "Terjadi kesalahan saat menambahkan transaksi",
+        variant: "destructive"
+      });
+    }
   };
 
-  if (isLoading) {
-    return (
-      <div className="space-y-4">
-        {[1, 2, 3].map((i) => (
-          <Card key={i} className="animate-pulse">
-            <CardContent className="p-6">
-              <div className="h-4 bg-gray-200 rounded mb-2"></div>
-              <div className="h-8 bg-gray-200 rounded"></div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-    );
-  }
+  const filteredTransactions = transactions?.filter(transaction =>
+    transaction.keterangan?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    transaction.chart_of_accounts?.nama_akun?.toLowerCase().includes(searchTerm.toLowerCase())
+  ) || [];
+
+  const transactionsMasuk = filteredTransactions.filter(t => t.jenis_transaksi === 'masuk');
+  const transactionsKeluar = filteredTransactions.filter(t => t.jenis_transaksi === 'keluar');
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold">Kas Umum</h2>
-          <p className="text-gray-600">Monitoring arus kas masuk dari penjualan tunai</p>
-        </div>
-        <Button onClick={exportKasData} variant="outline" className="gap-2">
-          <Download className="h-4 w-4" />
-          Export Kas
-        </Button>
+      <div className="flex justify-between items-center">
+        <h1 className="text-3xl font-bold">Kas Umum</h1>
+        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+          <DialogTrigger asChild>
+            <Button className="bg-blue-600 hover:bg-blue-700">
+              <Plus className="h-4 w-4 mr-2" />
+              Tambah Transaksi
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="max-w-2xl">
+            <DialogHeader>
+              <DialogTitle>Tambah Transaksi Kas</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="jenis_transaksi">Jenis Transaksi</Label>
+                  <Select
+                    value={newTransaction.jenis_transaksi}
+                    onValueChange={(value) => setNewTransaction(prev => ({ ...prev, jenis_transaksi: value }))}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="masuk">Kas Masuk</SelectItem>
+                      <SelectItem value="keluar">Kas Keluar</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label htmlFor="akun_id">Akun</Label>
+                  <Select
+                    value={newTransaction.akun_id}
+                    onValueChange={(value) => setNewTransaction(prev => ({ ...prev, akun_id: value }))}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Pilih akun" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {accounts?.map((account) => (
+                        <SelectItem key={account.id} value={account.id}>
+                          {account.kode_akun} - {account.nama_akun}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div>
+                <Label htmlFor="jumlah">Jumlah</Label>
+                <Input
+                  id="jumlah"
+                  type="number"
+                  value={newTransaction.jumlah}
+                  onChange={(e) => setNewTransaction(prev => ({ ...prev, jumlah: parseInt(e.target.value) || 0 }))}
+                  placeholder="Masukkan jumlah"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="keterangan">Keterangan</Label>
+                <Textarea
+                  id="keterangan"
+                  value={newTransaction.keterangan}
+                  onChange={(e) => setNewTransaction(prev => ({ ...prev, keterangan: e.target.value }))}
+                  placeholder="Masukkan keterangan transaksi"
+                />
+              </div>
+
+              <Button
+                onClick={handleCreateTransaction}
+                disabled={!newTransaction.akun_id || !newTransaction.jumlah || createTransaction.isPending}
+                className="w-full"
+              >
+                <Wallet className="h-4 w-4 mr-2" />
+                {createTransaction.isPending ? 'Menyimpan...' : 'Simpan Transaksi'}
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
 
-      {/* Summary */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      {/* Summary Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Total Kas Masuk</p>
+          <CardContent className="pt-6">
+            <div className="flex items-center">
+              <TrendingUp className="h-8 w-8 text-green-600" />
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-600">Total Masuk</p>
                 <p className="text-2xl font-bold text-green-600">
-                  Rp {(kasData?.totalKasMasuk || 0).toLocaleString('id-ID')}
+                  Rp {(summary?.totalMasuk || 0).toLocaleString()}
                 </p>
               </div>
-              <DollarSign className="h-8 w-8 text-green-600" />
             </div>
           </CardContent>
         </Card>
 
         <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Kas Hari Ini</p>
+          <CardContent className="pt-6">
+            <div className="flex items-center">
+              <TrendingDown className="h-8 w-8 text-red-600" />
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-600">Total Keluar</p>
+                <p className="text-2xl font-bold text-red-600">
+                  Rp {(summary?.totalKeluar || 0).toLocaleString()}
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-center">
+              <Wallet className="h-8 w-8 text-blue-600" />
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-600">Saldo</p>
                 <p className="text-2xl font-bold text-blue-600">
-                  Rp {(kasData?.todayKasMasuk || 0).toLocaleString('id-ID')}
+                  Rp {(summary?.saldo || 0).toLocaleString()}
                 </p>
               </div>
-              <Banknote className="h-8 w-8 text-blue-600" />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Total Transaksi</p>
-                <p className="text-2xl font-bold text-purple-600">
-                  {kasData?.totalTransaksiKas || 0}
-                </p>
-              </div>
-              <TrendingUp className="h-8 w-8 text-purple-600" />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Transaksi Hari Ini</p>
-                <p className="text-2xl font-bold text-orange-600">
-                  {kasData?.todayTransaksiKas || 0}
-                </p>
-              </div>
-              <TrendingUp className="h-8 w-8 text-orange-600" />
             </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Transaction Details */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Today's Transactions */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-blue-600">Transaksi Hari Ini</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3 max-h-96 overflow-y-auto">
-              {kasData?.todayTransaksi?.length === 0 ? (
-                <p className="text-gray-500 text-center py-4">Belum ada transaksi hari ini</p>
-              ) : (
-                kasData?.todayTransaksi?.map((transaction, index) => (
-                  <div key={index} className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
-                    <div>
-                      <p className="font-medium">
-                        {'transaction_number' in transaction ? transaction.transaction_number : transaction.nomor_transaksi}
-                      </p>
-                      <p className="text-sm text-gray-600">
-                        {new Date(transaction.created_at).toLocaleTimeString('id-ID')}
-                      </p>
-                      <p className="text-sm text-gray-600">
-                        {'kasir_name' in transaction ? transaction.kasir_name : 'Manual Entry'}
-                      </p>
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <CardTitle>Riwayat Transaksi</CardTitle>
+            <div className="relative w-80">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <Input
+                placeholder="Cari transaksi..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <Tabs defaultValue="semua" className="w-full">
+            <TabsList>
+              <TabsTrigger value="semua">Semua ({filteredTransactions.length})</TabsTrigger>
+              <TabsTrigger value="masuk" className="flex items-center gap-2">
+                <ArrowUpCircle className="h-4 w-4" />
+                Kas Masuk ({transactionsMasuk.length})
+              </TabsTrigger>
+              <TabsTrigger value="keluar" className="flex items-center gap-2">
+                <ArrowDownCircle className="h-4 w-4" />
+                Kas Keluar ({transactionsKeluar.length})
+              </TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="semua" className="mt-4">
+              <div className="space-y-4">
+                {filteredTransactions.map((transaction) => (
+                  <div key={transaction.id} className="flex items-center justify-between p-4 border rounded-lg">
+                    <div className="flex items-center gap-4">
+                      {transaction.jenis_transaksi === 'masuk' ? (
+                        <ArrowUpCircle className="h-6 w-6 text-green-500" />
+                      ) : (
+                        <ArrowDownCircle className="h-6 w-6 text-red-500" />
+                      )}
+                      <div>
+                        <div className="font-medium">{transaction.chart_of_accounts?.nama_akun || 'Unknown Account'}</div>
+                        <div className="text-sm text-gray-600">{transaction.keterangan || 'No description'}</div>
+                        <div className="text-xs text-gray-500">
+                          {new Date(transaction.created_at).toLocaleDateString('id-ID')}
+                        </div>
+                      </div>
                     </div>
                     <div className="text-right">
-                      <p className="font-bold text-blue-600">
-                        Rp {(('total_amount' in transaction) ? transaction.total_amount : transaction.total).toLocaleString('id-ID')}
-                      </p>
-                      <Badge variant="secondary" className="text-xs">
-                        Tunai
+                      <div className={`font-semibold ${
+                        transaction.jenis_transaksi === 'masuk' ? 'text-green-600' : 'text-red-600'
+                      }`}>
+                        {transaction.jenis_transaksi === 'masuk' ? '+' : '-'}Rp {transaction.jumlah.toLocaleString()}
+                      </div>
+                      <Badge variant="outline">
+                        {transaction.jenis_transaksi === 'masuk' ? 'Masuk' : 'Keluar'}
                       </Badge>
                     </div>
                   </div>
-                ))
-              )}
-            </div>
-          </CardContent>
-        </Card>
+                ))}
+              </div>
+            </TabsContent>
 
-        {/* Recent All Transactions */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-green-600">Transaksi Terbaru (Semua)</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3 max-h-96 overflow-y-auto">
-              {kasData?.detailTransaksi?.slice(0, 10).map((transaction, index) => (
-                <div key={index} className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
-                  <div>
-                    <p className="font-medium">
-                      {'transaction_number' in transaction ? transaction.transaction_number : transaction.nomor_transaksi}
-                    </p>
-                    <p className="text-sm text-gray-600">
-                      {new Date(transaction.created_at).toLocaleDateString('id-ID')}
-                    </p>
-                    <p className="text-sm text-gray-600">
-                      {'kasir_name' in transaction ? transaction.kasir_name : 'Manual Entry'}
-                    </p>
+            <TabsContent value="masuk" className="mt-4">
+              <div className="space-y-4">
+                {transactionsMasuk.map((transaction) => (
+                  <div key={transaction.id} className="flex items-center justify-between p-4 border rounded-lg">
+                    <div className="flex items-center gap-4">
+                      <ArrowUpCircle className="h-6 w-6 text-green-500" />
+                      <div>
+                        <div className="font-medium">{transaction.chart_of_accounts?.nama_akun || 'Unknown Account'}</div>
+                        <div className="text-sm text-gray-600">{transaction.keterangan || 'No description'}</div>
+                        <div className="text-xs text-gray-500">
+                          {new Date(transaction.created_at).toLocaleDateString('id-ID')}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className="font-semibold text-green-600">
+                        +Rp {transaction.jumlah.toLocaleString()}
+                      </div>
+                    </div>
                   </div>
-                  <div className="text-right">
-                    <p className="font-bold text-green-600">
-                      Rp {(('total_amount' in transaction) ? transaction.total_amount : transaction.total).toLocaleString('id-ID')}
-                    </p>
-                    <Badge variant="secondary" className="text-xs">
-                      Tunai
-                    </Badge>
+                ))}
+              </div>
+            </TabsContent>
+
+            <TabsContent value="keluar" className="mt-4">
+              <div className="space-y-4">
+                {transactionsKeluar.map((transaction) => (
+                  <div key={transaction.id} className="flex items-center justify-between p-4 border rounded-lg">
+                    <div className="flex items-center gap-4">
+                      <ArrowDownCircle className="h-6 w-6 text-red-500" />
+                      <div>
+                        <div className="font-medium">{transaction.chart_of_accounts?.nama_akun || 'Unknown Account'}</div>
+                        <div className="text-sm text-gray-600">{transaction.keterangan || 'No description'}</div>
+                        <div className="text-xs text-gray-500">
+                          {new Date(transaction.created_at).toLocaleDateString('id-ID')}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className="font-semibold text-red-600">
+                        -Rp {transaction.jumlah.toLocaleString()}
+                      </div>
+                    </div>
                   </div>
-                </div>
-              )) || <p className="text-gray-500 text-center py-4">Tidak ada data transaksi</p>}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+                ))}
+              </div>
+            </TabsContent>
+          </Tabs>
+        </CardContent>
+      </Card>
     </div>
   );
 };

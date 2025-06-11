@@ -499,6 +499,7 @@ export type Database = {
           payment_method: string
           status: string
           total_amount: number
+          transaction_number: string | null
         }
         Insert: {
           amount_paid: number
@@ -512,6 +513,7 @@ export type Database = {
           payment_method?: string
           status?: string
           total_amount: number
+          transaction_number?: string | null
         }
         Update: {
           amount_paid?: number
@@ -525,6 +527,7 @@ export type Database = {
           payment_method?: string
           status?: string
           total_amount?: number
+          transaction_number?: string | null
         }
         Relationships: []
       }
@@ -846,9 +849,21 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
+      generate_pos_transaction_number: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
       generate_registration_number: {
         Args: Record<PropertyKey, never>
         Returns: string
+      }
+      increment_personal_debt: {
+        Args: { person_id: string; amount: number }
+        Returns: undefined
+      }
+      increment_unit_debt: {
+        Args: { unit_id: string; amount: number }
+        Returns: undefined
       }
       process_payment: {
         Args: {
@@ -867,6 +882,10 @@ export type Database = {
           p_keterangan?: string
         }
         Returns: boolean
+      }
+      update_stok_barang: {
+        Args: { barang_id: string; jumlah_keluar: number }
+        Returns: undefined
       }
     }
     Enums: {

@@ -35,6 +35,9 @@ export const usePelangganPerorangan = () => {
   });
 };
 
+// Alias for backward compatibility
+export const usePelangganKredit = usePelangganUnit;
+
 export const useCreatePelangganUnit = () => {
   const queryClient = useQueryClient();
   

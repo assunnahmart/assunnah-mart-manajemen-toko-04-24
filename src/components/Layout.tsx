@@ -6,9 +6,23 @@ import { useLocation } from 'react-router-dom';
 
 interface LayoutProps {
   children: ReactNode;
+  onQuickScan?: () => void;
+  onTransactionHistory?: () => void;
+  onKonsinyasi?: () => void;
+  onStockOpname?: () => void;
+  onKasirKas?: () => void;
+  onDailyReport?: () => void;
 }
 
-const Layout = ({ children }: LayoutProps) => {
+const Layout = ({ 
+  children,
+  onQuickScan,
+  onTransactionHistory,
+  onKonsinyasi,
+  onStockOpname,
+  onKasirKas,
+  onDailyReport
+}: LayoutProps) => {
   const { user } = useSimpleAuth();
   const location = useLocation();
 
@@ -19,7 +33,16 @@ const Layout = ({ children }: LayoutProps) => {
   return (
     <div className="min-h-screen flex">
       {/* Slide Card Menu */}
-      {!shouldHideMenu && <SlideCardMenu />}
+      {!shouldHideMenu && (
+        <SlideCardMenu 
+          onQuickScan={onQuickScan}
+          onTransactionHistory={onTransactionHistory}
+          onKonsinyasi={onKonsinyasi}
+          onStockOpname={onStockOpname}
+          onKasirKas={onKasirKas}
+          onDailyReport={onDailyReport}
+        />
+      )}
       
       {/* Main Content */}
       <main className={`flex-1 transition-all duration-300 ${

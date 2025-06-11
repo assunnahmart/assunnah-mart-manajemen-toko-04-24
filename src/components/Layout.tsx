@@ -1,8 +1,7 @@
 
 import { ReactNode } from 'react';
 import { useSimpleAuth } from '@/hooks/useSimpleAuth';
-import NewNavbar from './NewNavbar';
-import AdminNavbar from './AdminNavbar';
+import SlideCardMenu from './SlideCardMenu';
 import { useLocation } from 'react-router-dom';
 
 interface LayoutProps {
@@ -13,52 +12,23 @@ const Layout = ({ children }: LayoutProps) => {
   const { user } = useSimpleAuth();
   const location = useLocation();
 
-  // Don't show navbar on login page or index page
-  const hideNavbarPaths = ['/login', '/'];
-  const shouldHideNavbar = hideNavbarPaths.includes(location.pathname);
-
-  // Check if user is admin (Ginanjar or Jamhur)
-  const isAdmin = user?.username === 'Jamhur' || user?.username === 'Ginanjar';
+  // Don't show menu on login page or index page
+  const hideMenuPaths = ['/login', '/'];
+  const shouldHideMenu = hideMenuPaths.includes(location.pathname);
 
   return (
-    <div className="min-h-screen flex flex-col">
-      {!shouldHideNavbar && (
-        <>
-          {isAdmin ? (
-            // Admin layout without sidebar - just navbar and content
-            <div className="flex flex-col h-screen">
-              <AdminNavbar />
-              <main className="flex-1 overflow-auto p-6">
-                {children}
-              </main>
-            </div>
-          ) : (
-            // Regular layout for other users
-            <>
-              {user?.role !== 'kasir' && <NewNavbar />}
-              <main className="flex-1">
-                {children}
-              </main>
-            </>
-          )}
-        </>
-      )}
+    <div className="min-h-screen flex">
+      {/* Slide Card Menu */}
+      {!shouldHideMenu && <SlideCardMenu />}
       
-      {shouldHideNavbar && (
-        <main className="flex-1">
+      {/* Main Content */}
+      <main className={`flex-1 transition-all duration-300 ${
+        shouldHideMenu ? 'ml-0' : 'ml-80'
+      }`}>
+        <div className="p-6">
           {children}
-        </main>
-      )}
-      
-      {!isAdmin && (
-        <footer className="bg-gray-800 text-white py-4 mt-auto">
-          <div className="container mx-auto px-4 text-center">
-            <p className="text-sm">
-              Assunnah Mart - Sistem Manajemen Toko
-            </p>
-          </div>
-        </footer>
-      )}
+        </div>
+      </main>
     </div>
   );
 };

@@ -13,11 +13,7 @@ export const useBarang = (searchQuery?: string) => {
     queryFn: async () => {
       let query = supabase
         .from('barang_konsinyasi')
-        .select(`
-          *,
-          kategori_barang (nama),
-          supplier!barang_konsinyasi_supplier_id_fkey (nama)
-        `)
+        .select('*')
         .eq('status', 'aktif'); // Only show active products in POS
       
       if (searchQuery && searchQuery.trim()) {
@@ -44,11 +40,7 @@ export const useBarangKonsinyasi = () => {
     queryFn: async () => {
       const query = supabase
         .from('barang_konsinyasi')
-        .select(`
-          *,
-          kategori_barang (nama),
-          supplier!barang_konsinyasi_supplier_id_fkey (nama)
-        `);
+        .select('*');
       
       const { data, error } = await query.order('nama');
       

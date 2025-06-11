@@ -1,3 +1,4 @@
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -36,11 +37,11 @@ const PenjualanKredit = () => {
           <div className="flex-1">
             <div className="flex items-center gap-2 mb-1">
               <Building2 className="h-4 w-4 text-gray-500" />
-              <h3 className="font-semibold">{unit.nama_unit}</h3>
+              <h3 className="font-semibold">{unit.nama_unit || unit.nama}</h3>
             </div>
             <p className="text-sm text-gray-500">{unit.alamat}</p>
             <p className="text-sm text-gray-600">
-              PIC: {unit.kontak_person} • {unit.telepon}
+              PIC: {unit.nama} • {unit.telepon}
             </p>
           </div>
           <Badge variant={getStatusColor(unit.status) as any}>
@@ -81,9 +82,9 @@ const PenjualanKredit = () => {
               <h3 className="font-semibold">{pelanggan.nama}</h3>
             </div>
             <p className="text-sm text-gray-500">
-              {pelanggan.jabatan} - {pelanggan.departemen}
+              {pelanggan.jabatan}
             </p>
-            <p className="text-sm text-gray-600">NIK: {pelanggan.nik}</p>
+            <p className="text-sm text-gray-600">{pelanggan.telepon}</p>
           </div>
           <Badge variant={getStatusColor(pelanggan.status) as any}>
             {pelanggan.status}
@@ -96,24 +97,14 @@ const PenjualanKredit = () => {
             <p className="font-medium text-red-600">{formatRupiah(Number(pelanggan.sisa_piutang))}</p>
           </div>
           <div>
-            <span className="text-gray-500">Gaji Pokok:</span>
-            <p className="font-medium">{formatRupiah(Number(pelanggan.gaji_pokok))}</p>
-          </div>
-          <div>
-            <span className="text-gray-500">Batas Potong:</span>
-            <p className="font-medium">{formatRupiah(Number(pelanggan.batas_potong_gaji))}</p>
-          </div>
-          <div>
-            <span className="text-gray-500">Sisa Batas:</span>
-            <p className="font-medium text-green-600">
-              {formatRupiah(Number(pelanggan.batas_potong_gaji) - Number(pelanggan.sisa_piutang))}
-            </p>
+            <span className="text-gray-500">Limit Kredit:</span>
+            <p className="font-medium">{formatRupiah(Number(pelanggan.limit_kredit))}</p>
           </div>
         </div>
         
         <div className="flex gap-2">
           <Button size="sm" variant="outline" className="flex-1">
-            Potong Gaji
+            Bayar
           </Button>
           <Button size="sm" variant="outline" className="flex-1">
             Detail
@@ -123,8 +114,8 @@ const PenjualanKredit = () => {
     </Card>
   );
 
-  const totalTagihanUnit = pelangganKredit?.unit.reduce((sum, u) => sum + Number(u.total_tagihan), 0) || 0;
-  const totalPiutangPerorangan = pelangganKredit?.perorangan.reduce((sum, p) => sum + Number(p.sisa_piutang), 0) || 0;
+  const totalTagihanUnit = pelangganKredit?.unit?.reduce((sum, u) => sum + Number(u.total_tagihan), 0) || 0;
+  const totalPiutangPerorangan = pelangganKredit?.perorangan?.reduce((sum, p) => sum + Number(p.sisa_piutang), 0) || 0;
 
   return (
     <NewProtectedRoute>
@@ -135,7 +126,7 @@ const PenjualanKredit = () => {
             {/* Header */}
             <div>
               <h1 className="text-3xl font-bold text-gray-900">Penjualan Kredit</h1>
-              <p className="text-gray-600">Kelola penjualan kredit unit dan potong gaji karyawan</p>
+              <p className="text-gray-600">Kelola penjualan kredit unit dan piutang pelanggan</p>
             </div>
 
             {/* Stats */}
@@ -146,16 +137,16 @@ const PenjualanKredit = () => {
                   <Building2 className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">{pelangganKredit?.unit.length || 0}</div>
+                  <div className="text-2xl font-bold">{pelangganKredit?.unit?.length || 0}</div>
                 </CardContent>
               </Card>
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Karyawan Piutang</CardTitle>
+                  <CardTitle className="text-sm font-medium">Pelanggan Piutang</CardTitle>
                   <User className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">{pelangganKredit?.perorangan.length || 0}</div>
+                  <div className="text-2xl font-bold">{pelangganKredit?.perorangan?.length || 0}</div>
                 </CardContent>
               </Card>
               <Card>
@@ -169,7 +160,7 @@ const PenjualanKredit = () => {
               </Card>
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Total Piutang Karyawan</CardTitle>
+                  <CardTitle className="text-sm font-medium">Total Piutang Perorangan</CardTitle>
                   <AlertCircle className="h-4 w-4 text-orange-500" />
                 </CardHeader>
                 <CardContent>
@@ -182,7 +173,7 @@ const PenjualanKredit = () => {
             <Tabs defaultValue="unit" className="space-y-4">
               <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="unit">Kredit Unit</TabsTrigger>
-                <TabsTrigger value="perorangan">Potong Gaji</TabsTrigger>
+                <TabsTrigger value="perorangan">Piutang Perorangan</TabsTrigger>
               </TabsList>
 
               <TabsContent value="unit">
@@ -195,7 +186,7 @@ const PenjualanKredit = () => {
                   </CardHeader>
                   <CardContent>
                     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                      {pelangganKredit?.unit.map((unit) => (
+                      {pelangganKredit?.unit?.map((unit) => (
                         <PelangganUnitCard key={unit.id} unit={unit} />
                       ))}
                     </div>
@@ -215,23 +206,23 @@ const PenjualanKredit = () => {
               <TabsContent value="perorangan">
                 <Card>
                   <CardHeader>
-                    <CardTitle>Sistem Potong Gaji</CardTitle>
+                    <CardTitle>Piutang Perorangan</CardTitle>
                     <CardDescription>
-                      Karyawan dengan sistem pembayaran potong gaji
+                      Pelanggan dengan piutang yang perlu dibayar
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
                     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                      {pelangganKredit?.perorangan.map((pelanggan) => (
+                      {pelangganKredit?.perorangan?.map((pelanggan) => (
                         <PelangganPeroranganCard key={pelanggan.id} pelanggan={pelanggan} />
                       ))}
                     </div>
                     {(!pelangganKredit?.perorangan || pelangganKredit.perorangan.length === 0) && (
                       <div className="text-center py-8">
                         <User className="mx-auto h-12 w-12 text-gray-400" />
-                        <h3 className="mt-2 text-sm font-semibold text-gray-900">Tidak ada piutang karyawan</h3>
+                        <h3 className="mt-2 text-sm font-semibold text-gray-900">Tidak ada piutang perorangan</h3>
                         <p className="mt-1 text-sm text-gray-500">
-                          Semua karyawan tidak memiliki piutang yang perlu dipotong gaji.
+                          Semua piutang perorangan sudah lunas.
                         </p>
                       </div>
                     )}

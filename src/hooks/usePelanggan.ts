@@ -36,7 +36,25 @@ export const usePelangganPerorangan = () => {
 };
 
 // Alias for backward compatibility
-export const usePelangganKredit = usePelangganUnit;
+export const usePelangganKredit = () => {
+  return useQuery({
+    queryKey: ['pelanggan_kredit'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('pelanggan')
+        .select('*')
+        .eq('status', 'aktif');
+      
+      if (error) throw error;
+      
+      // Separate unit and individual customers
+      const unit = data?.filter(p => p.nama_unit && p.nama_unit.trim() !== '') || [];
+      const perorangan = data?.filter(p => !p.nama_unit || p.nama_unit.trim() === '') || [];
+      
+      return { unit, perorangan };
+    },
+  });
+};
 
 export const useCreatePelangganUnit = () => {
   const queryClient = useQueryClient();
@@ -54,6 +72,7 @@ export const useCreatePelangganUnit = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['pelanggan_unit'] });
+      queryClient.invalidateQueries({ queryKey: ['pelanggan_kredit'] });
       queryClient.invalidateQueries({ queryKey: ['piutang_pelanggan'] });
     },
   });
@@ -75,6 +94,7 @@ export const useCreatePelangganPerorangan = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['pelanggan_perorangan'] });
+      queryClient.invalidateQueries({ queryKey: ['pelanggan_kredit'] });
       queryClient.invalidateQueries({ queryKey: ['piutang_pelanggan'] });
     },
   });

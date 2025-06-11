@@ -2,24 +2,27 @@
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { Search, Plus, FileText, Calendar, DollarSign, User, Phone, MapPin, Building2 } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Search, Plus, FileText, Calendar, DollarSign, User, Building2 } from 'lucide-react';
 import { usePelangganKredit } from '@/hooks/usePelanggan';
-import { usePiutangPelanggan } from '@/hooks/usePiutang';
 
 const KartuHutang = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCustomer, setSelectedCustomer] = useState(null);
-  const { data: customers } = usePelangganKredit();
-  const { data: piutangData } = usePiutangPelanggan();
+  const { data: pelangganKredit } = usePelangganKredit();
 
-  const filteredCustomers = customers?.filter(customer =>
+  // Combine both unit and perorangan customers
+  const allCustomers = [
+    ...(pelangganKredit?.unit || []),
+    ...(pelangganKredit?.perorangan || [])
+  ];
+
+  const filteredCustomers = allCustomers.filter(customer =>
     customer.nama.toLowerCase().includes(searchTerm.toLowerCase()) ||
     (customer.nama_unit && customer.nama_unit.toLowerCase().includes(searchTerm.toLowerCase()))
-  ) || [];
+  );
 
   return (
     <div className="space-y-6">
@@ -65,10 +68,10 @@ const KartuHutang = () => {
                   {customer.nama_unit && (
                     <div className="text-sm text-gray-600">{customer.nama_unit}</div>
                   )}
-                  <div className="text-sm text-gray-500">{customer.phone || 'No phone'}</div>
+                  <div className="text-sm text-gray-500">{customer.telepon || 'No phone'}</div>
                   <div className="flex justify-between items-center mt-1">
-                    <Badge variant={customer.total_tagihan > 0 ? 'destructive' : 'default'}>
-                      Rp {(customer.total_tagihan || 0).toLocaleString()}
+                    <Badge variant={(customer.total_tagihan || customer.sisa_piutang) > 0 ? 'destructive' : 'default'}>
+                      Rp {((customer.total_tagihan || 0) + (customer.sisa_piutang || 0)).toLocaleString()}
                     </Badge>
                     <Badge variant="outline">
                       Limit: Rp {(customer.limit_kredit || 0).toLocaleString()}
@@ -109,7 +112,7 @@ const KartuHutang = () => {
                   </div>
                   <div>
                     <Label className="text-sm font-medium text-gray-600">Telepon</Label>
-                    <div className="font-medium">{selectedCustomer.phone || '-'}</div>
+                    <div className="font-medium">{selectedCustomer.telepon || '-'}</div>
                   </div>
                 </div>
 

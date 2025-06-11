@@ -1,7 +1,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Users, CreditCard, Building, DollarSign, TrendingUp, Package } from 'lucide-react';
+import { Users, CreditCard, Building, DollarSign, TrendingUp } from 'lucide-react';
 import PelangganManagement from './PelangganManagement';
 import KartuHutang from './KartuHutang';
 import SupplierManagement from './SupplierManagement';
@@ -16,6 +16,8 @@ const AdminDashboard = () => {
   const { data: labaRugiData } = useLabaRugi();
   const { data: supplierData } = useSupplierData();
 
+  const totalPelanggan = (pelangganKredit?.unit?.length || 0) + (pelangganKredit?.perorangan?.length || 0);
+
   return (
     <div className="space-y-6">
       {/* Summary Cards */}
@@ -26,10 +28,10 @@ const AdminDashboard = () => {
               <div>
                 <p className="text-sm font-medium text-gray-600">Total Pelanggan</p>
                 <p className="text-2xl font-bold">
-                  {(pelangganKredit?.unit.length || 0) + (pelangganKredit?.perorangan.length || 0)}
+                  {totalPelanggan}
                 </p>
                 <p className="text-xs text-gray-500 mt-1">
-                  {pelangganKredit?.unit.length || 0} Unit, {pelangganKredit?.perorangan.length || 0} Perorangan
+                  {pelangganKredit?.unit?.length || 0} Unit, {pelangganKredit?.perorangan?.length || 0} Perorangan
                 </p>
               </div>
               <Users className="h-8 w-8 text-blue-600" />

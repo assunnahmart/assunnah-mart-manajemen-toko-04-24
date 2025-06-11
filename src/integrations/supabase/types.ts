@@ -742,6 +742,54 @@ export type Database = {
           },
         ]
       }
+      pelanggan: {
+        Row: {
+          alamat: string | null
+          created_at: string | null
+          id: string
+          jabatan: string | null
+          jenis_pembayaran: string | null
+          limit_kredit: number | null
+          nama: string
+          nama_unit: string | null
+          sisa_piutang: number | null
+          status: string | null
+          telepon: string | null
+          total_tagihan: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          alamat?: string | null
+          created_at?: string | null
+          id?: string
+          jabatan?: string | null
+          jenis_pembayaran?: string | null
+          limit_kredit?: number | null
+          nama: string
+          nama_unit?: string | null
+          sisa_piutang?: number | null
+          status?: string | null
+          telepon?: string | null
+          total_tagihan?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          alamat?: string | null
+          created_at?: string | null
+          id?: string
+          jabatan?: string | null
+          jenis_pembayaran?: string | null
+          limit_kredit?: number | null
+          nama?: string
+          nama_unit?: string | null
+          sisa_piutang?: number | null
+          status?: string | null
+          telepon?: string | null
+          total_tagihan?: number | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       pelanggan_perorangan: {
         Row: {
           alamat: string | null

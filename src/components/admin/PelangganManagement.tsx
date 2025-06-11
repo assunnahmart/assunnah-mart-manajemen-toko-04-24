@@ -16,12 +16,11 @@ import { useToast } from '@/hooks/use-toast';
 const PelangganManagement = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [selectedCustomer, setSelectedCustomer] = useState(null);
   const [newCustomer, setNewCustomer] = useState({
     nama: '',
     nama_unit: '',
     jabatan: '',
-    phone: '',
+    telepon: '',
     alamat: '',
     jenis_pembayaran: 'tunai',
     limit_kredit: 0
@@ -56,12 +55,13 @@ const PelangganManagement = () => {
         nama: '',
         nama_unit: '',
         jabatan: '',
-        phone: '',
+        telepon: '',
         alamat: '',
         jenis_pembayaran: 'tunai',
         limit_kredit: 0
       });
     } catch (error) {
+      console.error('Error creating customer:', error);
       toast({
         title: "Gagal",
         description: "Terjadi kesalahan saat menambahkan pelanggan",
@@ -127,11 +127,11 @@ const PelangganManagement = () => {
                   />
                 </div>
                 <div>
-                  <Label htmlFor="phone">Nomor Telepon</Label>
+                  <Label htmlFor="telepon">Nomor Telepon</Label>
                   <Input
-                    id="phone"
-                    value={newCustomer.phone}
-                    onChange={(e) => setNewCustomer(prev => ({ ...prev, phone: e.target.value }))}
+                    id="telepon"
+                    value={newCustomer.telepon}
+                    onChange={(e) => setNewCustomer(prev => ({ ...prev, telepon: e.target.value }))}
                     placeholder="Nomor telepon"
                   />
                 </div>
@@ -244,7 +244,7 @@ const PelangganManagement = () => {
                           </div>
                           <div className="flex items-center gap-2">
                             <Phone className="h-4 w-4" />
-                            {customer.phone || 'No phone'}
+                            {customer.telepon || 'No phone'}
                           </div>
                           <div className="flex items-center gap-2">
                             <MapPin className="h-4 w-4" />
@@ -289,7 +289,7 @@ const PelangganManagement = () => {
                           </div>
                           <div className="flex items-center gap-2">
                             <Phone className="h-4 w-4" />
-                            {customer.phone || 'No phone'}
+                            {customer.telepon || 'No phone'}
                           </div>
                         </div>
                       </div>

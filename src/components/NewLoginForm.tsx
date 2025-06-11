@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useSimpleAuth } from '@/hooks/useSimpleAuth';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -7,24 +7,14 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useNavigate } from 'react-router-dom';
-import WelcomeScreen from './WelcomeScreen';
 
 const NewLoginForm = () => {
-  const { signIn, isAuthenticated, user } = useSimpleAuth();
+  const { signIn } = useSimpleAuth();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const [showWelcome, setShowWelcome] = useState(false);
   const navigate = useNavigate();
-
-  // Auto redirect when authenticated (but not if showing welcome screen)
-  useEffect(() => {
-    if (isAuthenticated && !showWelcome && user) {
-      console.log('NewLoginForm: User is authenticated, redirecting to POS system');
-      navigate('/pos', { replace: true });
-    }
-  }, [isAuthenticated, navigate, showWelcome, user]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -45,31 +35,23 @@ const NewLoginForm = () => {
       if (!success) {
         console.log('NewLoginForm: Login failed');
         setError('Username atau password salah. Silakan coba lagi.');
+        setLoading(false);
       } else {
-        console.log('NewLoginForm: Login successful, navigating immediately');
+        console.log('NewLoginForm: Login successful, navigating to POS');
         // Reset form
         setUsername('');
         setPassword('');
-        // Navigate immediately without welcome screen to avoid refresh
+        setLoading(false);
+        
+        // Navigate immediately after successful login
         navigate('/pos', { replace: true });
       }
     } catch (error) {
       console.error('NewLoginForm: Unexpected error during login:', error);
       setError('Terjadi kesalahan yang tidak terduga');
+      setLoading(false);
     }
-    
-    setLoading(false);
   };
-
-  const handleWelcomeComplete = () => {
-    setShowWelcome(false);
-    // Navigation will happen automatically via useEffect
-  };
-
-  // Show welcome screen if user just logged in
-  if (showWelcome && user) {
-    return <WelcomeScreen userName={user.full_name} onComplete={handleWelcomeComplete} />;
-  }
 
   return (
     <div className="min-h-screen flex items-center justify-center gradient-assunnah p-4">

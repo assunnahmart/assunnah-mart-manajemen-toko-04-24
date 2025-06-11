@@ -9,10 +9,14 @@ const Index = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
+    console.log('Index: Auth state check:', { isAuthenticated, user: user?.username, loading });
+    
     if (!loading && isAuthenticated && user) {
-      console.log('Index: User authenticated, redirecting to POS system for all users');
-      // Always redirect to POS system - it's the main interface
-      navigate('/pos', { replace: true });
+      console.log('Index: User authenticated, redirecting to POS system');
+      // Use setTimeout to ensure the state is fully updated before navigation
+      setTimeout(() => {
+        navigate('/pos', { replace: true });
+      }, 100);
     }
   }, [user, isAuthenticated, loading, navigate]);
 

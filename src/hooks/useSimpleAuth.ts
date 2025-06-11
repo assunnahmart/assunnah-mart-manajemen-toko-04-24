@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 
 interface UserProfile {
   username: string;
@@ -24,47 +24,76 @@ const DEMO_USERS = [
   { username: 'Nurohman', password: 'kasir12', full_name: 'Nurohman', role: 'kasir' as const, kasir_id: 'kasir-004' }
 ];
 
+// Global state to prevent multiple auth instances
+let globalAuthState: AuthState = {
+  isAuthenticated: false,
+  user: null,
+  loading: true
+};
+
+let authListeners: ((state: AuthState) => void)[] = [];
+
+const notifyListeners = (newState: AuthState) => {
+  globalAuthState = newState;
+  authListeners.forEach(listener => listener(newState));
+};
+
 export const useSimpleAuth = () => {
-  const [authState, setAuthState] = useState<AuthState>({
-    isAuthenticated: false,
-    user: null,
-    loading: true
-  });
+  const [authState, setAuthState] = useState<AuthState>(globalAuthState);
 
   useEffect(() => {
-    console.log('useSimpleAuth: Initializing auth state check');
+    console.log('useSimpleAuth: Registering auth listener');
     
-    // Check for existing session in localStorage
-    const savedUser = localStorage.getItem('assunnah_auth_user');
-    if (savedUser) {
-      try {
-        const user = JSON.parse(savedUser);
-        console.log('useSimpleAuth: Found saved user:', user);
-        setAuthState({
-          isAuthenticated: true,
-          user,
-          loading: false
-        });
-      } catch (error) {
-        console.error('useSimpleAuth: Error parsing saved user:', error);
-        localStorage.removeItem('assunnah_auth_user');
-        setAuthState({
-          isAuthenticated: false,
-          user: null,
-          loading: false
-        });
-      }
-    } else {
-      console.log('useSimpleAuth: No saved user found');
-      setAuthState(prev => ({ ...prev, loading: false }));
+    // Add this component as a listener
+    authListeners.push(setAuthState);
+    
+    // Initialize auth state check only once
+    if (globalAuthState.loading) {
+      console.log('useSimpleAuth: Initializing auth state check');
+      
+      const initializeAuth = () => {
+        const savedUser = localStorage.getItem('assunnah_auth_user');
+        if (savedUser) {
+          try {
+            const user = JSON.parse(savedUser);
+            console.log('useSimpleAuth: Found saved user:', user);
+            notifyListeners({
+              isAuthenticated: true,
+              user,
+              loading: false
+            });
+          } catch (error) {
+            console.error('useSimpleAuth: Error parsing saved user:', error);
+            localStorage.removeItem('assunnah_auth_user');
+            notifyListeners({
+              isAuthenticated: false,
+              user: null,
+              loading: false
+            });
+          }
+        } else {
+          console.log('useSimpleAuth: No saved user found');
+          notifyListeners({
+            isAuthenticated: false,
+            user: null,
+            loading: false
+          });
+        }
+      };
+
+      initializeAuth();
     }
+
+    // Cleanup listener on unmount
+    return () => {
+      authListeners = authListeners.filter(listener => listener !== setAuthState);
+    };
   }, []);
 
-  const signIn = async (username: string, password: string) => {
+  const signIn = useCallback(async (username: string, password: string) => {
     try {
       console.log('useSimpleAuth: Attempting login with:', { username, password: '***' });
       
-      // Trim whitespace and ensure case-sensitive matching
       const trimmedUsername = username.trim();
       const trimmedPassword = password.trim();
       
@@ -87,8 +116,8 @@ export const useSimpleAuth = () => {
       // Save to localStorage
       localStorage.setItem('assunnah_auth_user', JSON.stringify(userProfile));
       
-      // Update state immediately
-      setAuthState({
+      // Update global state and notify all listeners
+      notifyListeners({
         isAuthenticated: true,
         user: userProfile,
         loading: false
@@ -100,24 +129,24 @@ export const useSimpleAuth = () => {
       console.error('useSimpleAuth: Login error:', error);
       return false;
     }
-  };
+  }, []);
 
-  const signOut = async () => {
+  const signOut = useCallback(async () => {
     console.log('useSimpleAuth: Signing out user');
     localStorage.removeItem('assunnah_auth_user');
-    setAuthState({
+    notifyListeners({
       isAuthenticated: false,
       user: null,
       loading: false
     });
     return { error: null };
-  };
+  }, []);
 
   console.log('useSimpleAuth: Current auth state:', authState);
 
   return {
     user: authState.user,
-    profile: authState.user, // For compatibility with existing components
+    profile: authState.user,
     loading: authState.loading,
     signIn,
     signOut,

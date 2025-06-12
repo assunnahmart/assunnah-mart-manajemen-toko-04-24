@@ -43,9 +43,20 @@ export const useStockOpnameRecap = (dateFrom: string, dateTo: string) => {
         throw error;
       }
       
-      // For now, return all data since the view doesn't have date filtering built-in
-      // You can add date filtering logic here if needed
-      return data || [];
+      // Transform the data to match our interface
+      const transformedData: StockOpnameRecapItem[] = (data || []).map(item => ({
+        ...item,
+        detail_input_pengguna: Array.isArray(item.detail_input_pengguna) 
+          ? item.detail_input_pengguna as Array<{
+              nama_kasir: string;
+              stok_fisik: number;
+              tanggal_opname: string;
+              keterangan?: string;
+            }>
+          : []
+      }));
+      
+      return transformedData;
     },
     enabled: !!dateFrom && !!dateTo,
   });
@@ -109,6 +120,8 @@ export const useCreateNewStokOpname = () => {
       kasir_id: string; 
       keterangan?: string; 
     }) => {
+      console.log('Creating new stock opname:', { barang_id, stok_fisik, kasir_id, keterangan });
+      
       // Get current system stock
       const { data: barang, error: barangError } = await supabase
         .from('barang_konsinyasi')
@@ -116,27 +129,33 @@ export const useCreateNewStokOpname = () => {
         .eq('id', barang_id)
         .single();
       
-      if (barangError) throw barangError;
+      if (barangError) {
+        console.error('Error fetching barang:', barangError);
+        throw barangError;
+      }
       
       const stok_sistem = barang.stok_saat_ini;
-      const selisih = stok_fisik - stok_sistem;
       
-      // Insert stock opname record
+      // Insert stock opname record without selisih - let database calculate it
       const { error: insertError } = await supabase
         .from('stok_opname')
         .insert({
           barang_id,
           stok_sistem,
           stok_fisik,
-          selisih,
           kasir_id,
           tanggal_opname: new Date().toISOString().split('T')[0],
           keterangan,
           status: 'approved'
+          // Note: not inserting selisih - let database calculate it automatically
         });
       
-      if (insertError) throw insertError;
+      if (insertError) {
+        console.error('Error inserting stock opname:', insertError);
+        throw insertError;
+      }
       
+      console.log('Stock opname created successfully');
       return { success: true };
     },
     onSuccess: () => {

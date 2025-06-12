@@ -101,8 +101,8 @@ export function AppSidebar() {
       </SidebarHeader>
 
       <SidebarContent>
-        <SidebarGroup className="bg-amber-300">
-          <SidebarGroupLabel>Menu Utama</SidebarGroupLabel>
+        <SidebarGroup className="bg-yellow-400">
+          <SidebarGroupLabel className="bg-amber-500">Menu Utama</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {menuItems.map(item => <SidebarMenuItem key={item.path}>

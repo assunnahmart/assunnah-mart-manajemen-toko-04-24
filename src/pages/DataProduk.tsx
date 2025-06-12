@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Search, Edit, Package, Plus } from 'lucide-react';
-import { useBarangKonsinyasi } from '@/hooks/useBarang';
+import { useBarangWithSupplier } from '@/hooks/useSupplier';
 import { useToast } from '@/hooks/use-toast';
 import {
   Table,
@@ -21,7 +21,7 @@ import ProductForm from '@/components/products/ProductForm';
 import ProductExportImport from '@/components/products/ProductExportImport';
 
 const DataProduk = () => {
-  const { data: products, isLoading, refetch } = useBarangKonsinyasi();
+  const { data: products, isLoading, refetch } = useBarangWithSupplier();
   const { toast } = useToast();
   const [searchQuery, setSearchQuery] = useState('');
   const [showForm, setShowForm] = useState(false);

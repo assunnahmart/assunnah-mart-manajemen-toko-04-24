@@ -9,6 +9,48 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      balance_sheet: {
+        Row: {
+          account_id: string | null
+          account_type: string
+          amount: number | null
+          created_at: string | null
+          financial_period_id: string | null
+          id: string
+        }
+        Insert: {
+          account_id?: string | null
+          account_type: string
+          amount?: number | null
+          created_at?: string | null
+          financial_period_id?: string | null
+          id?: string
+        }
+        Update: {
+          account_id?: string | null
+          account_type?: string
+          amount?: number | null
+          created_at?: string | null
+          financial_period_id?: string | null
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "balance_sheet_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "chart_of_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "balance_sheet_financial_period_id_fkey"
+            columns: ["financial_period_id"]
+            isOneToOne: false
+            referencedRelation: "financial_periods"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       barang_konsinyasi: {
         Row: {
           barcode: string | null
@@ -242,6 +284,131 @@ export type Database = {
           },
         ]
       }
+      financial_notes: {
+        Row: {
+          amount: number | null
+          content: string | null
+          created_at: string | null
+          financial_period_id: string | null
+          id: string
+          note_type: string
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          amount?: number | null
+          content?: string | null
+          created_at?: string | null
+          financial_period_id?: string | null
+          id?: string
+          note_type: string
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          amount?: number | null
+          content?: string | null
+          created_at?: string | null
+          financial_period_id?: string | null
+          id?: string
+          note_type?: string
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "financial_notes_financial_period_id_fkey"
+            columns: ["financial_period_id"]
+            isOneToOne: false
+            referencedRelation: "financial_periods"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      financial_periods: {
+        Row: {
+          created_at: string | null
+          end_date: string
+          id: string
+          name: string
+          start_date: string
+          status: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          end_date: string
+          id?: string
+          name: string
+          start_date: string
+          status?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          end_date?: string
+          id?: string
+          name?: string
+          start_date?: string
+          status?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      general_ledger: {
+        Row: {
+          account_id: string | null
+          created_at: string | null
+          credit_amount: number | null
+          debit_amount: number | null
+          description: string | null
+          financial_period_id: string | null
+          id: string
+          reference_id: string | null
+          reference_type: string | null
+          transaction_date: string
+        }
+        Insert: {
+          account_id?: string | null
+          created_at?: string | null
+          credit_amount?: number | null
+          debit_amount?: number | null
+          description?: string | null
+          financial_period_id?: string | null
+          id?: string
+          reference_id?: string | null
+          reference_type?: string | null
+          transaction_date: string
+        }
+        Update: {
+          account_id?: string | null
+          created_at?: string | null
+          credit_amount?: number | null
+          debit_amount?: number | null
+          description?: string | null
+          financial_period_id?: string | null
+          id?: string
+          reference_id?: string | null
+          reference_type?: string | null
+          transaction_date?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "general_ledger_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "chart_of_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "general_ledger_financial_period_id_fkey"
+            columns: ["financial_period_id"]
+            isOneToOne: false
+            referencedRelation: "financial_periods"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       hutang_supplier: {
         Row: {
           created_at: string | null
@@ -289,6 +456,48 @@ export type Database = {
             columns: ["transaksi_pembelian_id"]
             isOneToOne: false
             referencedRelation: "transaksi_pembelian"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      income_statement: {
+        Row: {
+          account_id: string | null
+          account_type: string
+          amount: number | null
+          created_at: string | null
+          financial_period_id: string | null
+          id: string
+        }
+        Insert: {
+          account_id?: string | null
+          account_type: string
+          amount?: number | null
+          created_at?: string | null
+          financial_period_id?: string | null
+          id?: string
+        }
+        Update: {
+          account_id?: string | null
+          account_type?: string
+          amount?: number | null
+          created_at?: string | null
+          financial_period_id?: string | null
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "income_statement_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "chart_of_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "income_statement_financial_period_id_fkey"
+            columns: ["financial_period_id"]
+            isOneToOne: false
+            referencedRelation: "financial_periods"
             referencedColumns: ["id"]
           },
         ]
@@ -1270,6 +1479,54 @@ export type Database = {
           },
         ]
       }
+      trial_balance: {
+        Row: {
+          account_id: string | null
+          beginning_balance: number | null
+          created_at: string | null
+          credit_total: number | null
+          debit_total: number | null
+          ending_balance: number | null
+          financial_period_id: string | null
+          id: string
+        }
+        Insert: {
+          account_id?: string | null
+          beginning_balance?: number | null
+          created_at?: string | null
+          credit_total?: number | null
+          debit_total?: number | null
+          ending_balance?: number | null
+          financial_period_id?: string | null
+          id?: string
+        }
+        Update: {
+          account_id?: string | null
+          beginning_balance?: number | null
+          created_at?: string | null
+          credit_total?: number | null
+          debit_total?: number | null
+          ending_balance?: number | null
+          financial_period_id?: string | null
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trial_balance_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "chart_of_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trial_balance_financial_period_id_fkey"
+            columns: ["financial_period_id"]
+            isOneToOne: false
+            referencedRelation: "financial_periods"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_profiles: {
         Row: {
           created_at: string | null
@@ -1331,6 +1588,22 @@ export type Database = {
       }
     }
     Functions: {
+      auto_generate_financial_reports: {
+        Args: { p_period_id: string }
+        Returns: undefined
+      }
+      create_general_ledger_entry: {
+        Args: {
+          p_transaction_date: string
+          p_account_id: string
+          p_debit_amount?: number
+          p_credit_amount?: number
+          p_description?: string
+          p_reference_type?: string
+          p_reference_id?: string
+        }
+        Returns: undefined
+      }
       create_supplier_debt: {
         Args: {
           p_supplier_id: string
@@ -1340,9 +1613,17 @@ export type Database = {
         }
         Returns: undefined
       }
+      generate_balance_sheet: {
+        Args: { p_period_id: string }
+        Returns: undefined
+      }
       generate_barcode: {
         Args: Record<PropertyKey, never>
         Returns: string
+      }
+      generate_income_statement: {
+        Args: { p_period_id: string }
+        Returns: undefined
       }
       generate_kas_transaction_number: {
         Args: Record<PropertyKey, never>
@@ -1367,6 +1648,10 @@ export type Database = {
       generate_transaction_number: {
         Args: Record<PropertyKey, never>
         Returns: string
+      }
+      generate_trial_balance: {
+        Args: { p_period_id: string }
+        Returns: undefined
       }
       get_stock_opname_recap: {
         Args: { date_from?: string; date_to?: string }

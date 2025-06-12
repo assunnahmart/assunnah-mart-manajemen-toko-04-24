@@ -1,6 +1,6 @@
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Users, CreditCard, Truck, TrendingUp, Database, Package } from 'lucide-react';
+import { Users, CreditCard, Truck, TrendingUp, Database, Package, Calculator } from 'lucide-react';
 import PelangganManagement from './PelangganManagement';
 import SupplierManagement from './SupplierManagement';
 import KartuHutang from './KartuHutang';
@@ -8,11 +8,12 @@ import KasUmum from './KasUmum';
 import LabaRugi from './LabaRugi';
 import DataManagement from './DataManagement';
 import ProductDataManagement from './ProductDataManagement';
+import FinancialReports from './FinancialReports';
 
 const AdminDashboard = () => {
   return (
     <Tabs defaultValue="pelanggan" className="space-y-4">
-      <TabsList className="grid w-full grid-cols-7">
+      <TabsList className="grid w-full grid-cols-8">
         <TabsTrigger value="pelanggan" className="flex items-center gap-2">
           <Users className="h-4 w-4" />
           Pelanggan
@@ -32,6 +33,10 @@ const AdminDashboard = () => {
         <TabsTrigger value="laba-rugi" className="flex items-center gap-2">
           <TrendingUp className="h-4 w-4" />
           Laba Rugi
+        </TabsTrigger>
+        <TabsTrigger value="financial-reports" className="flex items-center gap-2">
+          <Calculator className="h-4 w-4" />
+          Laporan Keuangan
         </TabsTrigger>
         <TabsTrigger value="data-management" className="flex items-center gap-2">
           <Database className="h-4 w-4" />
@@ -61,6 +66,10 @@ const AdminDashboard = () => {
 
       <TabsContent value="laba-rugi">
         <LabaRugi />
+      </TabsContent>
+
+      <TabsContent value="financial-reports">
+        <FinancialReports />
       </TabsContent>
 
       <TabsContent value="data-management">

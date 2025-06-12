@@ -9,7 +9,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Search, Scan, Plus, Package, Info } from 'lucide-react';
-import { useStockData, useCreateStockOpname } from '@/hooks/useStockManagement';
+import { useStockData } from '@/hooks/useStockManagement';
+import { useCreateNewStokOpname } from '@/hooks/useStockOpnameRecap';
 import { useKasir } from '@/hooks/useKasir';
 import { useSimpleAuth } from '@/hooks/useSimpleAuth';
 import { useToast } from '@/hooks/use-toast';
@@ -23,7 +24,7 @@ const NewStokOpnameInput = () => {
   const { data: stockData, isLoading: isLoadingStock } = useStockData();
   const { data: kasirData } = useKasir();
   const { user } = useSimpleAuth();
-  const createStockOpname = useCreateStockOpname();
+  const createStockOpname = useCreateNewStokOpname();
   const { toast } = useToast();
 
   const filteredProducts = stockData?.filter(item =>
@@ -33,23 +34,49 @@ const NewStokOpnameInput = () => {
 
   const selectedProductData = stockData?.find(p => p.id === selectedProduct);
 
-  // Get kasir ID from authenticated user or kasir data
+  // Get kasir ID from authenticated user
   const getKasirId = () => {
-    if (user?.role === 'kasir') {
-      return user.id;
+    if (user?.role === 'kasir' && user?.kasir_id) {
+      return user.kasir_id;
     }
-    // For admin users, we need to find their kasir record
-    const adminKasir = kasirData?.find(k => k.username === user?.username);
+    // For admin users, try to find their kasir record
+    const adminKasir = kasirData?.find(k => k.nama === user?.full_name || k.email === user?.username);
     return adminKasir?.id;
   };
 
   const handleSubmit = async () => {
     const kasirId = getKasirId();
     
-    if (!selectedProduct || !stokFisik || !kasirId) {
+    console.log('Form validation:', {
+      selectedProduct,
+      stokFisik,
+      kasirId,
+      user: user?.full_name,
+      kasirData: kasirData?.length
+    });
+    
+    if (!selectedProduct) {
       toast({
         title: "Error",
-        description: "Mohon lengkapi semua field yang diperlukan",
+        description: "Mohon pilih produk terlebih dahulu",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (!stokFisik || stokFisik === '') {
+      toast({
+        title: "Error", 
+        description: "Mohon masukkan stok fisik",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (!kasirId) {
+      toast({
+        title: "Error",
+        description: "Data kasir tidak ditemukan. Mohon login ulang atau hubungi admin.",
         variant: "destructive"
       });
       return;
@@ -77,7 +104,7 @@ const NewStokOpnameInput = () => {
       console.error('Error saving stock opname:', error);
       toast({
         title: "Error",
-        description: "Gagal menyimpan data stok opname",
+        description: "Gagal menyimpan data stok opname: " + (error as Error).message,
         variant: "destructive"
       });
     }
@@ -121,7 +148,7 @@ const NewStokOpnameInput = () => {
             </div>
             
             <div>
-              <Label htmlFor="product">Pilih Produk</Label>
+              <Label htmlFor="product">Pilih Produk *</Label>
               <Select value={selectedProduct} onValueChange={setSelectedProduct}>
                 <SelectTrigger>
                   <SelectValue placeholder="Pilih produk..." />
@@ -167,7 +194,7 @@ const NewStokOpnameInput = () => {
             )}
             
             <div>
-              <Label htmlFor="stokFisik">Stok Real/Fisik</Label>
+              <Label htmlFor="stokFisik">Stok Real/Fisik *</Label>
               <Input
                 id="stokFisik"
                 type="number"
@@ -190,13 +217,13 @@ const NewStokOpnameInput = () => {
                   <div className="space-y-2">
                     <p className="text-sm font-medium">Preview Selisih:</p>
                     <div className="flex items-center justify-between">
-                      <span className="text-sm">Stok Sistem - Stok Real:</span>
+                      <span className="text-sm">Stok Fisik - Stok Sistem:</span>
                       <Badge variant={
                         Number(stokFisik) === selectedProductData.stok_saat_ini 
                           ? "default" 
                           : "secondary"
                       }>
-                        {selectedProductData.stok_saat_ini - Number(stokFisik)} {selectedProductData.satuan}
+                        {Number(stokFisik) - selectedProductData.stok_saat_ini} {selectedProductData.satuan}
                       </Badge>
                     </div>
                     <p className="text-xs text-gray-600">
@@ -229,6 +256,17 @@ const NewStokOpnameInput = () => {
             >
               {createStockOpname.isPending ? 'Menyimpan...' : 'Simpan Stok Opname'}
             </Button>
+            
+            {/* Debug info untuk development */}
+            {process.env.NODE_ENV === 'development' && (
+              <div className="text-xs text-gray-500 mt-4 p-2 bg-gray-100 rounded">
+                <p>Debug Info:</p>
+                <p>User: {user?.full_name} ({user?.role})</p>
+                <p>Kasir ID: {getKasirId() || 'Not found'}</p>
+                <p>Selected Product: {selectedProduct || 'None'}</p>
+                <p>Stok Fisik: {stokFisik || 'Empty'}</p>
+              </div>
+            )}
           </CardContent>
         </Card>
 
@@ -248,7 +286,7 @@ const NewStokOpnameInput = () => {
                 <ul className="list-disc list-inside mt-2 space-y-1 text-sm">
                   <li>Stok sistem tetap tidak berubah meski ada multiple input</li>
                   <li>Total real stok = jumlah semua input dari semua pengguna</li>
-                  <li>Selisih = Stok sistem - Total real stok</li>
+                  <li>Selisih = Stok fisik - Stok sistem</li>
                   <li>Sistem mendukung multiple user input untuk barang yang sama</li>
                 </ul>
               </AlertDescription>
@@ -272,7 +310,7 @@ const NewStokOpnameInput = () => {
                   <p>User A input: 30 pcs</p>
                   <p>User B input: 40 pcs</p>
                   <p>Total Real: 70 pcs</p>
-                  <p className="font-medium">Selisih: 100 - 70 = 30 pcs</p>
+                  <p className="font-medium">Selisih: 70 - 100 = -30 pcs</p>
                 </div>
               </div>
             </div>

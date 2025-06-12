@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { 
   TrendingUp, 
   TrendingDown, 
@@ -14,19 +15,20 @@ import {
   Calculator,
   AlertTriangle,
   CheckCircle,
-  RefreshCw
+  RefreshCw,
+  BookOpen
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { 
   useFinancialPeriods, 
   useCurrentPeriod,
   useFinancialSummary,
-  useGeneralLedger,
   useTrialBalance,
   useBalanceSheet,
   useIncomeStatement,
   useGenerateFinancialReports
 } from '@/hooks/useFinancialReports';
+import GeneralJournal from './GeneralJournal';
 
 const FinancialReports = () => {
   const [selectedPeriod, setSelectedPeriod] = useState<string>('');
@@ -35,7 +37,6 @@ const FinancialReports = () => {
   const { data: periods } = useFinancialPeriods();
   const { data: currentPeriod } = useCurrentPeriod();
   const { data: summary } = useFinancialSummary(selectedPeriod || currentPeriod?.id);
-  const { data: generalLedger } = useGeneralLedger(selectedPeriod || currentPeriod?.id);
   const { data: trialBalance } = useTrialBalance(selectedPeriod || currentPeriod?.id || '');
   const { data: balanceSheet } = useBalanceSheet(selectedPeriod || currentPeriod?.id || '');
   const { data: incomeStatement } = useIncomeStatement(selectedPeriod || currentPeriod?.id || '');
@@ -197,13 +198,20 @@ const FinancialReports = () => {
       )}
 
       {/* Financial Reports Tabs */}
-      <Tabs defaultValue="trial-balance" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-4">
+      <Tabs defaultValue="journal" className="space-y-4">
+        <TabsList className="grid w-full grid-cols-5">
+          <TabsTrigger value="journal" className="flex items-center gap-2">
+            <BookOpen className="h-4 w-4" />
+            Jurnal Umum
+          </TabsTrigger>
           <TabsTrigger value="trial-balance">Neraca Saldo</TabsTrigger>
           <TabsTrigger value="income-statement">Laba Rugi</TabsTrigger>
           <TabsTrigger value="balance-sheet">Neraca</TabsTrigger>
-          <TabsTrigger value="general-ledger">Buku Besar</TabsTrigger>
         </TabsList>
+
+        <TabsContent value="journal">
+          <GeneralJournal />
+        </TabsContent>
 
         <TabsContent value="trial-balance">
           <Card>
@@ -212,28 +220,28 @@ const FinancialReports = () => {
             </CardHeader>
             <CardContent>
               <div className="overflow-x-auto">
-                <table className="w-full border-collapse border border-gray-300">
-                  <thead>
-                    <tr className="bg-gray-50">
-                      <th className="border border-gray-300 p-2 text-left">Kode Akun</th>
-                      <th className="border border-gray-300 p-2 text-left">Nama Akun</th>
-                      <th className="border border-gray-300 p-2 text-right">Debit</th>
-                      <th className="border border-gray-300 p-2 text-right">Kredit</th>
-                      <th className="border border-gray-300 p-2 text-right">Saldo</th>
-                    </tr>
-                  </thead>
-                  <tbody>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Kode Akun</TableHead>
+                      <TableHead>Nama Akun</TableHead>
+                      <TableHead className="text-right">Debit</TableHead>
+                      <TableHead className="text-right">Kredit</TableHead>
+                      <TableHead className="text-right">Saldo</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
                     {trialBalance?.map(item => (
-                      <tr key={item.id}>
-                        <td className="border border-gray-300 p-2">{item.chart_of_accounts?.kode_akun}</td>
-                        <td className="border border-gray-300 p-2">{item.chart_of_accounts?.nama_akun}</td>
-                        <td className="border border-gray-300 p-2 text-right">{formatCurrency(item.debit_total || 0)}</td>
-                        <td className="border border-gray-300 p-2 text-right">{formatCurrency(item.credit_total || 0)}</td>
-                        <td className="border border-gray-300 p-2 text-right">{formatCurrency(item.ending_balance || 0)}</td>
-                      </tr>
+                      <TableRow key={item.id}>
+                        <TableCell className="font-mono">{item.chart_of_accounts?.kode_akun}</TableCell>
+                        <TableCell>{item.chart_of_accounts?.nama_akun}</TableCell>
+                        <TableCell className="text-right">{formatCurrency(item.debit_total || 0)}</TableCell>
+                        <TableCell className="text-right">{formatCurrency(item.credit_total || 0)}</TableCell>
+                        <TableCell className="text-right font-medium">{formatCurrency(item.ending_balance || 0)}</TableCell>
+                      </TableRow>
                     ))}
-                  </tbody>
-                </table>
+                  </TableBody>
+                </Table>
               </div>
             </CardContent>
           </Card>
@@ -246,24 +254,24 @@ const FinancialReports = () => {
             </CardHeader>
             <CardContent>
               <div className="overflow-x-auto">
-                <table className="w-full border-collapse border border-gray-300">
-                  <thead>
-                    <tr className="bg-gray-50">
-                      <th className="border border-gray-300 p-2 text-left">Jenis</th>
-                      <th className="border border-gray-300 p-2 text-left">Nama Akun</th>
-                      <th className="border border-gray-300 p-2 text-right">Jumlah</th>
-                    </tr>
-                  </thead>
-                  <tbody>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Jenis</TableHead>
+                      <TableHead>Nama Akun</TableHead>
+                      <TableHead className="text-right">Jumlah</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
                     {incomeStatement?.map(item => (
-                      <tr key={item.id}>
-                        <td className="border border-gray-300 p-2 capitalize">{item.account_type}</td>
-                        <td className="border border-gray-300 p-2">{item.chart_of_accounts?.nama_akun}</td>
-                        <td className="border border-gray-300 p-2 text-right">{formatCurrency(item.amount || 0)}</td>
-                      </tr>
+                      <TableRow key={item.id}>
+                        <TableCell className="capitalize">{item.account_type}</TableCell>
+                        <TableCell>{item.chart_of_accounts?.nama_akun}</TableCell>
+                        <TableCell className="text-right">{formatCurrency(item.amount || 0)}</TableCell>
+                      </TableRow>
                     ))}
-                  </tbody>
-                </table>
+                  </TableBody>
+                </Table>
               </div>
             </CardContent>
           </Card>
@@ -276,72 +284,25 @@ const FinancialReports = () => {
             </CardHeader>
             <CardContent>
               <div className="overflow-x-auto">
-                <table className="w-full border-collapse border border-gray-300">
-                  <thead>
-                    <tr className="bg-gray-50">
-                      <th className="border border-gray-300 p-2 text-left">Jenis</th>
-                      <th className="border border-gray-300 p-2 text-left">Nama Akun</th>
-                      <th className="border border-gray-300 p-2 text-right">Jumlah</th>
-                    </tr>
-                  </thead>
-                  <tbody>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Jenis</TableHead>
+                      <TableHead>Nama Akun</TableHead>
+                      <TableHead className="text-right">Jumlah</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
                     {balanceSheet?.map(item => (
-                      <tr key={item.id}>
-                        <td className="border border-gray-300 p-2 capitalize">{item.account_type}</td>
-                        <td className="border border-gray-300 p-2">{item.chart_of_accounts?.nama_akun}</td>
-                        <td className="border border-gray-300 p-2 text-right">{formatCurrency(item.amount || 0)}</td>
-                      </tr>
+                      <TableRow key={item.id}>
+                        <TableCell className="capitalize">{item.account_type}</TableCell>
+                        <TableCell>{item.chart_of_accounts?.nama_akun}</TableCell>
+                        <TableCell className="text-right">{formatCurrency(item.amount || 0)}</TableCell>
+                      </TableRow>
                     ))}
-                  </tbody>
-                </table>
+                  </TableBody>
+                </Table>
               </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="general-ledger">
-          <Card>
-            <CardHeader>
-              <CardTitle>Buku Besar</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="overflow-x-auto">
-                <table className="w-full border-collapse border border-gray-300">
-                  <thead>
-                    <tr className="bg-gray-50">
-                      <th className="border border-gray-300 p-2 text-left">Tanggal</th>
-                      <th className="border border-gray-300 p-2 text-left">Akun</th>
-                      <th className="border border-gray-300 p-2 text-left">Keterangan</th>
-                      <th className="border border-gray-300 p-2 text-right">Debit</th>
-                      <th className="border border-gray-300 p-2 text-right">Kredit</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {generalLedger?.slice(0, 50).map(item => (
-                      <tr key={item.id}>
-                        <td className="border border-gray-300 p-2">
-                          {new Date(item.transaction_date).toLocaleDateString('id-ID')}
-                        </td>
-                        <td className="border border-gray-300 p-2">
-                          {item.chart_of_accounts?.kode_akun} - {item.chart_of_accounts?.nama_akun}
-                        </td>
-                        <td className="border border-gray-300 p-2">{item.description}</td>
-                        <td className="border border-gray-300 p-2 text-right">
-                          {item.debit_amount > 0 ? formatCurrency(item.debit_amount) : '-'}
-                        </td>
-                        <td className="border border-gray-300 p-2 text-right">
-                          {item.credit_amount > 0 ? formatCurrency(item.credit_amount) : '-'}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-              {generalLedger && generalLedger.length > 50 && (
-                <p className="text-sm text-gray-500 mt-2">
-                  Menampilkan 50 entri terbaru dari {generalLedger.length} total entri
-                </p>
-              )}
             </CardContent>
           </Card>
         </TabsContent>

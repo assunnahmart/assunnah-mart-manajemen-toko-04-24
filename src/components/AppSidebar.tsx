@@ -90,7 +90,7 @@ export function AppSidebar() {
     return null;
   }
   return <Sidebar className="animate-fade-in">
-      <SidebarHeader className="p-4 border-b bg-transparent">
+      <SidebarHeader className="p-4 border-b bg-white">
         <div className="flex items-center gap-3">
           <img src="/lovable-uploads/163a7d14-7869-47b2-b33b-40be703e48e1.png" alt="Assunnah Mart Logo" className="h-8 w-8 object-contain animate-flip-horizontal" />
           <div>
@@ -101,7 +101,7 @@ export function AppSidebar() {
       </SidebarHeader>
 
       <SidebarContent>
-        <SidebarGroup className="bg-yellow-200">
+        <SidebarGroup className="bg-amber-300">
           <SidebarGroupLabel>Menu Utama</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
@@ -109,7 +109,7 @@ export function AppSidebar() {
                   <SidebarMenuButton asChild isActive={isActive(item.path)}>
                     <Link to={item.path} className="flex items-center gap-3 w-full">
                       <item.icon className="h-4 w-4" />
-                      <span className="flex-1">{item.label}</span>
+                      <span className="flex-1 text-amber-950">{item.label}</span>
                       {item.badge && <Badge variant="secondary" className="text-xs bg-green-500 text-white">
                           {item.badge}
                         </Badge>}

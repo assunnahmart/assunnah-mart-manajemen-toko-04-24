@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -12,6 +11,7 @@ import { useCreatePurchaseTransaction } from '@/hooks/usePurchaseTransactions';
 import { useBarang } from '@/hooks/useBarang';
 import { useSimpleAuth } from '@/hooks/useSimpleAuth';
 import { useKasir } from '@/hooks/useKasir';
+import { useSupplier } from '@/hooks/useSupplier';
 import { useToast } from '@/hooks/use-toast';
 
 interface PurchaseItem {
@@ -22,11 +22,7 @@ interface PurchaseItem {
   subtotal: number;
 }
 
-interface PurchaseFormProps {
-  suppliers: any[];
-}
-
-const PurchaseForm = ({ suppliers }: PurchaseFormProps) => {
+const PurchaseForm = () => {
   const [supplierId, setSupplierId] = useState('');
   const [jenisTransaksi, setJenisTransaksi] = useState<'cash' | 'kredit'>('cash');
   const [jatuhTempo, setJatuhTempo] = useState('');
@@ -38,6 +34,7 @@ const PurchaseForm = ({ suppliers }: PurchaseFormProps) => {
   const [filteredProducts, setFilteredProducts] = useState<any[]>([]);
 
   const { data: products } = useBarang();
+  const { data: suppliers } = useSupplier();
   const { data: kasirData } = useKasir();
   const { user } = useSimpleAuth();
   const createPurchase = useCreatePurchaseTransaction();

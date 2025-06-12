@@ -5,8 +5,9 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CreditCard, Building2, User, AlertCircle } from "lucide-react";
 import { usePelangganKredit } from "@/hooks/usePelanggan";
-import NewNavbar from "@/components/NewNavbar";
 import NewProtectedRoute from "@/components/NewProtectedRoute";
+import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
+import { AppSidebar } from "@/components/AppSidebar";
 
 const PenjualanKredit = () => {
   const { data: pelangganKredit } = usePelangganKredit();
@@ -119,120 +120,128 @@ const PenjualanKredit = () => {
 
   return (
     <NewProtectedRoute>
-      <div className="min-h-screen bg-gray-50">
-        <NewNavbar />
-        <div className="p-6">
-          <div className="mx-auto max-w-7xl space-y-6">
-            {/* Header */}
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">Penjualan Kredit</h1>
-              <p className="text-gray-600">Kelola penjualan kredit unit dan piutang pelanggan</p>
+      <SidebarProvider>
+        <div className="min-h-screen flex w-full">
+          <AppSidebar />
+          <SidebarInset>
+            <div className="flex h-16 shrink-0 items-center gap-2 border-b px-4">
+              <SidebarTrigger className="-ml-1" />
+              <h1 className="text-lg font-semibold">Penjualan Kredit</h1>
             </div>
+            <div className="flex-1 p-6">
+              <div className="mx-auto max-w-7xl space-y-6">
+                {/* Header */}
+                <div>
+                  <h1 className="text-3xl font-bold text-gray-900">Penjualan Kredit</h1>
+                  <p className="text-gray-600">Kelola penjualan kredit unit dan piutang pelanggan</p>
+                </div>
 
-            {/* Stats */}
-            <div className="grid gap-4 md:grid-cols-4">
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Unit Bertagihan</CardTitle>
-                  <Building2 className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">{pelangganKredit?.unit?.length || 0}</div>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Pelanggan Piutang</CardTitle>
-                  <User className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">{pelangganKredit?.perorangan?.length || 0}</div>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Total Tagihan Unit</CardTitle>
-                  <CreditCard className="h-4 w-4 text-red-500" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold text-red-600">{formatRupiah(totalTagihanUnit)}</div>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Total Piutang Perorangan</CardTitle>
-                  <AlertCircle className="h-4 w-4 text-orange-500" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold text-orange-600">{formatRupiah(totalPiutangPerorangan)}</div>
-                </CardContent>
-              </Card>
+                {/* Stats */}
+                <div className="grid gap-4 md:grid-cols-4">
+                  <Card>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                      <CardTitle className="text-sm font-medium">Unit Bertagihan</CardTitle>
+                      <Building2 className="h-4 w-4 text-muted-foreground" />
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold">{pelangganKredit?.unit?.length || 0}</div>
+                    </CardContent>
+                  </Card>
+                  <Card>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                      <CardTitle className="text-sm font-medium">Pelanggan Piutang</CardTitle>
+                      <User className="h-4 w-4 text-muted-foreground" />
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold">{pelangganKredit?.perorangan?.length || 0}</div>
+                    </CardContent>
+                  </Card>
+                  <Card>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                      <CardTitle className="text-sm font-medium">Total Tagihan Unit</CardTitle>
+                      <CreditCard className="h-4 w-4 text-red-500" />
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold text-red-600">{formatRupiah(totalTagihanUnit)}</div>
+                    </CardContent>
+                  </Card>
+                  <Card>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                      <CardTitle className="text-sm font-medium">Total Piutang Perorangan</CardTitle>
+                      <AlertCircle className="h-4 w-4 text-orange-500" />
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold text-orange-600">{formatRupiah(totalPiutangPerorangan)}</div>
+                    </CardContent>
+                  </Card>
+                </div>
+
+                {/* Tabs */}
+                <Tabs defaultValue="unit" className="space-y-4">
+                  <TabsList className="grid w-full grid-cols-2">
+                    <TabsTrigger value="unit">Kredit Unit</TabsTrigger>
+                    <TabsTrigger value="perorangan">Piutang Perorangan</TabsTrigger>
+                  </TabsList>
+
+                  <TabsContent value="unit">
+                    <Card>
+                      <CardHeader>
+                        <CardTitle>Tagihan Unit</CardTitle>
+                        <CardDescription>
+                          Unit dengan tagihan kredit yang perlu dibayar
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                          {pelangganKredit?.unit?.map((unit) => (
+                            <PelangganUnitCard key={unit.id} unit={unit} />
+                          ))}
+                        </div>
+                        {(!pelangganKredit?.unit || pelangganKredit.unit.length === 0) && (
+                          <div className="text-center py-8">
+                            <Building2 className="mx-auto h-12 w-12 text-gray-400" />
+                            <h3 className="mt-2 text-sm font-semibold text-gray-900">Tidak ada tagihan unit</h3>
+                            <p className="mt-1 text-sm text-gray-500">
+                              Semua tagihan unit sudah lunas.
+                            </p>
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+                  </TabsContent>
+
+                  <TabsContent value="perorangan">
+                    <Card>
+                      <CardHeader>
+                        <CardTitle>Piutang Perorangan</CardTitle>
+                        <CardDescription>
+                          Pelanggan dengan piutang yang perlu dibayar
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                          {pelangganKredit?.perorangan?.map((pelanggan) => (
+                            <PelangganPeroranganCard key={pelanggan.id} pelanggan={pelanggan} />
+                          ))}
+                        </div>
+                        {(!pelangganKredit?.perorangan || pelangganKredit.perorangan.length === 0) && (
+                          <div className="text-center py-8">
+                            <User className="mx-auto h-12 w-12 text-gray-400" />
+                            <h3 className="mt-2 text-sm font-semibold text-gray-900">Tidak ada piutang perorangan</h3>
+                            <p className="mt-1 text-sm text-gray-500">
+                              Semua piutang perorangan sudah lunas.
+                            </p>
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+                  </TabsContent>
+                </Tabs>
+              </div>
             </div>
-
-            {/* Tabs */}
-            <Tabs defaultValue="unit" className="space-y-4">
-              <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="unit">Kredit Unit</TabsTrigger>
-                <TabsTrigger value="perorangan">Piutang Perorangan</TabsTrigger>
-              </TabsList>
-
-              <TabsContent value="unit">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Tagihan Unit</CardTitle>
-                    <CardDescription>
-                      Unit dengan tagihan kredit yang perlu dibayar
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                      {pelangganKredit?.unit?.map((unit) => (
-                        <PelangganUnitCard key={unit.id} unit={unit} />
-                      ))}
-                    </div>
-                    {(!pelangganKredit?.unit || pelangganKredit.unit.length === 0) && (
-                      <div className="text-center py-8">
-                        <Building2 className="mx-auto h-12 w-12 text-gray-400" />
-                        <h3 className="mt-2 text-sm font-semibold text-gray-900">Tidak ada tagihan unit</h3>
-                        <p className="mt-1 text-sm text-gray-500">
-                          Semua tagihan unit sudah lunas.
-                        </p>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              </TabsContent>
-
-              <TabsContent value="perorangan">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Piutang Perorangan</CardTitle>
-                    <CardDescription>
-                      Pelanggan dengan piutang yang perlu dibayar
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                      {pelangganKredit?.perorangan?.map((pelanggan) => (
-                        <PelangganPeroranganCard key={pelanggan.id} pelanggan={pelanggan} />
-                      ))}
-                    </div>
-                    {(!pelangganKredit?.perorangan || pelangganKredit.perorangan.length === 0) && (
-                      <div className="text-center py-8">
-                        <User className="mx-auto h-12 w-12 text-gray-400" />
-                        <h3 className="mt-2 text-sm font-semibold text-gray-900">Tidak ada piutang perorangan</h3>
-                        <p className="mt-1 text-sm text-gray-500">
-                          Semua piutang perorangan sudah lunas.
-                        </p>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              </TabsContent>
-            </Tabs>
-          </div>
+          </SidebarInset>
         </div>
-      </div>
+      </SidebarProvider>
     </NewProtectedRoute>
   );
 };

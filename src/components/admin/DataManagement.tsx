@@ -9,14 +9,23 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
+interface DeleteOperation {
+  id: string;
+  title: string;
+  description: string;
+  tables: string[];
+  confirmText: string;
+  color: string;
+}
+
 const DataManagement = () => {
   const [isDeleting, setIsDeleting] = useState<string | null>(null);
   const [confirmText, setConfirmText] = useState('');
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
-  const [selectedDeleteType, setSelectedDeleteType] = useState<string | null>(null);
+  const [selectedDeleteType, setSelectedDeleteType] = useState<DeleteOperation | null>(null);
   const { toast } = useToast();
 
-  const deleteOperations = [
+  const deleteOperations: DeleteOperation[] = [
     {
       id: 'transactions',
       title: 'Semua Transaksi POS',
@@ -75,7 +84,7 @@ const DataManagement = () => {
     }
   ];
 
-  const handleDeleteData = async (operation: any) => {
+  const handleDeleteData = async (operation: DeleteOperation) => {
     setIsDeleting(operation.id);
     
     try {
@@ -112,7 +121,7 @@ const DataManagement = () => {
     }
   };
 
-  const openConfirmDialog = (operation: any) => {
+  const openConfirmDialog = (operation: DeleteOperation) => {
     setSelectedDeleteType(operation);
     setShowConfirmDialog(true);
     setConfirmText('');

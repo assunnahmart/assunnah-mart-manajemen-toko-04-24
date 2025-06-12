@@ -1,4 +1,3 @@
-
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -58,12 +57,18 @@ export const useStockOpnameRecap = (dateFrom?: string, dateTo?: string) => {
             const product = productData?.find(p => p.id === item.barang_id);
             return {
               ...item,
-              harga_beli: product?.harga_beli || 0
+              harga_beli: product?.harga_beli || 0,
+              // Ensure selisih_stok calculation: stok_sistem - real_stok_total
+              selisih_stok: item.stok_sistem - item.real_stok_total
             };
           });
 
+          console.log('Stock opname recap calculation logic:');
+          console.log('- Stok sistem: current stock at time of opname (unchanged by multiple users)');
+          console.log('- Real stok total: sum of all real stock inputs from all users for same product');
+          console.log('- Selisih stok: stok sistem - real stok total');
           console.log('Stock opname recap RPC success, data length:', enrichedData?.length || 0);
-          console.log('Sample data:', enrichedData?.[0]);
+          console.log('Sample calculation:', enrichedData?.[0]);
           return enrichedData as StockOpnameRecapItem[];
         }
         
@@ -134,18 +139,41 @@ export const useStockOpnameRealTime = () => {
         throw opnameError;
       }
       
-      // Calculate summary
+      // Calculate summary with new logic
       const totalItems = opnameData?.length || 0;
-      const totalVariance = opnameData?.reduce((sum, item) => sum + Math.abs(item.selisih || 0), 0) || 0;
-      const itemsWithVariance = opnameData?.filter(item => (item.selisih || 0) !== 0).length || 0;
+      
+      // Group by barang_id to calculate total real stock and variance
+      const groupedData = opnameData?.reduce((acc, item) => {
+        if (!acc[item.barang_id]) {
+          acc[item.barang_id] = {
+            stok_sistem: item.stok_sistem,
+            real_stok_inputs: [],
+            barang_konsinyasi: item.barang_konsinyasi
+          };
+        }
+        acc[item.barang_id].real_stok_inputs.push(item.stok_fisik);
+        return acc;
+      }, {} as Record<string, any>) || {};
+      
+      let totalVariance = 0;
+      let itemsWithVariance = 0;
+      
+      Object.values(groupedData).forEach((group: any) => {
+        const realStokTotal = group.real_stok_inputs.reduce((sum: number, val: number) => sum + val, 0);
+        const variance = Math.abs(group.stok_sistem - realStokTotal);
+        totalVariance += variance;
+        if (variance !== 0) itemsWithVariance++;
+      });
+      
+      const uniqueItems = Object.keys(groupedData).length;
       
       return {
         todayOpname: opnameData || [],
         summary: {
-          totalItems,
+          totalItems: uniqueItems,
           totalVariance,
           itemsWithVariance,
-          accuracyRate: totalItems > 0 ? ((totalItems - itemsWithVariance) / totalItems * 100).toFixed(1) : '100'
+          accuracyRate: uniqueItems > 0 ? ((uniqueItems - itemsWithVariance) / uniqueItems * 100).toFixed(1) : '100'
         }
       };
     },

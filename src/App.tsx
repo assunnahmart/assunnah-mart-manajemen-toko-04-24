@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -19,6 +18,7 @@ import KasirManagement from "./pages/KasirManagement";
 import KonsinyasiHarianPage from "./pages/KonsinyasiHarianPage";
 import KasirKasPage from "./pages/KasirKasPage";
 import NotFound from "./pages/NotFound";
+import NewStokPage from '@/pages/NewStokPage';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -29,32 +29,35 @@ const queryClient = new QueryClient({
   },
 });
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <BrowserRouter>
-      <TooltipProvider delayDuration={300}>
-        <Toaster />
-        <Sonner />
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/pos" element={<POSSystem />} />
-          <Route path="/data-produk" element={<DataProduk />} />
-          <Route path="/admin" element={<AdminPanel />} />
-          <Route path="/konsinyasi" element={<Konsinyasi />} />
-          <Route path="/konsinyasi-harian" element={<KonsinyasiHarianPage />} />
-          <Route path="/purchase" element={<PurchasePage />} />
-          <Route path="/kas-umum" element={<KasUmumPage />} />
-          <Route path="/kasir-kas" element={<KasirKasPage />} />
-          <Route path="/stock-management" element={<StockManagementPage />} />
-          <Route path="/penjualan-kredit" element={<PenjualanKredit />} />
-          <Route path="/kasir-management" element={<KasirManagement />} />
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </TooltipProvider>
-    </BrowserRouter>
-  </QueryClientProvider>
-);
+function App() {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <BrowserRouter>
+        <TooltipProvider delayDuration={300}>
+          <Toaster />
+          <Sonner />
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/pos" element={<POSSystem />} />
+            <Route path="/data-produk" element={<DataProduk />} />
+            <Route path="/admin" element={<AdminPanel />} />
+            <Route path="/konsinyasi" element={<Konsinyasi />} />
+            <Route path="/konsinyasi-harian" element={<KonsinyasiHarianPage />} />
+            <Route path="/purchase" element={<PurchasePage />} />
+            <Route path="/kas-umum" element={<KasUmumPage />} />
+            <Route path="/kasir-kas" element={<KasirKasPage />} />
+            <Route path="/stock-management" element={<StockManagementPage />} />
+            <Route path="/penjualan-kredit" element={<PenjualanKredit />} />
+            <Route path="/kasir-management" element={<KasirManagement />} />
+            <Route path="/new-stok" element={<NewStokPage />} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </TooltipProvider>
+      </BrowserRouter>
+    </QueryClientProvider>
+  );
+}
 
 export default App;

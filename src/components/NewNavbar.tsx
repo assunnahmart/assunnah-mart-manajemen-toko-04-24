@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Menu, X, LogOut, User, Store, Package, ShoppingCart, Calculator, CreditCard, TrendingUp, Users, Settings } from 'lucide-react';
@@ -36,7 +35,13 @@ const NewNavbar = () => {
     { path: '/kasir-kas', label: 'Kasir Kas', icon: CreditCard },
     { path: '/kas-umum', label: 'Kas Umum', icon: CreditCard },
     { path: '/admin', label: 'Admin Panel', icon: Settings },
-    { path: '/kasir-management', label: 'Kasir Management', icon: Users }
+    { path: '/kasir-management', label: 'Kasir Management', icon: Users },
+    {
+      label: "New Stok",
+      href: "/new-stok",
+      icon: Package2,
+      badge: "NEW"
+    }
   ];
 
   // Don't show navbar for kasir users

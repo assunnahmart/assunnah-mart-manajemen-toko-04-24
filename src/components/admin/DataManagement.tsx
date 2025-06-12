@@ -13,10 +13,26 @@ interface DeleteOperation {
   id: string;
   title: string;
   description: string;
-  tables: string[];
+  tables: Array<keyof typeof tableMap>;
   confirmText: string;
   color: string;
 }
+
+// Map untuk TypeScript type safety
+const tableMap = {
+  'pos_transactions': 'pos_transactions',
+  'pos_transaction_items': 'pos_transaction_items',
+  'stok_opname': 'stok_opname',
+  'kas_umum_transactions': 'kas_umum_transactions',
+  'transaksi_pembelian': 'transaksi_pembelian',
+  'detail_transaksi_pembelian': 'detail_transaksi_pembelian',
+  'hutang_supplier': 'hutang_supplier',
+  'konsinyasi_laporan': 'konsinyasi_laporan',
+  'konsinyasi_detail': 'konsinyasi_detail',
+  'konsinyasi_harian': 'konsinyasi_harian',
+  'kasir_kas_transactions': 'kasir_kas_transactions',
+  'mutasi_stok': 'mutasi_stok'
+} as const;
 
 const DataManagement = () => {
   const [isDeleting, setIsDeleting] = useState<string | null>(null);
@@ -89,14 +105,15 @@ const DataManagement = () => {
     
     try {
       // Delete data from each table in the operation
-      for (const table of operation.tables) {
+      for (const tableName of operation.tables) {
+        const mappedTable = tableMap[tableName];
         const { error } = await supabase
-          .from(table)
+          .from(mappedTable)
           .delete()
           .neq('id', '00000000-0000-0000-0000-000000000000'); // Delete all records
         
         if (error) {
-          throw new Error(`Error deleting from ${table}: ${error.message}`);
+          throw new Error(`Error deleting from ${tableName}: ${error.message}`);
         }
       }
       

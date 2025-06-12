@@ -27,6 +27,7 @@ export const useStockSync = () => {
         queryClient.invalidateQueries({ queryKey: ['barang-konsinyasi'] });
         queryClient.invalidateQueries({ queryKey: ['stock_mutations'] });
         queryClient.invalidateQueries({ queryKey: ['low_stock_products'] });
+        queryClient.invalidateQueries({ queryKey: ['barang'] });
         
         console.log('Stock sync: Successfully synced stock for POS transaction');
       } catch (error) {
@@ -53,6 +54,7 @@ export const useStockSync = () => {
             queryClient.invalidateQueries({ queryKey: ['barang_konsinyasi'] });
             queryClient.invalidateQueries({ queryKey: ['barang-konsinyasi'] });
             queryClient.invalidateQueries({ queryKey: ['low_stock_products'] });
+            queryClient.invalidateQueries({ queryKey: ['barang'] });
           }
         )
         .on(
@@ -67,6 +69,25 @@ export const useStockSync = () => {
             
             // Invalidate mutation queries
             queryClient.invalidateQueries({ queryKey: ['stock_mutations'] });
+            queryClient.invalidateQueries({ queryKey: ['stock_data'] });
+          }
+        )
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'pos_transactions'
+          },
+          (payload) => {
+            console.log('Stock sync: Real-time POS transaction detected', payload);
+            
+            if (payload.eventType === 'INSERT' && payload.new?.status === 'completed') {
+              // Invalidate POS and stock related queries
+              queryClient.invalidateQueries({ queryKey: ['pos_transactions_today'] });
+              queryClient.invalidateQueries({ queryKey: ['stock_data'] });
+              queryClient.invalidateQueries({ queryKey: ['barang_konsinyasi'] });
+            }
           }
         )
         .subscribe();
@@ -94,6 +115,8 @@ export const useStockSync = () => {
       queryClient.invalidateQueries({ queryKey: ['barang-konsinyasi'] });
       queryClient.invalidateQueries({ queryKey: ['stock_mutations'] });
       queryClient.invalidateQueries({ queryKey: ['low_stock_products'] });
+      queryClient.invalidateQueries({ queryKey: ['barang'] });
+      queryClient.invalidateQueries({ queryKey: ['pos_transactions_today'] });
     }
   };
 };

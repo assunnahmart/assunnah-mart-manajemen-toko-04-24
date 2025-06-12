@@ -1,3 +1,4 @@
+
 import NewProtectedRoute from '@/components/NewProtectedRoute';
 import NewNavbar from '@/components/NewNavbar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -8,8 +9,15 @@ import NewStokSelisihAnalysis from '@/components/newstok/NewStokSelisihAnalysis'
 import NewStokRekapTerpadu from '@/components/newstok/NewStokRekapTerpadu';
 import NewStokReporting from '@/components/newstok/NewStokReporting';
 import NewStokAuditTrail from '@/components/newstok/NewStokAuditTrail';
+import StockSyncIndicator from '@/components/stock/StockSyncIndicator';
+import { useStockSyncMonitor } from '@/hooks/useStockSyncMonitor';
+
 const NewStokPage = () => {
-  return <NewProtectedRoute>
+  // Initialize stock sync monitoring
+  useStockSyncMonitor();
+
+  return (
+    <NewProtectedRoute>
       <div className="min-h-screen bg-gray-50">
         <NewNavbar />
         
@@ -20,6 +28,9 @@ const NewStokPage = () => {
               Sistem perhitungan selisih stok sistem vs stok real dengan multiple user input untuk barang yang sama
             </p>
           </div>
+          
+          {/* Stock Sync Status Indicator */}
+          <StockSyncIndicator />
           
           <Tabs defaultValue="dashboard" className="space-y-4">
             <TabsList className="grid w-full grid-cols-6">
@@ -75,6 +86,8 @@ const NewStokPage = () => {
           </Tabs>
         </div>
       </div>
-    </NewProtectedRoute>;
+    </NewProtectedRoute>
+  );
 };
+
 export default NewStokPage;

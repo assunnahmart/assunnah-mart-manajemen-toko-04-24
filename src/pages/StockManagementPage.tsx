@@ -7,12 +7,14 @@ import StockManagement from '@/components/stock/StockManagement';
 import StockOpname from '@/components/stock/StockOpname';
 import StockDashboard from '@/components/stock/StockDashboard';
 import StockMovements from '@/components/stock/StockMovements';
-import StockOpnameRealTimeSync from '@/components/stock/StockOpnameRealTimeSync';
+import StockSyncIndicator from '@/components/stock/StockSyncIndicator';
 import { useStockSync } from '@/hooks/useStockSync';
+import { useStockSyncMonitor } from '@/hooks/useStockSyncMonitor';
 
 const StockManagementPage = () => {
   // Initialize real-time stock sync
   useStockSync();
+  useStockSyncMonitor();
 
   return (
     <NewProtectedRoute>
@@ -28,7 +30,7 @@ const StockManagementPage = () => {
           </div>
           
           {/* Real-time Sync Status */}
-          <StockOpnameRealTimeSync />
+          <StockSyncIndicator />
           
           <Tabs defaultValue="dashboard" className="space-y-4">
             <TabsList className="grid w-full grid-cols-4">

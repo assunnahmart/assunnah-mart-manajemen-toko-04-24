@@ -30,7 +30,7 @@ export const useBarangWithSupplier = () => {
         .from('barang_konsinyasi')
         .select(`
           *,
-          supplier:supplier_id(
+          supplier!supplier_id(
             id,
             nama
           )

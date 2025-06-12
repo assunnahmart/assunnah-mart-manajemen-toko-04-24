@@ -1,7 +1,7 @@
 
 import { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { LogOut, User, Store, Package, ShoppingCart, Calculator, CreditCard, TrendingUp, Users, Settings, Package2 } from 'lucide-react';
+import { LogOut, User, Store, Package, ShoppingCart, Calculator, CreditCard, TrendingUp, Users, Settings, Package2, BookOpen } from 'lucide-react';
 import {
   Sidebar,
   SidebarContent,
@@ -47,6 +47,7 @@ export function AppSidebar() {
     { path: '/penjualan-kredit', label: 'Penjualan Kredit', icon: CreditCard },
     { path: '/kasir-kas', label: 'Kasir Kas', icon: CreditCard },
     { path: '/kas-umum', label: 'Kas Umum', icon: CreditCard },
+    { path: '/jurnal-umum', label: 'Jurnal Umum', icon: BookOpen },
     { path: '/admin', label: 'Admin Panel', icon: Settings },
     { path: '/kasir-management', label: 'Kasir Management', icon: Users },
     { 

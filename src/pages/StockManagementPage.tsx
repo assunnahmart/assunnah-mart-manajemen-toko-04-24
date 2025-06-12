@@ -1,12 +1,13 @@
 
 import NewProtectedRoute from '@/components/NewProtectedRoute';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Package, ClipboardList, TrendingUp, Activity, BarChart3 } from 'lucide-react';
+import { Package, ClipboardList, TrendingUp, Activity, BarChart3, AlertTriangle } from 'lucide-react';
 import StockManagement from '@/components/stock/StockManagement';
 import StockOpname from '@/components/stock/StockOpname';
 import StockDashboard from '@/components/stock/StockDashboard';
 import StockMovements from '@/components/stock/StockMovements';
 import StockOpnameRecap from '@/components/stock/StockOpnameRecap';
+import SelisihStokOpname from '@/components/stock/SelisihStokOpname';
 import StockSyncNotification from '@/components/stock/StockSyncNotification';
 
 const StockManagementPage = () => {
@@ -24,7 +25,7 @@ const StockManagementPage = () => {
         <StockSyncNotification />
         
         <Tabs defaultValue="dashboard" className="space-y-4">
-          <TabsList className="grid w-full grid-cols-5">
+          <TabsList className="grid w-full grid-cols-6">
             <TabsTrigger value="dashboard" className="flex items-center gap-2">
               <TrendingUp className="h-4 w-4" />
               Dashboard
@@ -44,6 +45,10 @@ const StockManagementPage = () => {
             <TabsTrigger value="opname-recap" className="flex items-center gap-2">
               <BarChart3 className="h-4 w-4" />
               Rekap Opname
+            </TabsTrigger>
+            <TabsTrigger value="selisih-opname" className="flex items-center gap-2">
+              <AlertTriangle className="h-4 w-4" />
+              Selisih Opname
             </TabsTrigger>
           </TabsList>
 
@@ -68,6 +73,10 @@ const StockManagementPage = () => {
 
           <TabsContent value="opname-recap">
             <StockOpnameRecap />
+          </TabsContent>
+
+          <TabsContent value="selisih-opname">
+            <SelisihStokOpname />
           </TabsContent>
         </Tabs>
       </div>

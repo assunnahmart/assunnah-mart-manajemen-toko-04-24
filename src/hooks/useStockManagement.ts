@@ -1,4 +1,3 @@
-
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -31,7 +30,7 @@ export const useStockOpname = () => {
         .from('stok_opname')
         .select(`
           *,
-          barang_konsinyasi(nama, satuan),
+          barang_konsinyasi(nama, satuan, harga_beli),
           kasir(nama)
         `)
         .order('created_at', { ascending: false });
@@ -251,5 +250,83 @@ export const useStockSyncStatus = () => {
       };
     },
     refetchInterval: 5000, // Check sync status every 5 seconds
+  });
+};
+
+// Delete mutation function
+export const useDeleteStockMutation = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase
+        .from('mutasi_stok')
+        .delete()
+        .eq('id', id);
+      
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['stock_mutations'] });
+    },
+  });
+};
+
+// Edit mutation function
+export const useEditStockMutation = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async ({ id, keterangan }: { id: string; keterangan: string }) => {
+      const { error } = await supabase
+        .from('mutasi_stok')
+        .update({ keterangan })
+        .eq('id', id);
+      
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['stock_mutations'] });
+    },
+  });
+};
+
+// Delete stock opname function
+export const useDeleteStockOpname = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase
+        .from('stok_opname')
+        .delete()
+        .eq('id', id);
+      
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['stock_opname'] });
+      queryClient.invalidateQueries({ queryKey: ['stock_data'] });
+    },
+  });
+};
+
+// Edit stock opname function
+export const useEditStockOpname = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async ({ id, stok_fisik, keterangan }: { id: string; stok_fisik: number; keterangan?: string }) => {
+      const { error } = await supabase
+        .from('stok_opname')
+        .update({ stok_fisik, keterangan })
+        .eq('id', id);
+      
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['stock_opname'] });
+      queryClient.invalidateQueries({ queryKey: ['stock_data'] });
+    },
   });
 };

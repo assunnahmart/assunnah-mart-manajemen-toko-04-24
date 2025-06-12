@@ -22,9 +22,17 @@ export const useStockSyncMonitor = () => {
   });
 
   useEffect(() => {
+    const timestamp = Date.now();
+    const randomId = Math.random().toString(36).substr(2, 9);
+    
+    // Create unique channel names
+    const posChannelName = `pos_stock_sync_${timestamp}_${randomId}`;
+    const stockChannelName = `stock_mutations_sync_${timestamp}_${randomId}`;
+    const inventoryChannelName = `inventory_sync_${timestamp}_${randomId}`;
+
     // Monitor POS transactions for immediate stock sync
     const posChannel = supabase
-      .channel('pos_stock_sync')
+      .channel(posChannelName)
       .on(
         'postgres_changes',
         {
@@ -72,7 +80,7 @@ export const useStockSyncMonitor = () => {
 
     // Monitor stock mutations for real-time updates
     const stockChannel = supabase
-      .channel('stock_mutations_sync')
+      .channel(stockChannelName)
       .on(
         'postgres_changes',
         {
@@ -97,7 +105,7 @@ export const useStockSyncMonitor = () => {
 
     // Monitor barang_konsinyasi changes
     const inventoryChannel = supabase
-      .channel('inventory_sync')
+      .channel(inventoryChannelName)
       .on(
         'postgres_changes',
         {

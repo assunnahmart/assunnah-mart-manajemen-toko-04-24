@@ -10,8 +10,9 @@ export const useStockSync = () => {
 
   useEffect(() => {
     let stockChannel: any = null;
+    const channelId = `stock-changes-${Date.now()}-${Math.random()}`;
 
-    // Listen for POS transaction completion events
+    // Listen for the custom POS transaction event
     const handlePOSTransaction = async (event: CustomEvent) => {
       const { transaction, items } = event.detail;
       
@@ -38,7 +39,7 @@ export const useStockSync = () => {
     // Setup real-time subscription for stock changes
     const setupRealTimeSync = () => {
       stockChannel = supabase
-        .channel('stock-changes-' + Date.now()) // Use unique channel name
+        .channel(channelId)
         .on(
           'postgres_changes',
           {

@@ -9,9 +9,19 @@ export const useAutoJournalEntries = () => {
   const { toast } = useToast();
 
   useEffect(() => {
+    const timestamp = Date.now();
+    const randomId = Math.random().toString(36).substr(2, 9);
+    
+    // Create unique channel names
+    const posChannelName = `pos_transaction_changes_${timestamp}_${randomId}`;
+    const purchaseChannelName = `purchase_transaction_changes_${timestamp}_${randomId}`;
+    const salesChannelName = `sales_transaction_changes_${timestamp}_${randomId}`;
+    const kasChannelName = `kas_transaction_changes_${timestamp}_${randomId}`;
+    const stockOpnameChannelName = `stock_opname_changes_${timestamp}_${randomId}`;
+
     // Listen for POS transaction changes
     const posChannel = supabase
-      .channel('pos_transaction_changes')
+      .channel(posChannelName)
       .on(
         'postgres_changes',
         {
@@ -31,7 +41,7 @@ export const useAutoJournalEntries = () => {
 
     // Listen for purchase transaction changes
     const purchaseChannel = supabase
-      .channel('purchase_transaction_changes')
+      .channel(purchaseChannelName)
       .on(
         'postgres_changes',
         {
@@ -50,7 +60,7 @@ export const useAutoJournalEntries = () => {
 
     // Listen for sales transaction changes
     const salesChannel = supabase
-      .channel('sales_transaction_changes')
+      .channel(salesChannelName)
       .on(
         'postgres_changes',
         {
@@ -69,7 +79,7 @@ export const useAutoJournalEntries = () => {
 
     // Listen for kas umum transaction changes
     const kasChannel = supabase
-      .channel('kas_transaction_changes')
+      .channel(kasChannelName)
       .on(
         'postgres_changes',
         {
@@ -88,7 +98,7 @@ export const useAutoJournalEntries = () => {
 
     // Listen for stock opname changes
     const stockOpnameChannel = supabase
-      .channel('stock_opname_changes')
+      .channel(stockOpnameChannelName)
       .on(
         'postgres_changes',
         {

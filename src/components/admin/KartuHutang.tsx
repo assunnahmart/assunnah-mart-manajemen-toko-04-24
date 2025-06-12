@@ -5,13 +5,17 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { Search, Plus, FileText, Calendar, DollarSign, User, Building2 } from 'lucide-react';
+import { Search, Plus, FileText, Calendar, DollarSign, User, Building2, TrendingUp, CreditCard } from 'lucide-react';
 import { usePelangganKredit } from '@/hooks/usePelanggan';
+import { usePiutangPelanggan, useTodayCreditSales, useKasUmumSummary } from '@/hooks/usePiutang';
 
 const KartuHutang = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCustomer, setSelectedCustomer] = useState(null);
   const { data: pelangganKredit } = usePelangganKredit();
+  const { data: piutangData } = usePiutangPelanggan();
+  const { data: creditSales } = useTodayCreditSales();
+  const { data: kasUmumData } = useKasUmumSummary();
 
   // Combine both unit and perorangan customers
   const allCustomers = [
@@ -27,11 +31,77 @@ const KartuHutang = () => {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold">Kartu Hutang Pelanggan</h1>
+        <div>
+          <h1 className="text-3xl font-bold">Kartu Hutang Pelanggan</h1>
+          <p className="text-gray-600">Kelola piutang pelanggan terintegrasi dengan POS dan Kas Umum</p>
+        </div>
         <Button className="bg-blue-600 hover:bg-blue-700">
           <Plus className="h-4 w-4 mr-2" />
           Buat Kartu Baru
         </Button>
+      </div>
+
+      {/* Summary Cards - Sync with POS and Kas Umum */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Piutang</CardTitle>
+            <DollarSign className="h-4 w-4 text-red-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-red-600">
+              Rp {(piutangData?.totalPiutang || 0).toLocaleString('id-ID')}
+            </div>
+            <p className="text-xs text-gray-500 mt-1">
+              {piutangData?.totalCreditCustomers || 0} pelanggan kredit
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Kredit Hari Ini</CardTitle>
+            <CreditCard className="h-4 w-4 text-orange-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-orange-600">
+              Rp {(creditSales?.totalCreditSales || 0).toLocaleString('id-ID')}
+            </div>
+            <p className="text-xs text-gray-500 mt-1">
+              {creditSales?.totalCreditTransactions || 0} transaksi kredit
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Kas Masuk Hari Ini</CardTitle>
+            <TrendingUp className="h-4 w-4 text-green-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-green-600">
+              Rp {(kasUmumData?.kasMasuk || 0).toLocaleString('id-ID')}
+            </div>
+            <p className="text-xs text-gray-500 mt-1">
+              Saldo: Rp {(kasUmumData?.saldoKas || 0).toLocaleString('id-ID')}
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Unit vs Perorangan</CardTitle>
+            <Building2 className="h-4 w-4 text-blue-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-lg font-bold text-blue-600">
+              {(piutangData?.pelangganUnit?.length || 0)} : {(piutangData?.pelangganPerorangan?.length || 0)}
+            </div>
+            <p className="text-xs text-gray-500 mt-1">
+              Unit : Perorangan
+            </p>
+          </CardContent>
+        </Card>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -71,15 +141,20 @@ const KartuHutang = () => {
                   <div className="text-sm text-gray-500">{customer.telepon || 'No phone'}</div>
                   <div className="flex justify-between items-center mt-1">
                     <Badge variant={(customer.total_tagihan || customer.sisa_piutang) > 0 ? 'destructive' : 'default'}>
-                      Rp {((customer.total_tagihan || 0) + (customer.sisa_piutang || 0)).toLocaleString()}
+                      Rp {((customer.total_tagihan || 0) + (customer.sisa_piutang || 0)).toLocaleString('id-ID')}
                     </Badge>
                     <Badge variant="outline">
-                      Limit: Rp {(customer.limit_kredit || 0).toLocaleString()}
+                      Limit: Rp {(customer.limit_kredit || 0).toLocaleString('id-ID')}
                     </Badge>
                   </div>
                 </div>
               ))}
             </div>
+            {filteredCustomers.length === 0 && (
+              <div className="text-center py-4 text-gray-500">
+                {searchTerm ? 'Tidak ada pelanggan yang ditemukan' : 'Belum ada data pelanggan'}
+              </div>
+            )}
           </CardContent>
         </Card>
 
@@ -125,7 +200,7 @@ const KartuHutang = () => {
                         <div>
                           <div className="text-sm text-gray-600">Total Hutang</div>
                           <div className="font-bold text-red-600">
-                            Rp {((selectedCustomer.total_tagihan || 0) + (selectedCustomer.sisa_piutang || 0)).toLocaleString()}
+                            Rp {((selectedCustomer.total_tagihan || 0) + (selectedCustomer.sisa_piutang || 0)).toLocaleString('id-ID')}
                           </div>
                         </div>
                       </div>
@@ -139,7 +214,7 @@ const KartuHutang = () => {
                         <div>
                           <div className="text-sm text-gray-600">Limit Kredit</div>
                           <div className="font-bold text-blue-600">
-                            Rp {(selectedCustomer.limit_kredit || 0).toLocaleString()}
+                            Rp {(selectedCustomer.limit_kredit || 0).toLocaleString('id-ID')}
                           </div>
                         </div>
                       </div>
@@ -167,6 +242,16 @@ const KartuHutang = () => {
                   <div className="font-medium">{selectedCustomer.alamat || '-'}</div>
                 </div>
 
+                {/* Sync Info */}
+                <div className="bg-blue-50 p-4 rounded-lg">
+                  <h4 className="font-medium text-blue-900 mb-2">Sinkronisasi Data</h4>
+                  <div className="text-sm text-blue-700 space-y-1">
+                    <p>• Data tersinkron dengan sistem POS real-time</p>
+                    <p>• Transaksi kredit otomatis masuk ke kas umum</p>
+                    <p>• Update otomatis setiap 30 detik</p>
+                  </div>
+                </div>
+
                 {/* Aksi */}
                 <div className="flex gap-2">
                   <Button variant="outline">
@@ -177,11 +262,17 @@ const KartuHutang = () => {
                     <Calendar className="h-4 w-4 mr-2" />
                     Riwayat Transaksi
                   </Button>
+                  <Button>
+                    <DollarSign className="h-4 w-4 mr-2" />
+                    Bayar Hutang
+                  </Button>
                 </div>
               </div>
             ) : (
               <div className="text-center text-gray-500 py-8">
-                Pilih pelanggan dari daftar untuk melihat kartu hutang
+                <User className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+                <p>Pilih pelanggan dari daftar untuk melihat kartu hutang</p>
+                <p className="text-sm mt-2">Data akan tersinkron otomatis dengan POS dan Kas Umum</p>
               </div>
             )}
           </CardContent>

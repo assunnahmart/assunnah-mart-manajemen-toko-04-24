@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -23,7 +24,7 @@ const KasirManagement = () => {
     shift: ""
   });
 
-  const { data: kasirData } = useKasir();
+  const { data: kasirData, isLoading } = useKasir();
   const createKasir = useCreateKasir();
   const updateKasir = useUpdateKasir();
   const deleteKasir = useDeleteKasir();
@@ -42,6 +43,15 @@ const KasirManagement = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!formData.nama.trim()) {
+      toast({
+        title: "Error",
+        description: "Nama kasir harus diisi",
+        variant: "destructive",
+      });
+      return;
+    }
     
     try {
       if (editingKasir) {
@@ -63,10 +73,11 @@ const KasirManagement = () => {
       
       setIsDialogOpen(false);
       resetForm();
-    } catch (error) {
+    } catch (error: any) {
+      console.error('Error saving kasir:', error);
       toast({
         title: "Error",
-        description: "Terjadi kesalahan saat menyimpan data",
+        description: error.message || "Terjadi kesalahan saat menyimpan data",
         variant: "destructive",
       });
     }
@@ -75,27 +86,28 @@ const KasirManagement = () => {
   const handleEdit = (kasir: any) => {
     setEditingKasir(kasir);
     setFormData({
-      nama: kasir.nama,
+      nama: kasir.nama || "",
       email: kasir.email || "",
       telepon: kasir.telepon || "",
-      status: kasir.status,
+      status: kasir.status || "aktif",
       shift: kasir.shift || ""
     });
     setIsDialogOpen(true);
   };
 
-  const handleDelete = async (id: string) => {
-    if (confirm("Apakah Anda yakin ingin menghapus kasir ini?")) {
+  const handleDelete = async (id: string, nama: string) => {
+    if (confirm(`Apakah Anda yakin ingin menghapus kasir "${nama}"?`)) {
       try {
         await deleteKasir.mutateAsync(id);
         toast({
           title: "Berhasil",
           description: "Kasir berhasil dihapus",
         });
-      } catch (error) {
+      } catch (error: any) {
+        console.error('Error deleting kasir:', error);
         toast({
           title: "Error",
-          description: "Terjadi kesalahan saat menghapus kasir",
+          description: error.message || "Terjadi kesalahan saat menghapus kasir",
           variant: "destructive",
         });
       }
@@ -121,8 +133,8 @@ const KasirManagement = () => {
         <div className="flex justify-between items-start">
           <div className="flex-1">
             <h3 className="font-semibold">{kasir.nama}</h3>
-            <p className="text-sm text-gray-500">{kasir.email}</p>
-            <p className="text-sm text-gray-500">{kasir.telepon}</p>
+            <p className="text-sm text-gray-500">{kasir.email || 'No email'}</p>
+            <p className="text-sm text-gray-500">{kasir.telepon || 'No phone'}</p>
           </div>
           <Badge variant={getStatusColor(kasir.status) as any}>
             {kasir.status}
@@ -142,7 +154,7 @@ const KasirManagement = () => {
           <Button 
             size="sm" 
             variant="outline" 
-            onClick={() => handleDelete(kasir.id)}
+            onClick={() => handleDelete(kasir.id, kasir.nama)}
             className="flex-1 text-red-600 hover:text-red-700"
           >
             <Trash2 className="h-3 w-3 mr-1" />
@@ -152,6 +164,21 @@ const KasirManagement = () => {
       </div>
     </Card>
   );
+
+  if (isLoading) {
+    return (
+      <NewProtectedRoute requiredRole="admin">
+        <div className="min-h-screen bg-gray-50">
+          <NewNavbar />
+          <div className="p-6">
+            <div className="mx-auto max-w-7xl">
+              <p>Loading...</p>
+            </div>
+          </div>
+        </div>
+      </NewProtectedRoute>
+    );
+  }
 
   return (
     <NewProtectedRoute requiredRole="admin">
@@ -183,12 +210,13 @@ const KasirManagement = () => {
                   </DialogHeader>
                   <form onSubmit={handleSubmit} className="space-y-4">
                     <div>
-                      <Label htmlFor="nama">Nama Lengkap</Label>
+                      <Label htmlFor="nama">Nama Lengkap *</Label>
                       <Input
                         id="nama"
                         value={formData.nama}
                         onChange={(e) => setFormData(prev => ({ ...prev, nama: e.target.value }))}
                         required
+                        placeholder="Masukkan nama lengkap"
                       />
                     </div>
                     <div>
@@ -198,6 +226,7 @@ const KasirManagement = () => {
                         type="email"
                         value={formData.email}
                         onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
+                        placeholder="Masukkan email"
                       />
                     </div>
                     <div>
@@ -206,6 +235,7 @@ const KasirManagement = () => {
                         id="telepon"
                         value={formData.telepon}
                         onChange={(e) => setFormData(prev => ({ ...prev, telepon: e.target.value }))}
+                        placeholder="Masukkan nomor telepon"
                       />
                     </div>
                     <div>
@@ -240,7 +270,11 @@ const KasirManagement = () => {
                       </Select>
                     </div>
                     <div className="flex gap-2 pt-4">
-                      <Button type="submit" className="flex-1">
+                      <Button 
+                        type="submit" 
+                        className="flex-1"
+                        disabled={createKasir.isPending || updateKasir.isPending}
+                      >
                         {editingKasir ? 'Update Kasir' : 'Tambah Kasir'}
                       </Button>
                       <Button 

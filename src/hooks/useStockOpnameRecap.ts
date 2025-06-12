@@ -47,6 +47,7 @@ export const useStockOpnameRecap = (dateFrom?: string, dateTo?: string) => {
     },
     retry: 2,
     staleTime: 5 * 60 * 1000, // 5 minutes
+    refetchInterval: 30000, // Refresh every 30 seconds for real-time updates
   });
 };
 
@@ -75,5 +76,49 @@ export const useStockOpnameRecapView = () => {
     },
     retry: 2,
     staleTime: 5 * 60 * 1000, // 5 minutes
+    refetchInterval: 30000, // Refresh every 30 seconds
+  });
+};
+
+// New hook for real-time stock opname monitoring
+export const useStockOpnameRealTime = () => {
+  return useQuery({
+    queryKey: ['stock_opname_realtime'],
+    queryFn: async () => {
+      const today = new Date().toISOString().split('T')[0];
+      
+      // Get today's stock opname entries
+      const { data: opnameData, error: opnameError } = await supabase
+        .from('stok_opname')
+        .select(`
+          *,
+          barang_konsinyasi(nama, satuan, stok_saat_ini),
+          kasir(nama)
+        `)
+        .eq('tanggal_opname', today)
+        .eq('status', 'approved')
+        .order('created_at', { ascending: false });
+      
+      if (opnameError) {
+        console.error('Error fetching stock opname data:', opnameError);
+        throw opnameError;
+      }
+      
+      // Calculate summary
+      const totalItems = opnameData?.length || 0;
+      const totalVariance = opnameData?.reduce((sum, item) => sum + Math.abs(item.selisih || 0), 0) || 0;
+      const itemsWithVariance = opnameData?.filter(item => (item.selisih || 0) !== 0).length || 0;
+      
+      return {
+        todayOpname: opnameData || [],
+        summary: {
+          totalItems,
+          totalVariance,
+          itemsWithVariance,
+          accuracyRate: totalItems > 0 ? ((totalItems - itemsWithVariance) / totalItems * 100).toFixed(1) : '100'
+        }
+      };
+    },
+    refetchInterval: 10000, // Refresh every 10 seconds for real-time monitoring
   });
 };

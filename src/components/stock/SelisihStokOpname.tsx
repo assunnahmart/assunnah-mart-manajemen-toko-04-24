@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { AlertTriangle, RefreshCw, TrendingUp, TrendingDown, Minus } from 'lucide-react';
+import { AlertTriangle, RefreshCw, TrendingUp, TrendingDown, Minus, DollarSign } from 'lucide-react';
 import { useStockOpnameRecap } from '@/hooks/useStockOpnameRecap';
 import { format } from 'date-fns';
 
@@ -32,12 +32,17 @@ const SelisihStokOpname = () => {
   };
 
   const getVarianceStats = () => {
-    if (!recapData) return { positive: 0, negative: 0, zero: 0, totalItems: 0, totalVariance: 0 };
+    if (!recapData) return { positive: 0, negative: 0, zero: 0, totalItems: 0, totalVariance: 0, totalVarianceValue: 0 };
     
     return recapData.reduce(
       (acc, item) => {
         acc.totalItems++;
         acc.totalVariance += Math.abs(item.selisih_stok);
+        
+        // Calculate variance value based on purchase price
+        const hargaBeli = item.harga_beli || 0;
+        const varianceValue = Math.abs(item.selisih_stok) * hargaBeli;
+        acc.totalVarianceValue += varianceValue;
         
         if (item.selisih_stok > 0) acc.positive++;
         else if (item.selisih_stok < 0) acc.negative++;
@@ -45,8 +50,12 @@ const SelisihStokOpname = () => {
         
         return acc;
       },
-      { positive: 0, negative: 0, zero: 0, totalItems: 0, totalVariance: 0 }
+      { positive: 0, negative: 0, zero: 0, totalItems: 0, totalVariance: 0, totalVarianceValue: 0 }
     );
+  };
+
+  const calculateVarianceValue = (selisih: number, hargaBeli: number) => {
+    return Math.abs(selisih) * (hargaBeli || 0);
   };
 
   const stats = getVarianceStats();
@@ -143,7 +152,7 @@ const SelisihStokOpname = () => {
       </Card>
 
       {/* Summary Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-gray-600">Total Produk</CardTitle>
@@ -202,6 +211,20 @@ const SelisihStokOpname = () => {
             </div>
           </CardContent>
         </Card>
+
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-gray-600">Nilai Selisih</CardTitle>
+          </CardHeader>
+          <CardContent className="pt-0">
+            <div className="flex items-center gap-2">
+              <DollarSign className="h-5 w-5 text-red-500" />
+              <span className="text-xl font-bold text-red-600">
+                Rp {stats.totalVarianceValue.toLocaleString('id-ID')}
+              </span>
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Tabel Selisih */}
@@ -227,52 +250,69 @@ const SelisihStokOpname = () => {
                   <TableRow>
                     <TableHead>Produk</TableHead>
                     <TableHead>Satuan</TableHead>
+                    <TableHead>Harga Beli</TableHead>
                     <TableHead>Stok Sistem</TableHead>
                     <TableHead>Stok Real</TableHead>
                     <TableHead>Selisih</TableHead>
+                    <TableHead>Nilai Selisih</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead>Pengguna Input</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {recapData?.map((item) => (
-                    <TableRow key={item.barang_id}>
-                      <TableCell className="font-medium">
-                        {item.nama_barang}
-                      </TableCell>
-                      <TableCell>{item.satuan}</TableCell>
-                      <TableCell>
-                        <span className="font-medium text-blue-600">
-                          {item.stok_sistem}
-                        </span>
-                      </TableCell>
-                      <TableCell>
-                        <span className="font-medium text-green-600">
-                          {item.real_stok_total}
-                        </span>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          {getVarianceIcon(item.selisih_stok)}
-                          <span className={`font-medium ${
-                            item.selisih_stok > 0 ? 'text-yellow-600' : 
-                            item.selisih_stok < 0 ? 'text-red-600' : 'text-green-600'
-                          }`}>
-                            {item.selisih_stok > 0 ? '+' : ''}{item.selisih_stok}
+                  {recapData?.map((item) => {
+                    const varianceValue = calculateVarianceValue(item.selisih_stok, item.harga_beli || 0);
+                    return (
+                      <TableRow key={item.barang_id}>
+                        <TableCell className="font-medium">
+                          {item.nama_barang}
+                        </TableCell>
+                        <TableCell>{item.satuan}</TableCell>
+                        <TableCell>
+                          <span className="text-sm text-gray-600">
+                            Rp {(item.harga_beli || 0).toLocaleString('id-ID')}
                           </span>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        {getVarianceBadge(item.selisih_stok)}
-                      </TableCell>
-                      <TableCell>
-                        <div className="text-center">
-                          <span className="font-medium">{item.jumlah_pengguna_input}</span>
-                          <span className="text-sm text-gray-500 ml-1">user</span>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                        </TableCell>
+                        <TableCell>
+                          <span className="font-medium text-blue-600">
+                            {item.stok_sistem}
+                          </span>
+                        </TableCell>
+                        <TableCell>
+                          <span className="font-medium text-green-600">
+                            {item.real_stok_total}
+                          </span>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            {getVarianceIcon(item.selisih_stok)}
+                            <span className={`font-medium ${
+                              item.selisih_stok > 0 ? 'text-yellow-600' : 
+                              item.selisih_stok < 0 ? 'text-red-600' : 'text-green-600'
+                            }`}>
+                              {item.selisih_stok > 0 ? '+' : ''}{item.selisih_stok}
+                            </span>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <span className={`font-medium ${
+                            varianceValue > 0 ? 'text-red-600' : 'text-green-600'
+                          }`}>
+                            Rp {varianceValue.toLocaleString('id-ID')}
+                          </span>
+                        </TableCell>
+                        <TableCell>
+                          {getVarianceBadge(item.selisih_stok)}
+                        </TableCell>
+                        <TableCell>
+                          <div className="text-center">
+                            <span className="font-medium">{item.jumlah_pengguna_input}</span>
+                            <span className="text-sm text-gray-500 ml-1">user</span>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
                 </TableBody>
               </Table>
             </div>

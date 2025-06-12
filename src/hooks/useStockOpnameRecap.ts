@@ -25,6 +25,7 @@ export const useStockOpnameRecap = (dateFrom: string, dateTo: string) => {
     queryFn: async (): Promise<StockOpnameRecapItem[]> => {
       console.log('Fetching stock opname recap for period:', { dateFrom, dateTo });
       
+      // Get recap data with product details including price information
       const { data, error } = await supabase
         .from('stock_opname_recap')
         .select(`
@@ -43,18 +44,40 @@ export const useStockOpnameRecap = (dateFrom: string, dateTo: string) => {
         throw error;
       }
       
-      // Transform the data to match our interface
-      const transformedData: StockOpnameRecapItem[] = (data || []).map(item => ({
-        ...item,
-        detail_input_pengguna: Array.isArray(item.detail_input_pengguna) 
-          ? item.detail_input_pengguna as Array<{
-              nama_kasir: string;
-              stok_fisik: number;
-              tanggal_opname: string;
-              keterangan?: string;
-            }>
-          : []
-      }));
+      // Get product price information separately
+      const { data: productPrices, error: priceError } = await supabase
+        .from('barang_konsinyasi')
+        .select('id, harga_jual, harga_beli');
+      
+      if (priceError) {
+        console.error('Error fetching product prices:', priceError);
+      }
+      
+      // Create price lookup map
+      const priceMap = new Map();
+      productPrices?.forEach(product => {
+        priceMap.set(product.id, {
+          harga_jual: product.harga_jual || 0,
+          harga_beli: product.harga_beli || 0
+        });
+      });
+      
+      // Transform the data to match our interface with price information
+      const transformedData: StockOpnameRecapItem[] = (data || []).map(item => {
+        const prices = priceMap.get(item.barang_id) || { harga_jual: 0, harga_beli: 0 };
+        return {
+          ...item,
+          harga_beli: prices.harga_beli,
+          detail_input_pengguna: Array.isArray(item.detail_input_pengguna) 
+            ? item.detail_input_pengguna as Array<{
+                nama_kasir: string;
+                stok_fisik: number;
+                tanggal_opname: string;
+                keterangan?: string;
+              }>
+            : []
+        };
+      });
       
       return transformedData;
     },

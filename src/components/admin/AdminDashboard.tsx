@@ -1,31 +1,32 @@
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Users, CreditCard, Building2, DollarSign, TrendingUp, Database } from 'lucide-react';
+import { Users, CreditCard, Truck, TrendingUp, Database, Package } from 'lucide-react';
 import PelangganManagement from './PelangganManagement';
-import KartuHutang from './KartuHutang';
 import SupplierManagement from './SupplierManagement';
+import KartuHutang from './KartuHutang';
 import KasUmum from './KasUmum';
 import LabaRugi from './LabaRugi';
 import DataManagement from './DataManagement';
+import ProductDataManagement from './ProductDataManagement';
 
 const AdminDashboard = () => {
   return (
     <Tabs defaultValue="pelanggan" className="space-y-4">
-      <TabsList className="grid w-full grid-cols-6">
+      <TabsList className="grid w-full grid-cols-7">
         <TabsTrigger value="pelanggan" className="flex items-center gap-2">
           <Users className="h-4 w-4" />
           Pelanggan
         </TabsTrigger>
-        <TabsTrigger value="piutang" className="flex items-center gap-2">
-          <CreditCard className="h-4 w-4" />
-          Piutang
-        </TabsTrigger>
         <TabsTrigger value="supplier" className="flex items-center gap-2">
-          <Building2 className="h-4 w-4" />
+          <Truck className="h-4 w-4" />
           Supplier
         </TabsTrigger>
+        <TabsTrigger value="hutang" className="flex items-center gap-2">
+          <CreditCard className="h-4 w-4" />
+          Kartu Hutang
+        </TabsTrigger>
         <TabsTrigger value="kas-umum" className="flex items-center gap-2">
-          <DollarSign className="h-4 w-4" />
+          <CreditCard className="h-4 w-4" />
           Kas Umum
         </TabsTrigger>
         <TabsTrigger value="laba-rugi" className="flex items-center gap-2">
@@ -34,7 +35,11 @@ const AdminDashboard = () => {
         </TabsTrigger>
         <TabsTrigger value="data-management" className="flex items-center gap-2">
           <Database className="h-4 w-4" />
-          Data Management
+          Data
+        </TabsTrigger>
+        <TabsTrigger value="product-management" className="flex items-center gap-2">
+          <Package className="h-4 w-4" />
+          Produk
         </TabsTrigger>
       </TabsList>
 
@@ -42,12 +47,12 @@ const AdminDashboard = () => {
         <PelangganManagement />
       </TabsContent>
 
-      <TabsContent value="piutang">
-        <KartuHutang />
-      </TabsContent>
-
       <TabsContent value="supplier">
         <SupplierManagement />
+      </TabsContent>
+
+      <TabsContent value="hutang">
+        <KartuHutang />
       </TabsContent>
 
       <TabsContent value="kas-umum">
@@ -60,6 +65,10 @@ const AdminDashboard = () => {
 
       <TabsContent value="data-management">
         <DataManagement />
+      </TabsContent>
+
+      <TabsContent value="product-management">
+        <ProductDataManagement />
       </TabsContent>
     </Tabs>
   );

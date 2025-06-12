@@ -32,9 +32,10 @@ const StockOpnameHistory = () => {
     return opnameHistory
       .filter(item => item.status === 'approved')
       .reduce((total, item) => {
+        // Access harga_beli from the joined barang_konsinyasi data
         const hargaBeli = item.barang_konsinyasi?.harga_beli || 0;
         const realStok = item.stok_fisik || 0;
-        return total + (hargaBeli * realStok);
+        return total + (Number(hargaBeli) * realStok);
       }, 0);
   };
 
@@ -136,7 +137,7 @@ const StockOpnameHistory = () => {
               <TableBody>
                 {opnameHistory?.map((item) => {
                   const selisih = (item.stok_fisik || 0) - (item.stok_sistem || 0);
-                  const hargaBeli = item.barang_konsinyasi?.harga_beli || 0;
+                  const hargaBeli = Number(item.barang_konsinyasi?.harga_beli || 0);
                   const nilaiRealStok = hargaBeli * (item.stok_fisik || 0);
                   
                   return (
@@ -218,13 +219,13 @@ const StockOpnameHistory = () => {
                                   <div>
                                     <label className="text-sm font-medium">Harga Beli</label>
                                     <p className="text-gray-700">
-                                      Rp {(selectedOpname.barang_konsinyasi?.harga_beli || 0).toLocaleString('id-ID')}
+                                      Rp {Number(selectedOpname.barang_konsinyasi?.harga_beli || 0).toLocaleString('id-ID')}
                                     </p>
                                   </div>
                                   <div>
                                     <label className="text-sm font-medium">Nilai Real Stok</label>
                                     <p className="text-green-700 font-bold">
-                                      Rp {((selectedOpname.barang_konsinyasi?.harga_beli || 0) * selectedOpname.stok_fisik).toLocaleString('id-ID')}
+                                      Rp {(Number(selectedOpname.barang_konsinyasi?.harga_beli || 0) * selectedOpname.stok_fisik).toLocaleString('id-ID')}
                                     </p>
                                   </div>
                                 </div>

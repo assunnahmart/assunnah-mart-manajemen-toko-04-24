@@ -9,6 +9,8 @@ export const useStockSync = () => {
   const { syncStock } = usePOSTransactionSync();
 
   useEffect(() => {
+    let stockChannel: any = null;
+
     // Listen for POS transaction completion events
     const handlePOSTransaction = async (event: CustomEvent) => {
       const { transaction, items } = event.detail;
@@ -32,48 +34,55 @@ export const useStockSync = () => {
       }
     };
 
+    // Setup real-time subscription for stock changes
+    const setupRealTimeSync = () => {
+      stockChannel = supabase
+        .channel('stock-changes-' + Date.now()) // Use unique channel name
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'barang_konsinyasi'
+          },
+          (payload) => {
+            console.log('Stock sync: Real-time stock change detected', payload);
+            
+            // Invalidate stock queries to refresh data
+            queryClient.invalidateQueries({ queryKey: ['stock_data'] });
+            queryClient.invalidateQueries({ queryKey: ['barang_konsinyasi'] });
+            queryClient.invalidateQueries({ queryKey: ['barang-konsinyasi'] });
+            queryClient.invalidateQueries({ queryKey: ['low_stock_products'] });
+          }
+        )
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'mutasi_stok'
+          },
+          (payload) => {
+            console.log('Stock sync: Real-time stock mutation detected', payload);
+            
+            // Invalidate mutation queries
+            queryClient.invalidateQueries({ queryKey: ['stock_mutations'] });
+          }
+        )
+        .subscribe();
+    };
+
     // Listen for the custom POS transaction event
     window.addEventListener('pos-transaction-complete', handlePOSTransaction as EventListener);
-
-    // Setup real-time subscription for stock changes
-    const stockChannel = supabase
-      .channel('stock-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'barang_konsinyasi'
-        },
-        (payload) => {
-          console.log('Stock sync: Real-time stock change detected', payload);
-          
-          // Invalidate stock queries to refresh data
-          queryClient.invalidateQueries({ queryKey: ['stock_data'] });
-          queryClient.invalidateQueries({ queryKey: ['barang_konsinyasi'] });
-          queryClient.invalidateQueries({ queryKey: ['barang-konsinyasi'] });
-          queryClient.invalidateQueries({ queryKey: ['low_stock_products'] });
-        }
-      )
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'mutasi_stok'
-        },
-        (payload) => {
-          console.log('Stock sync: Real-time stock mutation detected', payload);
-          
-          // Invalidate mutation queries
-          queryClient.invalidateQueries({ queryKey: ['stock_mutations'] });
-        }
-      )
-      .subscribe();
+    
+    // Setup real-time sync
+    setupRealTimeSync();
 
     return () => {
       window.removeEventListener('pos-transaction-complete', handlePOSTransaction as EventListener);
-      supabase.removeChannel(stockChannel);
+      if (stockChannel) {
+        supabase.removeChannel(stockChannel);
+      }
     };
   }, [queryClient, syncStock]);
 

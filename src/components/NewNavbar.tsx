@@ -1,6 +1,7 @@
+
 import { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { Menu, X, LogOut, User, Store, Package, ShoppingCart, Calculator, CreditCard, TrendingUp, Users, Settings } from 'lucide-react';
+import { Menu, X, LogOut, User, Store, Package, ShoppingCart, Calculator, CreditCard, TrendingUp, Users, Settings, Package2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useSimpleAuth } from '@/hooks/useSimpleAuth';
 import { useToast } from '@/hooks/use-toast';
@@ -36,12 +37,7 @@ const NewNavbar = () => {
     { path: '/kas-umum', label: 'Kas Umum', icon: CreditCard },
     { path: '/admin', label: 'Admin Panel', icon: Settings },
     { path: '/kasir-management', label: 'Kasir Management', icon: Users },
-    {
-      label: "New Stok",
-      href: "/new-stok",
-      icon: Package2,
-      badge: "NEW"
-    }
+    { path: '/new-stok', label: 'New Stok', icon: Package2, badge: 'NEW' }
   ];
 
   // Don't show navbar for kasir users
@@ -83,6 +79,11 @@ const NewNavbar = () => {
                   >
                     <item.icon className="h-3 w-3 mr-1" />
                     {item.label}
+                    {item.badge && (
+                      <span className="ml-1 px-1 py-0.5 text-xs bg-green-500 text-white rounded">
+                        {item.badge}
+                      </span>
+                    )}
                   </Link>
                 ))}
               </div>
@@ -135,6 +136,11 @@ const NewNavbar = () => {
               >
                 <item.icon className="h-5 w-5 mr-3" />
                 {item.label}
+                {item.badge && (
+                  <span className="ml-2 px-1 py-0.5 text-xs bg-green-500 text-white rounded">
+                    {item.badge}
+                  </span>
+                )}
               </Link>
             ))}
 

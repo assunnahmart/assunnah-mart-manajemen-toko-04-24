@@ -22,7 +22,7 @@ const NewStokOpnameInput = () => {
   
   const { data: stockData, isLoading: isLoadingStock } = useStockData();
   const { data: kasirData } = useKasir();
-  const { userData } = useSimpleAuth();
+  const { user } = useSimpleAuth();
   const createStockOpname = useCreateStockOpname();
   const { toast } = useToast();
 
@@ -33,8 +33,20 @@ const NewStokOpnameInput = () => {
 
   const selectedProductData = stockData?.find(p => p.id === selectedProduct);
 
+  // Get kasir ID from authenticated user or kasir data
+  const getKasirId = () => {
+    if (user?.role === 'kasir') {
+      return user.id;
+    }
+    // For admin users, we need to find their kasir record
+    const adminKasir = kasirData?.find(k => k.username === user?.username);
+    return adminKasir?.id;
+  };
+
   const handleSubmit = async () => {
-    if (!selectedProduct || !stokFisik || !userData?.kasir_id) {
+    const kasirId = getKasirId();
+    
+    if (!selectedProduct || !stokFisik || !kasirId) {
       toast({
         title: "Error",
         description: "Mohon lengkapi semua field yang diperlukan",
@@ -47,7 +59,7 @@ const NewStokOpnameInput = () => {
       await createStockOpname.mutateAsync({
         barang_id: selectedProduct,
         stok_fisik: parseInt(stokFisik),
-        kasir_id: userData.kasir_id,
+        kasir_id: kasirId,
         keterangan
       });
 

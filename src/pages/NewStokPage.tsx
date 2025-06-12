@@ -1,4 +1,3 @@
-
 import NewProtectedRoute from '@/components/NewProtectedRoute';
 import NewNavbar from '@/components/NewNavbar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -9,16 +8,14 @@ import NewStokSelisihAnalysis from '@/components/newstok/NewStokSelisihAnalysis'
 import NewStokRekapTerpadu from '@/components/newstok/NewStokRekapTerpadu';
 import NewStokReporting from '@/components/newstok/NewStokReporting';
 import NewStokAuditTrail from '@/components/newstok/NewStokAuditTrail';
-
 const NewStokPage = () => {
-  return (
-    <NewProtectedRoute>
+  return <NewProtectedRoute>
       <div className="min-h-screen bg-gray-50">
         <NewNavbar />
         
         <div className="container mx-auto p-4">
           <div className="mb-6">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">New Stok - Sistem Manajemen Stok Standar Nasional</h1>
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">New Stok - Sistem Manajemen Stok</h1>
             <p className="text-gray-600">
               Sistem perhitungan selisih stok sistem vs stok real dengan multiple user input untuk barang yang sama
             </p>
@@ -78,8 +75,6 @@ const NewStokPage = () => {
           </Tabs>
         </div>
       </div>
-    </NewProtectedRoute>
-  );
+    </NewProtectedRoute>;
 };
-
 export default NewStokPage;

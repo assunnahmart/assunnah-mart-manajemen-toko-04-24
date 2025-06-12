@@ -28,33 +28,54 @@ import {
   useIncomeStatement,
   useGenerateFinancialReports
 } from '@/hooks/useFinancialReports';
+import { useAutoJournalEntries } from '@/hooks/useAutoJournalEntries';
 import GeneralJournal from './GeneralJournal';
+import FinancialReportActions from './FinancialReportActions';
 
 const FinancialReports = () => {
   const [selectedPeriod, setSelectedPeriod] = useState<string>('');
   const { toast } = useToast();
   
+  // Initialize auto journal entries listener
+  useAutoJournalEntries();
+  
   const { data: periods } = useFinancialPeriods();
   const { data: currentPeriod } = useCurrentPeriod();
   const { data: summary } = useFinancialSummary(selectedPeriod || currentPeriod?.id);
-  const { data: trialBalance } = useTrialBalance(selectedPeriod || currentPeriod?.id || '');
-  const { data: balanceSheet } = useBalanceSheet(selectedPeriod || currentPeriod?.id || '');
-  const { data: incomeStatement } = useIncomeStatement(selectedPeriod || currentPeriod?.id || '');
+  const { data: trialBalance, refetch: refetchTrialBalance } = useTrialBalance(selectedPeriod || currentPeriod?.id || '');
+  const { data: balanceSheet, refetch: refetchBalanceSheet } = useBalanceSheet(selectedPeriod || currentPeriod?.id || '');
+  const { data: incomeStatement, refetch: refetchIncomeStatement } = useIncomeStatement(selectedPeriod || currentPeriod?.id || '');
   
   const generateReports = useGenerateFinancialReports();
 
   const activePeriod = selectedPeriod ? periods?.find(p => p.id === selectedPeriod) : currentPeriod;
 
   const handleGenerateReports = async () => {
-    if (!activePeriod?.id) return;
+    if (!activePeriod?.id) {
+      toast({
+        title: "Error",
+        description: "Pilih periode terlebih dahulu",
+        variant: "destructive"
+      });
+      return;
+    }
     
     try {
       await generateReports.mutateAsync(activePeriod.id);
+      
+      // Refetch all reports
+      await Promise.all([
+        refetchTrialBalance(),
+        refetchBalanceSheet(),
+        refetchIncomeStatement()
+      ]);
+      
       toast({
         title: "Berhasil",
         description: "Laporan keuangan berhasil dibuat",
       });
     } catch (error) {
+      console.error('Error generating reports:', error);
       toast({
         title: "Error",
         description: "Gagal membuat laporan keuangan",
@@ -77,7 +98,7 @@ const FinancialReports = () => {
         <div>
           <h3 className="text-lg font-semibold text-gray-900">Laporan Keuangan</h3>
           <p className="text-gray-600">
-            Kelola dan lihat laporan keuangan perusahaan
+            Kelola dan lihat laporan keuangan perusahaan dengan jurnal otomatis
           </p>
         </div>
         <Badge variant="outline" className="bg-blue-100 text-blue-800">
@@ -199,7 +220,7 @@ const FinancialReports = () => {
 
       {/* Financial Reports Tabs */}
       <Tabs defaultValue="journal" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-5">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="journal" className="flex items-center gap-2">
             <BookOpen className="h-4 w-4" />
             Jurnal Umum
@@ -215,94 +236,139 @@ const FinancialReports = () => {
 
         <TabsContent value="trial-balance">
           <Card>
-            <CardHeader>
+            <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle>Neraca Saldo</CardTitle>
+              {trialBalance && trialBalance.length > 0 && (
+                <FinancialReportActions
+                  reportType="Neraca Saldo"
+                  reportData={trialBalance}
+                  periodName={activePeriod?.name || ''}
+                />
+              )}
             </CardHeader>
             <CardContent>
-              <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Kode Akun</TableHead>
-                      <TableHead>Nama Akun</TableHead>
-                      <TableHead className="text-right">Debit</TableHead>
-                      <TableHead className="text-right">Kredit</TableHead>
-                      <TableHead className="text-right">Saldo</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {trialBalance?.map(item => (
-                      <TableRow key={item.id}>
-                        <TableCell className="font-mono">{item.chart_of_accounts?.kode_akun}</TableCell>
-                        <TableCell>{item.chart_of_accounts?.nama_akun}</TableCell>
-                        <TableCell className="text-right">{formatCurrency(item.debit_total || 0)}</TableCell>
-                        <TableCell className="text-right">{formatCurrency(item.credit_total || 0)}</TableCell>
-                        <TableCell className="text-right font-medium">{formatCurrency(item.ending_balance || 0)}</TableCell>
+              {!trialBalance || trialBalance.length === 0 ? (
+                <div className="text-center py-8">
+                  <p className="text-gray-500">
+                    Belum ada data neraca saldo. Klik "Generate Laporan" untuk membuat laporan.
+                  </p>
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Kode Akun</TableHead>
+                        <TableHead>Nama Akun</TableHead>
+                        <TableHead className="text-right">Debit</TableHead>
+                        <TableHead className="text-right">Kredit</TableHead>
+                        <TableHead className="text-right">Saldo</TableHead>
                       </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
+                    </TableHeader>
+                    <TableBody>
+                      {trialBalance.map(item => (
+                        <TableRow key={item.id}>
+                          <TableCell className="font-mono">{item.chart_of_accounts?.kode_akun}</TableCell>
+                          <TableCell>{item.chart_of_accounts?.nama_akun}</TableCell>
+                          <TableCell className="text-right">{formatCurrency(item.debit_total || 0)}</TableCell>
+                          <TableCell className="text-right">{formatCurrency(item.credit_total || 0)}</TableCell>
+                          <TableCell className="text-right font-medium">{formatCurrency(item.ending_balance || 0)}</TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
 
         <TabsContent value="income-statement">
           <Card>
-            <CardHeader>
+            <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle>Laporan Laba Rugi</CardTitle>
+              {incomeStatement && incomeStatement.length > 0 && (
+                <FinancialReportActions
+                  reportType="Laporan Laba Rugi"
+                  reportData={incomeStatement}
+                  periodName={activePeriod?.name || ''}
+                />
+              )}
             </CardHeader>
             <CardContent>
-              <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Jenis</TableHead>
-                      <TableHead>Nama Akun</TableHead>
-                      <TableHead className="text-right">Jumlah</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {incomeStatement?.map(item => (
-                      <TableRow key={item.id}>
-                        <TableCell className="capitalize">{item.account_type}</TableCell>
-                        <TableCell>{item.chart_of_accounts?.nama_akun}</TableCell>
-                        <TableCell className="text-right">{formatCurrency(item.amount || 0)}</TableCell>
+              {!incomeStatement || incomeStatement.length === 0 ? (
+                <div className="text-center py-8">
+                  <p className="text-gray-500">
+                    Belum ada data laporan laba rugi. Klik "Generate Laporan" untuk membuat laporan.
+                  </p>
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Jenis</TableHead>
+                        <TableHead>Nama Akun</TableHead>
+                        <TableHead className="text-right">Jumlah</TableHead>
                       </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
+                    </TableHeader>
+                    <TableBody>
+                      {incomeStatement.map(item => (
+                        <TableRow key={item.id}>
+                          <TableCell className="capitalize">{item.account_type}</TableCell>
+                          <TableCell>{item.chart_of_accounts?.nama_akun}</TableCell>
+                          <TableCell className="text-right">{formatCurrency(item.amount || 0)}</TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
 
         <TabsContent value="balance-sheet">
           <Card>
-            <CardHeader>
+            <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle>Neraca</CardTitle>
+              {balanceSheet && balanceSheet.length > 0 && (
+                <FinancialReportActions
+                  reportType="Neraca"
+                  reportData={balanceSheet}
+                  periodName={activePeriod?.name || ''}
+                />
+              )}
             </CardHeader>
             <CardContent>
-              <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Jenis</TableHead>
-                      <TableHead>Nama Akun</TableHead>
-                      <TableHead className="text-right">Jumlah</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {balanceSheet?.map(item => (
-                      <TableRow key={item.id}>
-                        <TableCell className="capitalize">{item.account_type}</TableCell>
-                        <TableCell>{item.chart_of_accounts?.nama_akun}</TableCell>
-                        <TableCell className="text-right">{formatCurrency(item.amount || 0)}</TableCell>
+              {!balanceSheet || balanceSheet.length === 0 ? (
+                <div className="text-center py-8">
+                  <p className="text-gray-500">
+                    Belum ada data neraca. Klik "Generate Laporan" untuk membuat laporan.
+                  </p>
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Jenis</TableHead>
+                        <TableHead>Nama Akun</TableHead>
+                        <TableHead className="text-right">Jumlah</TableHead>
                       </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
+                    </TableHeader>
+                    <TableBody>
+                      {balanceSheet.map(item => (
+                        <TableRow key={item.id}>
+                          <TableCell className="capitalize">{item.account_type}</TableCell>
+                          <TableCell>{item.chart_of_accounts?.nama_akun}</TableCell>
+                          <TableCell className="text-right">{formatCurrency(item.amount || 0)}</TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>

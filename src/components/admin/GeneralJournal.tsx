@@ -4,15 +4,15 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Plus, Save, Edit, Trash2, BookOpen } from 'lucide-react';
+import { Plus, Save, Trash2, BookOpen } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useChartOfAccounts } from '@/hooks/useChartOfAccounts';
 import { useGeneralLedger } from '@/hooks/useFinancialReports';
 import { supabase } from '@/integrations/supabase/client';
+import FinancialReportActions from './FinancialReportActions';
 
 const GeneralJournal = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -84,6 +84,7 @@ const GeneralJournal = () => {
       setDescription('');
       refetch();
     } catch (error) {
+      console.error('Error saving journal:', error);
       toast({
         title: "Error",
         description: "Gagal menyimpan jurnal",
@@ -106,7 +107,7 @@ const GeneralJournal = () => {
         <div>
           <h3 className="text-lg font-semibold text-gray-900">Jurnal Umum</h3>
           <p className="text-gray-600">
-            Kelola entri jurnal manual dan lihat riwayat transaksi
+            Kelola entri jurnal manual dan lihat riwayat transaksi otomatis
           </p>
         </div>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
@@ -232,11 +233,18 @@ const GeneralJournal = () => {
 
       {/* General Ledger Table */}
       <Card>
-        <CardHeader>
+        <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle className="flex items-center gap-2">
             <BookOpen className="h-5 w-5" />
             Buku Besar Umum
           </CardTitle>
+          {generalLedger && generalLedger.length > 0 && (
+            <FinancialReportActions
+              reportType="Buku Besar Umum"
+              reportData={generalLedger}
+              periodName="Semua Periode"
+            />
+          )}
         </CardHeader>
         <CardContent>
           <div className="overflow-x-auto">

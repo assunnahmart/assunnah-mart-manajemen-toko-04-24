@@ -90,9 +90,9 @@ export function AppSidebar() {
     return null;
   }
   return <Sidebar className="animate-fade-in">
-      <SidebarHeader className="p-4 border-b bg-white">
+      <SidebarHeader className="p-4 border-b bg-slate-50">
         <div className="flex items-center gap-3">
-          <img src="/lovable-uploads/163a7d14-7869-47b2-b33b-40be703e48e1.png" alt="Assunnah Mart Logo" className="h-8 w-8 object-contain animate-flip-horizontal" />
+          <img src="/lovable-uploads/163a7d14-7869-47b2-b33b-40be703e48e1.png" alt="Assunnah Mart Logo" className="h-8 w-8 animate-flip-horizontal object-cover" />
           <div>
             <h2 className="text-lg font-bold text-yellow-700">Assunnah Mart</h2>
             <p className="text-xs text-amber-900">Management System</p>
@@ -121,7 +121,7 @@ export function AppSidebar() {
         </SidebarGroup>
       </SidebarContent>
 
-      <SidebarFooter className="p-4 border-t">
+      <SidebarFooter className="p-4 border-t bg-slate-100">
         <div className="space-y-3">
           <div className="flex items-center gap-2 px-2">
             <User className="h-4 w-4 text-gray-600" />

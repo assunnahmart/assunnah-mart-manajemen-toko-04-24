@@ -2,6 +2,55 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
+export interface StockOpnameRecapItem {
+  barang_id: string;
+  nama_barang: string;
+  satuan: string;
+  stok_sistem: number;
+  real_stok_total: number;
+  selisih_stok: number;
+  jumlah_pengguna_input: number;
+  harga_beli?: number;
+  detail_input_pengguna?: Array<{
+    nama_kasir: string;
+    stok_fisik: number;
+    tanggal_opname: string;
+    keterangan?: string;
+  }>;
+}
+
+export const useStockOpnameRecap = (dateFrom: string, dateTo: string) => {
+  return useQuery({
+    queryKey: ['stock_opname_recap', dateFrom, dateTo],
+    queryFn: async (): Promise<StockOpnameRecapItem[]> => {
+      console.log('Fetching stock opname recap for period:', { dateFrom, dateTo });
+      
+      const { data, error } = await supabase
+        .from('stock_opname_recap')
+        .select(`
+          barang_id,
+          nama_barang,
+          satuan,
+          stok_sistem,
+          real_stok_total,
+          selisih_stok,
+          jumlah_pengguna_input,
+          detail_input_pengguna
+        `);
+      
+      if (error) {
+        console.error('Error fetching stock opname recap:', error);
+        throw error;
+      }
+      
+      // For now, return all data since the view doesn't have date filtering built-in
+      // You can add date filtering logic here if needed
+      return data || [];
+    },
+    enabled: !!dateFrom && !!dateTo,
+  });
+};
+
 export const useStockOpnameRealTime = () => {
   return useQuery({
     queryKey: ['stock_opname_realtime'],
@@ -95,6 +144,7 @@ export const useCreateNewStokOpname = () => {
       queryClient.invalidateQueries({ queryKey: ['stock_opname_realtime'] });
       queryClient.invalidateQueries({ queryKey: ['stock_data'] });
       queryClient.invalidateQueries({ queryKey: ['stock_opname'] });
+      queryClient.invalidateQueries({ queryKey: ['stock_opname_recap'] });
     },
   });
 };

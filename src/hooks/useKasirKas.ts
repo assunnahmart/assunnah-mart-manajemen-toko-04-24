@@ -24,26 +24,38 @@ export const useCreateKasirKasTransaction = () => {
     mutationFn: async (data: any) => {
       console.log('Creating kasir kas transaction with data:', data);
       
+      // Validate required fields
+      if (!data.kasir_id || !data.jenis_transaksi || !data.jumlah) {
+        throw new Error('Data transaksi tidak lengkap');
+      }
+      
+      // Ensure jumlah is a positive number
+      if (data.jumlah <= 0) {
+        throw new Error('Jumlah transaksi harus lebih dari 0');
+      }
+      
       // Generate transaction number
       const { data: transactionNumber, error: numberError } = await supabase
         .rpc('generate_kasir_kas_transaction_number');
 
       if (numberError) {
         console.error('Error generating transaction number:', numberError);
-        throw numberError;
+        throw new Error('Gagal membuat nomor transaksi');
       }
 
       const transactionData = {
-        ...data,
+        kasir_id: data.kasir_id,
+        jenis_transaksi: data.jenis_transaksi,
+        jumlah: parseInt(data.jumlah), // Ensure it's an integer
+        keterangan: data.keterangan || '',
         transaction_number: transactionNumber,
         tanggal_transaksi: new Date().toISOString().split('T')[0],
-        sync_to_kas_umum: true,
-        // Use kasir_id as string (from auth system)
-        kasir_id: data.kasir_id
+        sync_to_kas_umum: true
       };
 
       console.log('Final transaction data:', transactionData);
 
+      // Insert kasir kas transaction
       const { data: result, error } = await supabase
         .from('kasir_kas_transactions')
         .insert(transactionData)
@@ -52,7 +64,47 @@ export const useCreateKasirKasTransaction = () => {
       
       if (error) {
         console.error('Error inserting kasir kas transaction:', error);
-        throw error;
+        throw new Error(`Gagal menyimpan transaksi kas kasir: ${error.message}`);
+      }
+      
+      // If this is a cash transaction, also create corresponding kas umum transaction
+      if (data.sync_to_kas_umum !== false) {
+        try {
+          console.log('Creating corresponding kas umum transaction...');
+          
+          const kasUmumData = {
+            jenis_transaksi: data.jenis_transaksi,
+            jumlah: parseInt(data.jumlah),
+            keterangan: `Kas Kasir - ${data.keterangan || 'Transaksi tunai'}`,
+            akun_id: null, // Will use default cash account
+            sumber_transaksi: 'kas_kasir',
+            referensi_id: result.id
+          };
+          
+          const { data: kasUmumNumber, error: kasUmumNumberError } = await supabase
+            .rpc('generate_kas_transaction_number');
+          
+          if (kasUmumNumberError) {
+            console.error('Warning: Could not generate kas umum transaction number:', kasUmumNumberError);
+          } else {
+            const { error: kasUmumError } = await supabase
+              .from('kas_umum_transactions')
+              .insert({
+                ...kasUmumData,
+                transaction_number: kasUmumNumber
+              });
+            
+            if (kasUmumError) {
+              console.error('Warning: Could not sync to kas umum:', kasUmumError);
+              // Don't throw error here, just log it as the main transaction succeeded
+            } else {
+              console.log('Successfully synced to kas umum');
+            }
+          }
+        } catch (syncError) {
+          console.error('Warning: Kas umum sync failed:', syncError);
+          // Don't throw error here, the main transaction succeeded
+        }
       }
       
       console.log('Successfully created kasir kas transaction:', result);
@@ -62,9 +114,10 @@ export const useCreateKasirKasTransaction = () => {
       queryClient.invalidateQueries({ queryKey: ['kasir_kas_transactions'] });
       queryClient.invalidateQueries({ queryKey: ['kas_umum_transactions'] });
       queryClient.invalidateQueries({ queryKey: ['kasir_kas_balance'] });
+      queryClient.invalidateQueries({ queryKey: ['kas_umum_summary'] });
     },
     onError: (error) => {
-      console.error('Mutation error:', error);
+      console.error('Kasir kas transaction error:', error);
     },
   });
 };

@@ -203,6 +203,122 @@ export type Database = {
           },
         ]
       }
+      detail_retur_pembelian: {
+        Row: {
+          alasan_item: string | null
+          barang_id: string | null
+          created_at: string | null
+          harga_satuan: number
+          id: string
+          jumlah_retur: number
+          nama_barang: string
+          retur_id: string | null
+          subtotal_retur: number
+        }
+        Insert: {
+          alasan_item?: string | null
+          barang_id?: string | null
+          created_at?: string | null
+          harga_satuan: number
+          id?: string
+          jumlah_retur: number
+          nama_barang: string
+          retur_id?: string | null
+          subtotal_retur: number
+        }
+        Update: {
+          alasan_item?: string | null
+          barang_id?: string | null
+          created_at?: string | null
+          harga_satuan?: number
+          id?: string
+          jumlah_retur?: number
+          nama_barang?: string
+          retur_id?: string | null
+          subtotal_retur?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "detail_retur_pembelian_barang_id_fkey"
+            columns: ["barang_id"]
+            isOneToOne: false
+            referencedRelation: "barang_konsinyasi"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "detail_retur_pembelian_barang_id_fkey"
+            columns: ["barang_id"]
+            isOneToOne: false
+            referencedRelation: "stock_opname_recap"
+            referencedColumns: ["barang_id"]
+          },
+          {
+            foreignKeyName: "detail_retur_pembelian_retur_id_fkey"
+            columns: ["retur_id"]
+            isOneToOne: false
+            referencedRelation: "retur_pembelian"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      detail_retur_penjualan: {
+        Row: {
+          alasan_item: string | null
+          barang_id: string | null
+          created_at: string | null
+          harga_satuan: number
+          id: string
+          jumlah_retur: number
+          nama_barang: string
+          retur_id: string | null
+          subtotal_retur: number
+        }
+        Insert: {
+          alasan_item?: string | null
+          barang_id?: string | null
+          created_at?: string | null
+          harga_satuan: number
+          id?: string
+          jumlah_retur: number
+          nama_barang: string
+          retur_id?: string | null
+          subtotal_retur: number
+        }
+        Update: {
+          alasan_item?: string | null
+          barang_id?: string | null
+          created_at?: string | null
+          harga_satuan?: number
+          id?: string
+          jumlah_retur?: number
+          nama_barang?: string
+          retur_id?: string | null
+          subtotal_retur?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "detail_retur_penjualan_barang_id_fkey"
+            columns: ["barang_id"]
+            isOneToOne: false
+            referencedRelation: "barang_konsinyasi"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "detail_retur_penjualan_barang_id_fkey"
+            columns: ["barang_id"]
+            isOneToOne: false
+            referencedRelation: "stock_opname_recap"
+            referencedColumns: ["barang_id"]
+          },
+          {
+            foreignKeyName: "detail_retur_penjualan_retur_id_fkey"
+            columns: ["retur_id"]
+            isOneToOne: false
+            referencedRelation: "retur_penjualan"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       detail_transaksi_pembelian: {
         Row: {
           barang_id: string | null
@@ -1459,6 +1575,149 @@ export type Database = {
           },
         ]
       }
+      retur_pembelian: {
+        Row: {
+          alasan_retur: string | null
+          catatan: string | null
+          created_at: string | null
+          id: string
+          kasir_id: string | null
+          nomor_retur: string
+          status: string | null
+          supplier_id: string | null
+          tanggal_retur: string
+          total_retur: number
+          transaksi_pembelian_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          alasan_retur?: string | null
+          catatan?: string | null
+          created_at?: string | null
+          id?: string
+          kasir_id?: string | null
+          nomor_retur: string
+          status?: string | null
+          supplier_id?: string | null
+          tanggal_retur?: string
+          total_retur?: number
+          transaksi_pembelian_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          alasan_retur?: string | null
+          catatan?: string | null
+          created_at?: string | null
+          id?: string
+          kasir_id?: string | null
+          nomor_retur?: string
+          status?: string | null
+          supplier_id?: string | null
+          tanggal_retur?: string
+          total_retur?: number
+          transaksi_pembelian_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "retur_pembelian_kasir_id_fkey"
+            columns: ["kasir_id"]
+            isOneToOne: false
+            referencedRelation: "kasir"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "retur_pembelian_supplier_id_fkey"
+            columns: ["supplier_id"]
+            isOneToOne: false
+            referencedRelation: "supplier"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "retur_pembelian_transaksi_pembelian_id_fkey"
+            columns: ["transaksi_pembelian_id"]
+            isOneToOne: false
+            referencedRelation: "transaksi_pembelian"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      retur_penjualan: {
+        Row: {
+          alasan_retur: string | null
+          catatan: string | null
+          created_at: string | null
+          id: string
+          jenis_retur: string | null
+          kasir_id: string | null
+          nomor_retur: string
+          pelanggan_id: string | null
+          pelanggan_name: string | null
+          pos_transaction_id: string | null
+          status: string | null
+          tanggal_retur: string
+          total_retur: number
+          transaksi_penjualan_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          alasan_retur?: string | null
+          catatan?: string | null
+          created_at?: string | null
+          id?: string
+          jenis_retur?: string | null
+          kasir_id?: string | null
+          nomor_retur: string
+          pelanggan_id?: string | null
+          pelanggan_name?: string | null
+          pos_transaction_id?: string | null
+          status?: string | null
+          tanggal_retur?: string
+          total_retur?: number
+          transaksi_penjualan_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          alasan_retur?: string | null
+          catatan?: string | null
+          created_at?: string | null
+          id?: string
+          jenis_retur?: string | null
+          kasir_id?: string | null
+          nomor_retur?: string
+          pelanggan_id?: string | null
+          pelanggan_name?: string | null
+          pos_transaction_id?: string | null
+          status?: string | null
+          tanggal_retur?: string
+          total_retur?: number
+          transaksi_penjualan_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "retur_penjualan_kasir_id_fkey"
+            columns: ["kasir_id"]
+            isOneToOne: false
+            referencedRelation: "kasir"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "retur_penjualan_pos_transaction_id_fkey"
+            columns: ["pos_transaction_id"]
+            isOneToOne: false
+            referencedRelation: "pos_transactions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "retur_penjualan_transaksi_penjualan_id_fkey"
+            columns: ["transaksi_penjualan_id"]
+            isOneToOne: false
+            referencedRelation: "transaksi_penjualan"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       stok_opname: {
         Row: {
           barang_id: string | null
@@ -1900,6 +2159,14 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: string
       }
+      generate_retur_pembelian_number: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
+      generate_retur_penjualan_number: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
       generate_transaction_number: {
         Args: Record<PropertyKey, never>
         Returns: string
@@ -1944,6 +2211,14 @@ export type Database = {
       }
       increment_unit_debt: {
         Args: { unit_id: string; amount: number }
+        Returns: undefined
+      }
+      process_purchase_return: {
+        Args: { p_retur_id: string }
+        Returns: undefined
+      }
+      process_sales_return: {
+        Args: { p_retur_id: string }
         Returns: undefined
       }
       update_stok_barang: {

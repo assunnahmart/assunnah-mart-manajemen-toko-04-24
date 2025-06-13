@@ -15,7 +15,7 @@ import { useToast } from '@/hooks/use-toast';
 
 const KartuPiutangPelanggan = () => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedCustomer, setSelectedCustomer] = useState(null);
+  const [selectedCustomer, setSelectedCustomer] = useState<any>(null);
   const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
   const [paymentForm, setPaymentForm] = useState({
     amount: 0,
@@ -58,6 +58,24 @@ const KartuPiutangPelanggan = () => {
       return;
     }
 
+    if (paymentForm.amount <= 0) {
+      toast({
+        title: "Error", 
+        description: "Jumlah pembayaran harus lebih dari 0",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (currentBalance <= 0) {
+      toast({
+        title: "Error",
+        description: "Tidak ada piutang yang perlu dibayar untuk pelanggan ini",
+        variant: "destructive"
+      });
+      return;
+    }
+
     if (paymentForm.amount > Math.abs(currentBalance)) {
       toast({
         title: "Error",
@@ -68,6 +86,15 @@ const KartuPiutangPelanggan = () => {
     }
 
     try {
+      console.log('Recording payment:', {
+        pelanggan_name: selectedCustomer.nama,
+        amount: paymentForm.amount,
+        payment_date: new Date().toISOString().split('T')[0],
+        reference_number: paymentForm.reference_number,
+        kasir_name: user?.full_name || 'Unknown',
+        keterangan: paymentForm.keterangan
+      });
+
       await recordPayment.mutateAsync({
         pelanggan_name: selectedCustomer.nama,
         amount: paymentForm.amount,
@@ -79,21 +106,22 @@ const KartuPiutangPelanggan = () => {
 
       toast({
         title: "Berhasil",
-        description: "Pembayaran piutang berhasil dicatat"
+        description: `Pembayaran piutang sebesar ${formatRupiah(paymentForm.amount)} berhasil dicatat`
       });
 
       setIsPaymentDialogOpen(false);
       setPaymentForm({ amount: 0, reference_number: '', keterangan: '' });
-    } catch (error) {
+    } catch (error: any) {
+      console.error('Payment error:', error);
       toast({
         title: "Error",
-        description: error.message,
+        description: error.message || "Terjadi kesalahan saat memproses pembayaran",
         variant: "destructive"
       });
     }
   };
 
-  const formatRupiah = (amount) => {
+  const formatRupiah = (amount: number) => {
     return new Intl.NumberFormat('id-ID', {
       style: 'currency',
       currency: 'IDR',
@@ -132,10 +160,11 @@ const KartuPiutangPelanggan = () => {
                 <Label>Jumlah Pembayaran *</Label>
                 <Input
                   type="number"
-                  value={paymentForm.amount}
+                  value={paymentForm.amount || ''}
                   onChange={(e) => setPaymentForm(prev => ({ ...prev, amount: Number(e.target.value) }))}
                   placeholder="Masukkan jumlah pembayaran"
                   max={Math.abs(currentBalance)}
+                  min={0}
                 />
               </div>
               <div>
@@ -156,7 +185,7 @@ const KartuPiutangPelanggan = () => {
               </div>
               <Button 
                 onClick={handleRecordPayment} 
-                disabled={recordPayment.isPending}
+                disabled={recordPayment.isPending || !paymentForm.amount || !paymentForm.reference_number}
                 className="w-full"
               >
                 {recordPayment.isPending ? 'Menyimpan...' : 'Terima Pembayaran'}
@@ -255,6 +284,11 @@ const KartuPiutangPelanggan = () => {
                 );
               })}
             </div>
+            {filteredCustomers.length === 0 && (
+              <div className="text-center py-4 text-gray-500">
+                {searchTerm ? 'Tidak ada pelanggan yang ditemukan' : 'Belum ada data pelanggan'}
+              </div>
+            )}
           </CardContent>
         </Card>
 
@@ -287,10 +321,26 @@ const KartuPiutangPelanggan = () => {
                   </div>
                   <div>
                     <Label className="text-sm font-medium text-gray-600">Saldo Piutang</Label>
-                    <div className={`font-bold ${currentBalance > 0 ? 'text-red-600' : 'text-green-600'}`}>
+                    <div className={`font-bold text-lg ${currentBalance > 0 ? 'text-red-600' : 'text-green-600'}`}>
                       {formatRupiah(Math.abs(currentBalance))}
                     </div>
                   </div>
+                </div>
+
+                {/* Tombol Aksi */}
+                <div className="flex gap-2">
+                  <Button 
+                    onClick={() => setIsPaymentDialogOpen(true)}
+                    disabled={currentBalance <= 0}
+                    className="bg-green-600 hover:bg-green-700"
+                  >
+                    <DollarSign className="h-4 w-4 mr-2" />
+                    Terima Pembayaran
+                  </Button>
+                  <Button variant="outline">
+                    <FileText className="h-4 w-4 mr-2" />
+                    Cetak Kartu
+                  </Button>
                 </div>
 
                 {/* Riwayat Transaksi */}
@@ -309,7 +359,7 @@ const KartuPiutangPelanggan = () => {
                           </TableRow>
                         </TableHeader>
                         <TableBody>
-                          {ledgerEntries.slice(0, 5).map((entry) => (
+                          {ledgerEntries.slice(0, 10).map((entry) => (
                             <TableRow key={entry.id}>
                               <TableCell>
                                 {new Date(entry.transaction_date).toLocaleDateString('id-ID')}

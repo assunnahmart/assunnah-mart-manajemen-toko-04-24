@@ -5,17 +5,36 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Search, Plus, FileText, Calendar, DollarSign, User, Building2, TrendingUp, CreditCard } from 'lucide-react';
 import { usePelangganKredit } from '@/hooks/usePelanggan';
 import { usePiutangPelanggan, useTodayCreditSales, useKasUmumSummary } from '@/hooks/usePiutang';
+import { useCustomerReceivablesLedger, useRecordCustomerPayment } from '@/hooks/useLedgers';
+import { useSimpleAuth } from '@/hooks/useSimpleAuth';
+import { useToast } from '@/hooks/use-toast';
 
 const KartuHutang = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCustomer, setSelectedCustomer] = useState(null);
+  const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
+  const [paymentForm, setPaymentForm] = useState({
+    amount: 0,
+    reference_number: '',
+    keterangan: ''
+  });
+
+  const { user } = useSimpleAuth();
   const { data: pelangganKredit } = usePelangganKredit();
   const { data: piutangData } = usePiutangPelanggan();
   const { data: creditSales } = useTodayCreditSales();
   const { data: kasUmumData } = useKasUmumSummary();
+  const { data: ledgerEntries } = useCustomerReceivablesLedger(
+    selectedCustomer?.nama,
+    undefined,
+    undefined
+  );
+  const recordPayment = useRecordCustomerPayment();
+  const { toast } = useToast();
 
   // Combine both unit and perorangan customers
   const allCustomers = [
@@ -28,17 +47,124 @@ const KartuHutang = () => {
     (customer.nama_unit && customer.nama_unit.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
+  const currentBalance = ledgerEntries?.[0]?.running_balance || 0;
+
+  const handleRecordPayment = async () => {
+    if (!selectedCustomer || !paymentForm.amount || !paymentForm.reference_number) {
+      toast({
+        title: "Error",
+        description: "Lengkapi semua field yang diperlukan",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (paymentForm.amount > Math.abs(currentBalance)) {
+      toast({
+        title: "Error",
+        description: "Jumlah pembayaran melebihi saldo piutang yang tersisa",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    try {
+      await recordPayment.mutateAsync({
+        pelanggan_name: selectedCustomer.nama,
+        amount: paymentForm.amount,
+        payment_date: new Date().toISOString().split('T')[0],
+        reference_number: paymentForm.reference_number,
+        kasir_name: user?.full_name || 'Unknown',
+        keterangan: paymentForm.keterangan
+      });
+
+      toast({
+        title: "Berhasil",
+        description: "Pembayaran piutang berhasil dicatat"
+      });
+
+      setIsPaymentDialogOpen(false);
+      setPaymentForm({ amount: 0, reference_number: '', keterangan: '' });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive"
+      });
+    }
+  };
+
+  const formatRupiah = (amount) => {
+    return new Intl.NumberFormat('id-ID', {
+      style: 'currency',
+      currency: 'IDR',
+      minimumFractionDigits: 0,
+    }).format(amount);
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold">Kartu Hutang Pelanggan</h1>
+          <h1 className="text-3xl font-bold">Kartu Piutang Pelanggan</h1>
           <p className="text-gray-600">Kelola piutang pelanggan terintegrasi dengan POS dan Kas Umum</p>
         </div>
-        <Button className="bg-blue-600 hover:bg-blue-700">
-          <Plus className="h-4 w-4 mr-2" />
-          Buat Kartu Baru
-        </Button>
+        <Dialog open={isPaymentDialogOpen} onOpenChange={setIsPaymentDialogOpen}>
+          <DialogTrigger asChild>
+            <Button disabled={!selectedCustomer || currentBalance <= 0}>
+              <Plus className="h-4 w-4 mr-2" />
+              Terima Pembayaran
+            </Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Terima Pembayaran Piutang</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div>
+                <Label>Pelanggan</Label>
+                <Input value={selectedCustomer?.nama || ''} disabled />
+              </div>
+              <div>
+                <Label>Saldo Piutang Saat Ini</Label>
+                <Input value={formatRupiah(Math.abs(currentBalance))} disabled />
+              </div>
+              <div>
+                <Label>Jumlah Pembayaran *</Label>
+                <Input
+                  type="number"
+                  value={paymentForm.amount}
+                  onChange={(e) => setPaymentForm(prev => ({ ...prev, amount: Number(e.target.value) }))}
+                  placeholder="Masukkan jumlah pembayaran"
+                  max={Math.abs(currentBalance)}
+                />
+              </div>
+              <div>
+                <Label>Nomor Referensi *</Label>
+                <Input
+                  value={paymentForm.reference_number}
+                  onChange={(e) => setPaymentForm(prev => ({ ...prev, reference_number: e.target.value }))}
+                  placeholder="Nomor bukti pembayaran"
+                />
+              </div>
+              <div>
+                <Label>Keterangan</Label>
+                <Input
+                  value={paymentForm.keterangan}
+                  onChange={(e) => setPaymentForm(prev => ({ ...prev, keterangan: e.target.value }))}
+                  placeholder="Keterangan pembayaran"
+                />
+              </div>
+              <Button 
+                onClick={handleRecordPayment} 
+                disabled={recordPayment.isPending}
+                className="w-full"
+              >
+                {recordPayment.isPending ? 'Menyimpan...' : 'Terima Pembayaran'}
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
 
       {/* Summary Cards - Sync with POS and Kas Umum */}
@@ -50,7 +176,7 @@ const KartuHutang = () => {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-red-600">
-              Rp {(piutangData?.totalPiutang || 0).toLocaleString('id-ID')}
+              {formatRupiah(piutangData?.totalPiutang || 0)}
             </div>
             <p className="text-xs text-gray-500 mt-1">
               {piutangData?.totalCreditCustomers || 0} pelanggan kredit
@@ -65,7 +191,7 @@ const KartuHutang = () => {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-orange-600">
-              Rp {(creditSales?.totalCreditSales || 0).toLocaleString('id-ID')}
+              {formatRupiah(creditSales?.totalCreditSales || 0)}
             </div>
             <p className="text-xs text-gray-500 mt-1">
               {creditSales?.totalCreditTransactions || 0} transaksi kredit
@@ -80,10 +206,10 @@ const KartuHutang = () => {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-green-600">
-              Rp {(kasUmumData?.kasMasuk || 0).toLocaleString('id-ID')}
+              {formatRupiah(kasUmumData?.kasMasuk || 0)}
             </div>
             <p className="text-xs text-gray-500 mt-1">
-              Saldo: Rp {(kasUmumData?.saldoKas || 0).toLocaleString('id-ID')}
+              Saldo: {formatRupiah(kasUmumData?.saldoKas || 0)}
             </p>
           </CardContent>
         </Card>
@@ -141,10 +267,10 @@ const KartuHutang = () => {
                   <div className="text-sm text-gray-500">{customer.telepon || 'No phone'}</div>
                   <div className="flex justify-between items-center mt-1">
                     <Badge variant={(customer.total_tagihan || customer.sisa_piutang) > 0 ? 'destructive' : 'default'}>
-                      Rp {((customer.total_tagihan || 0) + (customer.sisa_piutang || 0)).toLocaleString('id-ID')}
+                      {formatRupiah((customer.total_tagihan || 0) + (customer.sisa_piutang || 0))}
                     </Badge>
                     <Badge variant="outline">
-                      Limit: Rp {(customer.limit_kredit || 0).toLocaleString('id-ID')}
+                      Limit: {formatRupiah(customer.limit_kredit || 0)}
                     </Badge>
                   </div>
                 </div>
@@ -158,12 +284,12 @@ const KartuHutang = () => {
           </CardContent>
         </Card>
 
-        {/* Detail Kartu Hutang */}
+        {/* Detail Kartu Piutang */}
         <Card className="lg:col-span-2">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <FileText className="h-5 w-5" />
-              Kartu Hutang - {selectedCustomer ? selectedCustomer.nama : 'Pilih Pelanggan'}
+              Kartu Piutang - {selectedCustomer ? selectedCustomer.nama : 'Pilih Pelanggan'}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -198,9 +324,9 @@ const KartuHutang = () => {
                       <div className="flex items-center gap-2">
                         <DollarSign className="h-5 w-5 text-red-500" />
                         <div>
-                          <div className="text-sm text-gray-600">Total Hutang</div>
+                          <div className="text-sm text-gray-600">Saldo Piutang</div>
                           <div className="font-bold text-red-600">
-                            Rp {((selectedCustomer.total_tagihan || 0) + (selectedCustomer.sisa_piutang || 0)).toLocaleString('id-ID')}
+                            {formatRupiah(Math.abs(currentBalance))}
                           </div>
                         </div>
                       </div>
@@ -214,7 +340,7 @@ const KartuHutang = () => {
                         <div>
                           <div className="text-sm text-gray-600">Limit Kredit</div>
                           <div className="font-bold text-blue-600">
-                            Rp {(selectedCustomer.limit_kredit || 0).toLocaleString('id-ID')}
+                            {formatRupiah(selectedCustomer.limit_kredit || 0)}
                           </div>
                         </div>
                       </div>
@@ -262,16 +388,19 @@ const KartuHutang = () => {
                     <Calendar className="h-4 w-4 mr-2" />
                     Riwayat Transaksi
                   </Button>
-                  <Button>
+                  <Button 
+                    onClick={() => setIsPaymentDialogOpen(true)}
+                    disabled={currentBalance <= 0}
+                  >
                     <DollarSign className="h-4 w-4 mr-2" />
-                    Bayar Hutang
+                    Terima Pembayaran
                   </Button>
                 </div>
               </div>
             ) : (
               <div className="text-center text-gray-500 py-8">
                 <User className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-                <p>Pilih pelanggan dari daftar untuk melihat kartu hutang</p>
+                <p>Pilih pelanggan dari daftar untuk melihat kartu piutang</p>
                 <p className="text-sm mt-2">Data akan tersinkron otomatis dengan POS dan Kas Umum</p>
               </div>
             )}

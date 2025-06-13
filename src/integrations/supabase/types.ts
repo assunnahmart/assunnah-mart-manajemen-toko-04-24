@@ -1838,31 +1838,21 @@ export type Database = {
         }[]
       }
       create_general_ledger_entry: {
-        Args:
-          | {
-              p_transaction_date: string
-              p_account_id: string
-              p_debit_amount?: number
-              p_credit_amount?: number
-              p_description?: string
-              p_reference_type?: string
-              p_reference_id?: string
-            }
-          | {
-              p_transaction_date: string
-              p_account_id: string
-              p_debit_amount?: number
-              p_credit_amount?: number
-              p_description?: string
-              p_reference_type?: string
-              p_reference_id?: string
-              p_supplier_name?: string
-              p_pelanggan_name?: string
-              p_payment_method?: string
-              p_kasir_name?: string
-              p_transaction_type?: string
-              p_transaction_number?: string
-            }
+        Args: {
+          p_transaction_date: string
+          p_account_id: string
+          p_debit_amount?: number
+          p_credit_amount?: number
+          p_description?: string
+          p_reference_type?: string
+          p_reference_id?: string
+          p_supplier_name?: string
+          p_pelanggan_name?: string
+          p_payment_method?: string
+          p_kasir_name?: string
+          p_transaction_type?: string
+          p_transaction_number?: string
+        }
         Returns: undefined
       }
       create_supplier_debt: {

@@ -1,4 +1,3 @@
-
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -48,9 +47,11 @@ export const useCreateKasirKasTransaction = () => {
         jenis_transaksi: data.jenis_transaksi,
         jumlah: parseInt(data.jumlah), // Ensure it's an integer
         keterangan: data.keterangan || '',
+        kategori: data.kategori || 'Transaksi Manual', // Add required kategori field
         transaction_number: transactionNumber,
         tanggal_transaksi: new Date().toISOString().split('T')[0],
-        sync_to_kas_umum: true
+        sync_to_kas_umum: true,
+        kasir_name: data.kasir_name || 'Unknown'
       };
 
       console.log('Final transaction data:', transactionData);

@@ -18,15 +18,15 @@ const KartuPiutangPelanggan = () => {
   const [selectedCustomer, setSelectedCustomer] = useState<any>(null);
   const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
   const [paymentForm, setPaymentForm] = useState({
-    amount: 0,
+    amount: '',
     reference_number: '',
     keterangan: ''
   });
 
   const { user } = useSimpleAuth();
-  const { data: pelangganKredit } = usePelangganKredit();
-  const { data: customerSummary } = useCustomerReceivablesSummary();
-  const { data: ledgerEntries } = useCustomerReceivablesLedger(
+  const { data: pelangganKredit, refetch: refetchPelanggan } = usePelangganKredit();
+  const { data: customerSummary, refetch: refetchSummary } = useCustomerReceivablesSummary();
+  const { data: ledgerEntries, refetch: refetchLedger } = useCustomerReceivablesLedger(
     selectedCustomer?.nama,
     undefined,
     undefined
@@ -49,19 +49,30 @@ const KartuPiutangPelanggan = () => {
   const totalReceivables = customerSummary?.reduce((sum, item) => sum + Number(item.total_receivables), 0) || 0;
 
   const handleRecordPayment = async () => {
-    if (!selectedCustomer || !paymentForm.amount || !paymentForm.reference_number) {
+    const amount = parseFloat(paymentForm.amount);
+    
+    if (!selectedCustomer) {
       toast({
         title: "Error",
-        description: "Lengkapi semua field yang diperlukan",
+        description: "Pilih pelanggan terlebih dahulu",
         variant: "destructive"
       });
       return;
     }
 
-    if (paymentForm.amount <= 0) {
+    if (!amount || amount <= 0) {
+      toast({
+        title: "Error",
+        description: "Masukkan jumlah pembayaran yang valid",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (!paymentForm.reference_number.trim()) {
       toast({
         title: "Error", 
-        description: "Jumlah pembayaran harus lebih dari 0",
+        description: "Masukkan nomor referensi pembayaran",
         variant: "destructive"
       });
       return;
@@ -76,10 +87,10 @@ const KartuPiutangPelanggan = () => {
       return;
     }
 
-    if (paymentForm.amount > Math.abs(currentBalance)) {
+    if (amount > Math.abs(currentBalance)) {
       toast({
         title: "Error",
-        description: "Jumlah pembayaran melebihi saldo piutang yang tersisa",
+        description: `Jumlah pembayaran (${formatRupiah(amount)}) melebihi saldo piutang (${formatRupiah(Math.abs(currentBalance))})`,
         variant: "destructive"
       });
       return;
@@ -88,7 +99,7 @@ const KartuPiutangPelanggan = () => {
     try {
       console.log('Recording payment:', {
         pelanggan_name: selectedCustomer.nama,
-        amount: paymentForm.amount,
+        amount: amount,
         payment_date: new Date().toISOString().split('T')[0],
         reference_number: paymentForm.reference_number,
         kasir_name: user?.full_name || 'Unknown',
@@ -97,7 +108,7 @@ const KartuPiutangPelanggan = () => {
 
       await recordPayment.mutateAsync({
         pelanggan_name: selectedCustomer.nama,
-        amount: paymentForm.amount,
+        amount: amount,
         payment_date: new Date().toISOString().split('T')[0],
         reference_number: paymentForm.reference_number,
         kasir_name: user?.full_name || 'Unknown',
@@ -105,12 +116,19 @@ const KartuPiutangPelanggan = () => {
       });
 
       toast({
-        title: "Berhasil",
-        description: `Pembayaran piutang sebesar ${formatRupiah(paymentForm.amount)} berhasil dicatat`
+        title: "Berhasil!",
+        description: `Pembayaran piutang sebesar ${formatRupiah(amount)} untuk ${selectedCustomer.nama} berhasil dicatat`
       });
 
+      // Reset form and close dialog
+      setPaymentForm({ amount: '', reference_number: '', keterangan: '' });
       setIsPaymentDialogOpen(false);
-      setPaymentForm({ amount: 0, reference_number: '', keterangan: '' });
+      
+      // Refresh data
+      refetchLedger();
+      refetchSummary();
+      refetchPelanggan();
+
     } catch (error: any) {
       console.error('Payment error:', error);
       toast({
@@ -129,6 +147,8 @@ const KartuPiutangPelanggan = () => {
     }).format(amount);
   };
 
+  const isPaymentButtonEnabled = selectedCustomer && currentBalance > 0;
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -138,41 +158,52 @@ const KartuPiutangPelanggan = () => {
         </div>
         <Dialog open={isPaymentDialogOpen} onOpenChange={setIsPaymentDialogOpen}>
           <DialogTrigger asChild>
-            <Button disabled={!selectedCustomer || currentBalance <= 0}>
+            <Button 
+              disabled={!isPaymentButtonEnabled}
+              className={isPaymentButtonEnabled ? "bg-green-600 hover:bg-green-700" : ""}
+            >
               <Plus className="h-4 w-4 mr-2" />
               Terima Pembayaran
             </Button>
           </DialogTrigger>
-          <DialogContent>
+          <DialogContent className="max-w-md">
             <DialogHeader>
               <DialogTitle>Terima Pembayaran Piutang</DialogTitle>
             </DialogHeader>
             <div className="space-y-4">
               <div>
                 <Label>Pelanggan</Label>
-                <Input value={selectedCustomer?.nama || ''} disabled />
+                <Input value={selectedCustomer?.nama || ''} disabled className="bg-gray-50" />
               </div>
               <div>
                 <Label>Saldo Piutang Saat Ini</Label>
-                <Input value={formatRupiah(Math.abs(currentBalance))} disabled />
+                <Input 
+                  value={formatRupiah(Math.abs(currentBalance))} 
+                  disabled 
+                  className="bg-gray-50 text-red-600 font-semibold" 
+                />
               </div>
               <div>
                 <Label>Jumlah Pembayaran *</Label>
                 <Input
                   type="number"
-                  value={paymentForm.amount || ''}
-                  onChange={(e) => setPaymentForm(prev => ({ ...prev, amount: Number(e.target.value) }))}
-                  placeholder="Masukkan jumlah pembayaran"
+                  value={paymentForm.amount}
+                  onChange={(e) => setPaymentForm(prev => ({ ...prev, amount: e.target.value }))}
+                  placeholder="0"
                   max={Math.abs(currentBalance)}
                   min={0}
+                  step={1000}
                 />
+                <div className="text-xs text-gray-500 mt-1">
+                  Maksimal: {formatRupiah(Math.abs(currentBalance))}
+                </div>
               </div>
               <div>
                 <Label>Nomor Referensi *</Label>
                 <Input
                   value={paymentForm.reference_number}
                   onChange={(e) => setPaymentForm(prev => ({ ...prev, reference_number: e.target.value }))}
-                  placeholder="Nomor bukti pembayaran"
+                  placeholder="No. Bukti/Kwitansi"
                 />
               </div>
               <div>
@@ -180,16 +211,25 @@ const KartuPiutangPelanggan = () => {
                 <Input
                   value={paymentForm.keterangan}
                   onChange={(e) => setPaymentForm(prev => ({ ...prev, keterangan: e.target.value }))}
-                  placeholder="Keterangan pembayaran"
+                  placeholder="Keterangan pembayaran (opsional)"
                 />
               </div>
-              <Button 
-                onClick={handleRecordPayment} 
-                disabled={recordPayment.isPending || !paymentForm.amount || !paymentForm.reference_number}
-                className="w-full"
-              >
-                {recordPayment.isPending ? 'Menyimpan...' : 'Terima Pembayaran'}
-              </Button>
+              <div className="flex gap-2 pt-4">
+                <Button 
+                  variant="outline" 
+                  onClick={() => setIsPaymentDialogOpen(false)}
+                  className="flex-1"
+                >
+                  Batal
+                </Button>
+                <Button 
+                  onClick={handleRecordPayment} 
+                  disabled={recordPayment.isPending || !paymentForm.amount || !paymentForm.reference_number}
+                  className="flex-1 bg-green-600 hover:bg-green-700"
+                >
+                  {recordPayment.isPending ? 'Memproses...' : 'Terima Pembayaran'}
+                </Button>
+              </div>
             </div>
           </DialogContent>
         </Dialog>
@@ -257,6 +297,8 @@ const KartuPiutangPelanggan = () => {
             <div className="space-y-2">
               {filteredCustomers.map((customer) => {
                 const customerReceivables = customerSummary?.find(c => c.pelanggan_name === customer.nama);
+                const hasDebt = Number(customerReceivables?.total_receivables || 0) > 0;
+                
                 return (
                   <div
                     key={customer.id}
@@ -273,7 +315,7 @@ const KartuPiutangPelanggan = () => {
                     )}
                     <div className="text-sm text-gray-500">{customer.telepon || 'No phone'}</div>
                     <div className="flex justify-between items-center mt-1">
-                      <Badge variant={customerReceivables?.total_receivables > 0 ? 'destructive' : 'default'}>
+                      <Badge variant={hasDebt ? 'destructive' : 'default'}>
                         {formatRupiah(Number(customerReceivables?.total_receivables || 0))}
                       </Badge>
                       <Badge variant="outline">
@@ -323,6 +365,9 @@ const KartuPiutangPelanggan = () => {
                     <Label className="text-sm font-medium text-gray-600">Saldo Piutang</Label>
                     <div className={`font-bold text-lg ${currentBalance > 0 ? 'text-red-600' : 'text-green-600'}`}>
                       {formatRupiah(Math.abs(currentBalance))}
+                      {currentBalance > 0 && (
+                        <span className="text-sm text-red-500 ml-2">(Belum Lunas)</span>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -331,8 +376,8 @@ const KartuPiutangPelanggan = () => {
                 <div className="flex gap-2">
                   <Button 
                     onClick={() => setIsPaymentDialogOpen(true)}
-                    disabled={currentBalance <= 0}
-                    className="bg-green-600 hover:bg-green-700"
+                    disabled={!isPaymentButtonEnabled}
+                    className={isPaymentButtonEnabled ? "bg-green-600 hover:bg-green-700" : ""}
                   >
                     <DollarSign className="h-4 w-4 mr-2" />
                     Terima Pembayaran
@@ -342,6 +387,17 @@ const KartuPiutangPelanggan = () => {
                     Cetak Kartu
                   </Button>
                 </div>
+
+                {!isPaymentButtonEnabled && (
+                  <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+                    <p className="text-yellow-800 text-sm">
+                      {!selectedCustomer 
+                        ? "Pilih pelanggan untuk melakukan pembayaran"
+                        : "Pelanggan ini tidak memiliki piutang yang perlu dibayar"
+                      }
+                    </p>
+                  </div>
+                )}
 
                 {/* Riwayat Transaksi */}
                 {ledgerEntries && ledgerEntries.length > 0 && (
@@ -386,6 +442,7 @@ const KartuPiutangPelanggan = () => {
               <div className="text-center text-gray-500 py-8">
                 <User className="mx-auto h-12 w-12 text-gray-400 mb-4" />
                 <p>Pilih pelanggan dari daftar untuk melihat kartu piutang</p>
+                <p className="text-sm mt-2">Klik nama pelanggan untuk memulai</p>
               </div>
             )}
           </CardContent>

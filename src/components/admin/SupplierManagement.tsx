@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -7,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Search, Plus, Edit, Trash2, Building2, Phone, Mail, MapPin } from 'lucide-react';
-import { useSupplier } from '@/hooks/useSupplier';
+import { useSupplier, useCreateSupplier, useUpdateSupplier, useDeleteSupplier } from '@/hooks/useSupplier';
 import { useToast } from '@/hooks/use-toast';
 
 const SupplierManagement = () => {
@@ -22,7 +21,10 @@ const SupplierManagement = () => {
     email: ''
   });
 
-  const { data: suppliers, createSupplier, updateSupplier, deleteSupplier } = useSupplier();
+  const { data: suppliers } = useSupplier();
+  const createSupplier = useCreateSupplier();
+  const updateSupplier = useUpdateSupplier();
+  const deleteSupplier = useDeleteSupplier();
   const { toast } = useToast();
 
   const filteredSuppliers = suppliers?.filter(supplier =>
@@ -36,7 +38,7 @@ const SupplierManagement = () => {
       if (editingSupplier) {
         await updateSupplier.mutateAsync({
           id: editingSupplier.id,
-          ...supplierForm
+          updates: supplierForm
         });
         toast({
           title: "Berhasil",

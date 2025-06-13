@@ -174,6 +174,35 @@ export type Database = {
           },
         ]
       }
+      credit_transaction_notes: {
+        Row: {
+          created_at: string | null
+          id: string
+          notes: string | null
+          transaction_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          notes?: string | null
+          transaction_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          notes?: string | null
+          transaction_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "credit_transaction_notes_transaction_id_fkey"
+            columns: ["transaction_id"]
+            isOneToOne: false
+            referencedRelation: "pos_transactions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       detail_transaksi_pembelian: {
         Row: {
           barang_id: string | null
@@ -364,9 +393,15 @@ export type Database = {
           description: string | null
           financial_period_id: string | null
           id: string
+          kasir_name: string | null
+          payment_method: string | null
+          pelanggan_name: string | null
           reference_id: string | null
           reference_type: string | null
+          supplier_name: string | null
           transaction_date: string
+          transaction_number: string | null
+          transaction_type: string | null
         }
         Insert: {
           account_id?: string | null
@@ -376,9 +411,15 @@ export type Database = {
           description?: string | null
           financial_period_id?: string | null
           id?: string
+          kasir_name?: string | null
+          payment_method?: string | null
+          pelanggan_name?: string | null
           reference_id?: string | null
           reference_type?: string | null
+          supplier_name?: string | null
           transaction_date: string
+          transaction_number?: string | null
+          transaction_type?: string | null
         }
         Update: {
           account_id?: string | null
@@ -388,9 +429,15 @@ export type Database = {
           description?: string | null
           financial_period_id?: string | null
           id?: string
+          kasir_name?: string | null
+          payment_method?: string | null
+          pelanggan_name?: string | null
           reference_id?: string | null
           reference_type?: string | null
+          supplier_name?: string | null
           transaction_date?: string
+          transaction_number?: string | null
+          transaction_type?: string | null
         }
         Relationships: [
           {
@@ -405,6 +452,53 @@ export type Database = {
             columns: ["financial_period_id"]
             isOneToOne: false
             referencedRelation: "financial_periods"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      hutang_detail: {
+        Row: {
+          bulan: number
+          created_at: string | null
+          id: string
+          jumlah_bayar: number | null
+          jumlah_hutang_baru: number | null
+          saldo_awal: number | null
+          sisa_hutang: number | null
+          supplier_id: string | null
+          tahun: number
+          updated_at: string | null
+        }
+        Insert: {
+          bulan: number
+          created_at?: string | null
+          id?: string
+          jumlah_bayar?: number | null
+          jumlah_hutang_baru?: number | null
+          saldo_awal?: number | null
+          sisa_hutang?: number | null
+          supplier_id?: string | null
+          tahun: number
+          updated_at?: string | null
+        }
+        Update: {
+          bulan?: number
+          created_at?: string | null
+          id?: string
+          jumlah_bayar?: number | null
+          jumlah_hutang_baru?: number | null
+          saldo_awal?: number | null
+          sisa_hutang?: number | null
+          supplier_id?: string | null
+          tahun?: number
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hutang_detail_supplier_id_fkey"
+            columns: ["supplier_id"]
+            isOneToOne: false
+            referencedRelation: "supplier"
             referencedColumns: ["id"]
           },
         ]
@@ -1089,6 +1183,128 @@ export type Database = {
         }
         Relationships: []
       }
+      piutang_detail: {
+        Row: {
+          bulan: number
+          created_at: string | null
+          id: string
+          jumlah_bayar: number | null
+          jumlah_piutang_baru: number | null
+          pelanggan_id: string | null
+          saldo_awal: number | null
+          sisa_piutang: number | null
+          tahun: number
+          updated_at: string | null
+        }
+        Insert: {
+          bulan: number
+          created_at?: string | null
+          id?: string
+          jumlah_bayar?: number | null
+          jumlah_piutang_baru?: number | null
+          pelanggan_id?: string | null
+          saldo_awal?: number | null
+          sisa_piutang?: number | null
+          tahun: number
+          updated_at?: string | null
+        }
+        Update: {
+          bulan?: number
+          created_at?: string | null
+          id?: string
+          jumlah_bayar?: number | null
+          jumlah_piutang_baru?: number | null
+          pelanggan_id?: string | null
+          saldo_awal?: number | null
+          sisa_piutang?: number | null
+          tahun?: number
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "piutang_detail_pelanggan_id_fkey"
+            columns: ["pelanggan_id"]
+            isOneToOne: false
+            referencedRelation: "pelanggan"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      piutang_payments: {
+        Row: {
+          bulan: number
+          created_at: string | null
+          id: string
+          jumlah_bayar: number
+          kasir_name: string | null
+          keterangan: string | null
+          pelanggan_id: string
+          pelanggan_name: string
+          receipt_number: string | null
+          tahun: number
+          tanggal_bayar: string | null
+        }
+        Insert: {
+          bulan: number
+          created_at?: string | null
+          id?: string
+          jumlah_bayar: number
+          kasir_name?: string | null
+          keterangan?: string | null
+          pelanggan_id: string
+          pelanggan_name: string
+          receipt_number?: string | null
+          tahun: number
+          tanggal_bayar?: string | null
+        }
+        Update: {
+          bulan?: number
+          created_at?: string | null
+          id?: string
+          jumlah_bayar?: number
+          kasir_name?: string | null
+          keterangan?: string | null
+          pelanggan_id?: string
+          pelanggan_name?: string
+          receipt_number?: string | null
+          tahun?: number
+          tanggal_bayar?: string | null
+        }
+        Relationships: []
+      }
+      piutang_saldo_awal: {
+        Row: {
+          bulan: number
+          created_at: string | null
+          id: string
+          pelanggan_id: string
+          pelanggan_name: string
+          saldo_awal: number | null
+          tahun: number
+          updated_at: string | null
+        }
+        Insert: {
+          bulan: number
+          created_at?: string | null
+          id?: string
+          pelanggan_id: string
+          pelanggan_name: string
+          saldo_awal?: number | null
+          tahun: number
+          updated_at?: string | null
+        }
+        Update: {
+          bulan?: number
+          created_at?: string | null
+          id?: string
+          pelanggan_id?: string
+          pelanggan_name?: string
+          saldo_awal?: number | null
+          tahun?: number
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       pos_transaction_items: {
         Row: {
           created_at: string
@@ -1138,6 +1354,7 @@ export type Database = {
           amount_paid: number
           change_amount: number
           created_at: string
+          credit_notes: string | null
           id: string
           items_count: number
           kasir_name: string
@@ -1153,6 +1370,7 @@ export type Database = {
           amount_paid?: number
           change_amount?: number
           created_at?: string
+          credit_notes?: string | null
           id?: string
           items_count?: number
           kasir_name: string
@@ -1168,6 +1386,7 @@ export type Database = {
           amount_paid?: number
           change_amount?: number
           created_at?: string
+          credit_notes?: string | null
           id?: string
           items_count?: number
           kasir_name?: string
@@ -1592,16 +1811,58 @@ export type Database = {
         Args: { p_period_id: string }
         Returns: undefined
       }
+      calculate_monthly_debt_summary: {
+        Args: { p_year?: number }
+        Returns: {
+          supplier_id: string
+          supplier_name: string
+          bulan: number
+          nama_bulan: string
+          saldo_awal: number
+          jumlah_hutang_baru: number
+          jumlah_bayar: number
+          sisa_hutang: number
+        }[]
+      }
+      calculate_monthly_receivables_summary: {
+        Args: { p_year?: number }
+        Returns: {
+          pelanggan_id: string
+          pelanggan_name: string
+          bulan: number
+          nama_bulan: string
+          saldo_awal: number
+          jumlah_piutang_baru: number
+          jumlah_bayar: number
+          sisa_piutang: number
+        }[]
+      }
       create_general_ledger_entry: {
-        Args: {
-          p_transaction_date: string
-          p_account_id: string
-          p_debit_amount?: number
-          p_credit_amount?: number
-          p_description?: string
-          p_reference_type?: string
-          p_reference_id?: string
-        }
+        Args:
+          | {
+              p_transaction_date: string
+              p_account_id: string
+              p_debit_amount?: number
+              p_credit_amount?: number
+              p_description?: string
+              p_reference_type?: string
+              p_reference_id?: string
+            }
+          | {
+              p_transaction_date: string
+              p_account_id: string
+              p_debit_amount?: number
+              p_credit_amount?: number
+              p_description?: string
+              p_reference_type?: string
+              p_reference_id?: string
+              p_supplier_name?: string
+              p_pelanggan_name?: string
+              p_payment_method?: string
+              p_kasir_name?: string
+              p_transaction_type?: string
+              p_transaction_number?: string
+            }
         Returns: undefined
       }
       create_supplier_debt: {
@@ -1645,6 +1906,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: string
       }
+      generate_receipt_number: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
       generate_transaction_number: {
         Args: Record<PropertyKey, never>
         Returns: string
@@ -1652,6 +1917,22 @@ export type Database = {
       generate_trial_balance: {
         Args: { p_period_id: string }
         Returns: undefined
+      }
+      get_credit_transactions: {
+        Args: {
+          p_start_date?: string
+          p_end_date?: string
+          p_transaction_number?: string
+        }
+        Returns: {
+          id: string
+          transaction_number: string
+          created_at: string
+          kasir_name: string
+          total_amount: number
+          credit_notes: string
+          customer_info: string
+        }[]
       }
       get_stock_opname_recap: {
         Args: { date_from?: string; date_to?: string }

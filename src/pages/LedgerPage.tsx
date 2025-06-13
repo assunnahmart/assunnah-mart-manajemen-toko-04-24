@@ -5,8 +5,25 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Users, Building, FileText, TrendingUp } from 'lucide-react';
 import CustomerReceivablesLedger from '@/components/ledgers/CustomerReceivablesLedger';
 import SupplierPayablesLedger from '@/components/ledgers/SupplierPayablesLedger';
+import { useCustomerReceivablesSummary, useSupplierPayablesSummary } from '@/hooks/useLedgers';
 
 const LedgerPage = () => {
+  const { data: customerSummary } = useCustomerReceivablesSummary();
+  const { data: supplierSummary } = useSupplierPayablesSummary();
+
+  const totalReceivables = customerSummary?.reduce((sum: number, item: any) => sum + Number(item.total_receivables), 0) || 0;
+  const totalPayables = supplierSummary?.reduce((sum: number, item: any) => sum + Number(item.total_payables), 0) || 0;
+  const netPosition = totalReceivables - totalPayables;
+  const todayTransactions = 0; // This would need a separate query for today's transactions
+
+  const formatRupiah = (amount: number) => {
+    return new Intl.NumberFormat('id-ID', {
+      style: 'currency',
+      currency: 'IDR',
+      minimumFractionDigits: 0,
+    }).format(amount);
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -24,8 +41,8 @@ const LedgerPage = () => {
             <Users className="h-4 w-4 text-blue-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-blue-600">-</div>
-            <p className="text-xs text-gray-500 mt-1">Dari semua pelanggan</p>
+            <div className="text-2xl font-bold text-blue-600">{formatRupiah(totalReceivables)}</div>
+            <p className="text-xs text-gray-500 mt-1">Dari {customerSummary?.length || 0} pelanggan</p>
           </CardContent>
         </Card>
 
@@ -35,8 +52,8 @@ const LedgerPage = () => {
             <Building className="h-4 w-4 text-orange-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-orange-600">-</div>
-            <p className="text-xs text-gray-500 mt-1">Dari semua supplier</p>
+            <div className="text-2xl font-bold text-orange-600">{formatRupiah(totalPayables)}</div>
+            <p className="text-xs text-gray-500 mt-1">Dari {supplierSummary?.length || 0} supplier</p>
           </CardContent>
         </Card>
 
@@ -46,7 +63,7 @@ const LedgerPage = () => {
             <FileText className="h-4 w-4 text-green-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600">-</div>
+            <div className="text-2xl font-bold text-green-600">{todayTransactions}</div>
             <p className="text-xs text-gray-500 mt-1">Pembayaran & penjualan</p>
           </CardContent>
         </Card>
@@ -57,8 +74,12 @@ const LedgerPage = () => {
             <TrendingUp className="h-4 w-4 text-purple-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-purple-600">-</div>
-            <p className="text-xs text-gray-500 mt-1">Piutang - Hutang</p>
+            <div className={`text-2xl font-bold ${netPosition >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+              {formatRupiah(Math.abs(netPosition))}
+            </div>
+            <p className="text-xs text-gray-500 mt-1">
+              {netPosition >= 0 ? 'Surplus' : 'Defisit'}
+            </p>
           </CardContent>
         </Card>
       </div>

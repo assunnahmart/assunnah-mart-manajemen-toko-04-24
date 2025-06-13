@@ -2315,6 +2315,14 @@ export type Database = {
           customer_info: string
         }[]
       }
+      get_customer_receivables_summary: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          pelanggan_name: string
+          total_receivables: number
+          total_transactions: number
+        }[]
+      }
       get_stock_opname_recap: {
         Args: { date_from?: string; date_to?: string }
         Returns: {
@@ -2327,6 +2335,14 @@ export type Database = {
           selisih_stok: number
           detail_input_pengguna: Json
           kategori_selisih: string
+        }[]
+      }
+      get_supplier_payables_summary: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          supplier_name: string
+          total_payables: number
+          total_transactions: number
         }[]
       }
       increment_personal_debt: {

@@ -16,6 +16,9 @@ import { useToast } from '@/hooks/use-toast';
 const PelangganManagement = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [editingCustomer, setEditingCustomer] = useState(null);
+  const [editingType, setEditingType] = useState('unit');
   const [newCustomer, setNewCustomer] = useState({
     nama: '',
     nama_unit: '',
@@ -32,7 +35,7 @@ const PelangganManagement = () => {
   const createPelangganPerorangan = useCreatePelangganPerorangan();
   const { toast } = useToast();
 
-  const handleCreateCustomer = async (type: 'unit' | 'perorangan') => {
+  const handleCreateCustomer = async (type) => {
     try {
       const customerData = {
         ...newCustomer,
@@ -65,6 +68,34 @@ const PelangganManagement = () => {
       toast({
         title: "Gagal",
         description: "Terjadi kesalahan saat menambahkan pelanggan",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleEditCustomer = (customer, type) => {
+    setEditingCustomer({
+      ...customer,
+      nama_unit: customer.nama_unit || ''
+    });
+    setEditingType(type);
+    setIsEditDialogOpen(true);
+  };
+
+  const handleUpdateCustomer = async () => {
+    try {
+      // This would need to be implemented with update mutations
+      // For now, just close the dialog
+      toast({
+        title: "Info",
+        description: "Fitur edit akan segera tersedia"
+      });
+      setIsEditDialogOpen(false);
+      setEditingCustomer(null);
+    } catch (error) {
+      toast({
+        title: "Gagal",
+        description: "Terjadi kesalahan saat memperbarui pelanggan",
         variant: "destructive"
       });
     }
@@ -199,6 +230,81 @@ const PelangganManagement = () => {
         </Dialog>
       </div>
 
+      {/* Edit Dialog */}
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Edit Pelanggan</DialogTitle>
+          </DialogHeader>
+          {editingCustomer && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="edit_nama">Nama Lengkap *</Label>
+                  <Input
+                    id="edit_nama"
+                    value={editingCustomer.nama}
+                    onChange={(e) => setEditingCustomer(prev => ({ ...prev, nama: e.target.value }))}
+                    placeholder="Masukkan nama lengkap"
+                  />
+                </div>
+                {editingType === 'unit' && (
+                  <div>
+                    <Label htmlFor="edit_nama_unit">Nama Unit/Perusahaan</Label>
+                    <Input
+                      id="edit_nama_unit"
+                      value={editingCustomer.nama_unit}
+                      onChange={(e) => setEditingCustomer(prev => ({ ...prev, nama_unit: e.target.value }))}
+                      placeholder="Nama unit atau perusahaan"
+                    />
+                  </div>
+                )}
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="edit_jabatan">Jabatan</Label>
+                  <Input
+                    id="edit_jabatan"
+                    value={editingCustomer.jabatan || ''}
+                    onChange={(e) => setEditingCustomer(prev => ({ ...prev, jabatan: e.target.value }))}
+                    placeholder="Jabatan"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="edit_telepon">Nomor Telepon</Label>
+                  <Input
+                    id="edit_telepon"
+                    value={editingCustomer.telepon || ''}
+                    onChange={(e) => setEditingCustomer(prev => ({ ...prev, telepon: e.target.value }))}
+                    placeholder="Nomor telepon"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <Label htmlFor="edit_alamat">Alamat</Label>
+                <Textarea
+                  id="edit_alamat"
+                  value={editingCustomer.alamat || ''}
+                  onChange={(e) => setEditingCustomer(prev => ({ ...prev, alamat: e.target.value }))}
+                  placeholder="Alamat lengkap"
+                />
+              </div>
+
+              <Button
+                onClick={handleUpdateCustomer}
+                disabled={!editingCustomer.nama}
+                className="w-full"
+              >
+                <User className="h-4 w-4 mr-2" />
+                Update Pelanggan
+              </Button>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
@@ -258,7 +364,11 @@ const PelangganManagement = () => {
                           <div>Limit: <span className="font-semibold">Rp {(customer.limit_kredit || 0).toLocaleString()}</span></div>
                         </div>
                         <div className="flex gap-2">
-                          <Button size="sm" variant="outline">
+                          <Button 
+                            size="sm" 
+                            variant="outline"
+                            onClick={() => handleEditCustomer(customer, 'unit')}
+                          >
                             <Edit className="h-4 w-4" />
                           </Button>
                           <Button size="sm" variant="outline">
@@ -299,7 +409,11 @@ const PelangganManagement = () => {
                           <div>Limit: <span className="font-semibold">Rp {(customer.limit_kredit || 0).toLocaleString()}</span></div>
                         </div>
                         <div className="flex gap-2">
-                          <Button size="sm" variant="outline">
+                          <Button 
+                            size="sm" 
+                            variant="outline"
+                            onClick={() => handleEditCustomer(customer, 'perorangan')}
+                          >
                             <Edit className="h-4 w-4" />
                           </Button>
                           <Button size="sm" variant="outline">

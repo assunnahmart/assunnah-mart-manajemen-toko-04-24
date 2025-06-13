@@ -8,9 +8,13 @@ import { usePelangganKredit } from "@/hooks/usePelanggan";
 import NewProtectedRoute from "@/components/NewProtectedRoute";
 import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
+import PaymentDialog from "@/components/penjualan/PaymentDialog";
+import { useState } from "react";
 
 const PenjualanKredit = () => {
   const { data: pelangganKredit } = usePelangganKredit();
+  const [selectedCustomer, setSelectedCustomer] = useState(null);
+  const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
 
   const formatRupiah = (amount: number) => {
     return new Intl.NumberFormat('id-ID', {
@@ -29,6 +33,22 @@ const PenjualanKredit = () => {
       default:
         return 'secondary';
     }
+  };
+
+  const handlePayment = (customer: any) => {
+    setSelectedCustomer(customer);
+    setIsPaymentDialogOpen(true);
+  };
+
+  const handlePaymentSubmit = async (paymentData: any) => {
+    // This would typically integrate with your payment processing system
+    console.log('Processing payment:', paymentData, 'for customer:', selectedCustomer);
+    
+    // Simulate API call
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    
+    // You would call your actual payment API here
+    // Example: await processPayment(selectedCustomer.id, paymentData);
   };
 
   const PelangganUnitCard = ({ unit }: { unit: any }) => (
@@ -62,7 +82,13 @@ const PenjualanKredit = () => {
         </div>
         
         <div className="flex gap-2">
-          <Button size="sm" variant="outline" className="flex-1">
+          <Button 
+            size="sm" 
+            variant="outline" 
+            className="flex-1"
+            onClick={() => handlePayment(unit)}
+            disabled={!unit.total_tagihan || unit.total_tagihan <= 0}
+          >
             Bayar
           </Button>
           <Button size="sm" variant="outline" className="flex-1">
@@ -104,7 +130,13 @@ const PenjualanKredit = () => {
         </div>
         
         <div className="flex gap-2">
-          <Button size="sm" variant="outline" className="flex-1">
+          <Button 
+            size="sm" 
+            variant="outline" 
+            className="flex-1"
+            onClick={() => handlePayment(pelanggan)}
+            disabled={!pelanggan.sisa_piutang || pelanggan.sisa_piutang <= 0}
+          >
             Bayar
           </Button>
           <Button size="sm" variant="outline" className="flex-1">
@@ -237,6 +269,17 @@ const PenjualanKredit = () => {
                     </Card>
                   </TabsContent>
                 </Tabs>
+
+                {/* Payment Dialog */}
+                <PaymentDialog
+                  isOpen={isPaymentDialogOpen}
+                  onClose={() => {
+                    setIsPaymentDialogOpen(false);
+                    setSelectedCustomer(null);
+                  }}
+                  customer={selectedCustomer}
+                  onPaymentSubmit={handlePaymentSubmit}
+                />
               </div>
             </div>
           </SidebarInset>

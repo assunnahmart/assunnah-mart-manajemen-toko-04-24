@@ -203,6 +203,68 @@ export type Database = {
           },
         ]
       }
+      customer_receivables_ledger: {
+        Row: {
+          created_at: string | null
+          credit_amount: number | null
+          debit_amount: number | null
+          description: string | null
+          id: string
+          kasir_name: string | null
+          pelanggan_id: string | null
+          pelanggan_name: string
+          reference_id: string | null
+          reference_number: string | null
+          reference_type: string
+          running_balance: number | null
+          transaction_date: string
+          transaction_type: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          credit_amount?: number | null
+          debit_amount?: number | null
+          description?: string | null
+          id?: string
+          kasir_name?: string | null
+          pelanggan_id?: string | null
+          pelanggan_name: string
+          reference_id?: string | null
+          reference_number?: string | null
+          reference_type: string
+          running_balance?: number | null
+          transaction_date: string
+          transaction_type?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          credit_amount?: number | null
+          debit_amount?: number | null
+          description?: string | null
+          id?: string
+          kasir_name?: string | null
+          pelanggan_id?: string | null
+          pelanggan_name?: string
+          reference_id?: string | null
+          reference_number?: string | null
+          reference_type?: string
+          running_balance?: number | null
+          transaction_date?: string
+          transaction_type?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "customer_receivables_ledger_pelanggan_id_fkey"
+            columns: ["pelanggan_id"]
+            isOneToOne: false
+            referencedRelation: "pelanggan"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       detail_retur_pembelian: {
         Row: {
           alasan_item: string | null
@@ -1809,6 +1871,68 @@ export type Database = {
         }
         Relationships: []
       }
+      supplier_payables_ledger: {
+        Row: {
+          created_at: string | null
+          credit_amount: number | null
+          debit_amount: number | null
+          description: string | null
+          id: string
+          kasir_name: string | null
+          reference_id: string | null
+          reference_number: string | null
+          reference_type: string
+          running_balance: number | null
+          supplier_id: string | null
+          supplier_name: string
+          transaction_date: string
+          transaction_type: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          credit_amount?: number | null
+          debit_amount?: number | null
+          description?: string | null
+          id?: string
+          kasir_name?: string | null
+          reference_id?: string | null
+          reference_number?: string | null
+          reference_type: string
+          running_balance?: number | null
+          supplier_id?: string | null
+          supplier_name: string
+          transaction_date: string
+          transaction_type?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          credit_amount?: number | null
+          debit_amount?: number | null
+          description?: string | null
+          id?: string
+          kasir_name?: string | null
+          reference_id?: string | null
+          reference_number?: string | null
+          reference_type?: string
+          running_balance?: number | null
+          supplier_id?: string | null
+          supplier_name?: string
+          transaction_date?: string
+          transaction_type?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "supplier_payables_ledger_supplier_id_fkey"
+            columns: ["supplier_id"]
+            isOneToOne: false
+            referencedRelation: "supplier"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       transaksi_pembelian: {
         Row: {
           catatan: string | null
@@ -2219,6 +2343,28 @@ export type Database = {
       }
       process_sales_return: {
         Args: { p_retur_id: string }
+        Returns: undefined
+      }
+      record_customer_payment: {
+        Args: {
+          p_pelanggan_name: string
+          p_amount: number
+          p_payment_date: string
+          p_reference_number: string
+          p_kasir_name: string
+          p_keterangan?: string
+        }
+        Returns: undefined
+      }
+      record_supplier_payment: {
+        Args: {
+          p_supplier_id: string
+          p_amount: number
+          p_payment_date: string
+          p_reference_number: string
+          p_kasir_name: string
+          p_keterangan?: string
+        }
         Returns: undefined
       }
       update_stok_barang: {

@@ -13,7 +13,8 @@ import {
   LogOut,
   Scan,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  DollarSign
 } from 'lucide-react';
 import { useSimpleAuth } from '@/hooks/useSimpleAuth';
 import { useToast } from '@/hooks/use-toast';
@@ -26,6 +27,7 @@ interface POSSidebarProps {
   onStockOpname: () => void;
   onKasirKas: () => void;
   onDailyReport: () => void;
+  onKasUmum: () => void;
 }
 
 const POSSidebar = ({
@@ -34,7 +36,8 @@ const POSSidebar = ({
   onKonsinyasi,
   onStockOpname,
   onKasirKas,
-  onDailyReport
+  onDailyReport,
+  onKasUmum
 }: POSSidebarProps) => {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const { user, signOut } = useSimpleAuth();
@@ -85,6 +88,13 @@ const POSSidebar = ({
       onClick: onKasirKas,
       color: 'bg-indigo-600 hover:bg-indigo-700',
       description: 'Kas kasir'
+    },
+    {
+      icon: DollarSign,
+      label: 'Kas Umum',
+      onClick: onKasUmum,
+      color: 'bg-yellow-600 hover:bg-yellow-700',
+      description: 'Kas umum & tunai'
     },
     {
       icon: FileText,

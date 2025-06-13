@@ -21,18 +21,22 @@ import KonsinyasiHarianHistory from '@/components/konsinyasi/KonsinyasiHarianHis
 import StockOpname from '@/components/stock/StockOpname';
 import KasirKasForm from '@/components/kas/KasirKasForm';
 import KasirKasHistory from '@/components/kas/KasirKasHistory';
+import KasUmumForm from '@/components/kas/KasUmumForm';
+import KasUmumHistory from '@/components/kas/KasUmumHistory';
 import { useCreatePOSTransaction } from '@/hooks/usePOSTransactions';
 import { useSimpleAuth } from '@/hooks/useSimpleAuth';
 import { useToast } from '@/hooks/use-toast';
 import NewProtectedRoute from '@/components/NewProtectedRoute';
 import POSTransactionSync from '@/components/pos/POSTransactionSync';
 import { usePOSTransactionSync } from '@/hooks/usePOSTransactionSync';
+
 interface Customer {
   id: string;
   name: string;
   type: 'unit' | 'perorangan' | 'guest';
   phone?: string;
 }
+
 const POSSystem = () => {
   const {
     user,
@@ -54,6 +58,7 @@ const POSSystem = () => {
   const [showKonsinyasi, setShowKonsinyasi] = useState(false);
   const [showKasirKas, setShowKasirKas] = useState(false);
   const [showStockOpname, setShowStockOpname] = useState(false);
+  const [showKasUmum, setShowKasUmum] = useState(false);
   const createTransaction = useCreatePOSTransaction();
   const {
     syncStock,
@@ -291,7 +296,15 @@ const POSSystem = () => {
       <POSTransactionSync onTransactionComplete={handleTransactionSync}>
         <div className="min-h-screen bg-gray-50 flex">
           {/* Sidebar - Always show */}
-          <POSSidebar onQuickScan={() => setShowQuickScanner(true)} onTransactionHistory={() => setShowTransactionHistory(true)} onKonsinyasi={() => setShowKonsinyasi(true)} onStockOpname={() => setShowStockOpname(true)} onKasirKas={() => setShowKasirKas(true)} onDailyReport={() => setShowDailyReport(true)} />
+          <POSSidebar 
+            onQuickScan={() => setShowQuickScanner(true)} 
+            onTransactionHistory={() => setShowTransactionHistory(true)} 
+            onKonsinyasi={() => setShowKonsinyasi(true)} 
+            onStockOpname={() => setShowStockOpname(true)} 
+            onKasirKas={() => setShowKasirKas(true)} 
+            onDailyReport={() => setShowDailyReport(true)}
+            onKasUmum={() => setShowKasUmum(true)}
+          />
 
           {/* Main Content */}
           <div className="flex-1 transition-all duration-300 ml-16">
@@ -493,6 +506,27 @@ const POSSystem = () => {
               </div>
             </div>}
 
+          {/* Kas Umum Modal */}
+          {showKasUmum && <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+              <div className="bg-white rounded-lg max-w-6xl w-full max-h-[90vh] overflow-hidden">
+                <div className="flex items-center justify-between p-6 border-b">
+                  <h2 className="text-xl font-semibold flex items-center gap-2">
+                    <Wallet className="h-5 w-5" />
+                    Kas Umum
+                  </h2>
+                  <Button variant="ghost" onClick={() => setShowKasUmum(false)} className="h-8 w-8 p-0">
+                    ×
+                  </Button>
+                </div>
+                <div className="p-6 overflow-y-auto max-h-[calc(90vh-80px)]">
+                  <div className="space-y-6">
+                    <KasUmumForm />
+                    <KasUmumHistory />
+                  </div>
+                </div>
+              </div>
+            </div>}
+
           {/* Daily Report Modal */}
           {showDailyReport && user?.full_name && <POSDailyReport isOpen={showDailyReport} onClose={() => setShowDailyReport(false)} kasirName={user.full_name} />}
 
@@ -527,4 +561,5 @@ const POSSystem = () => {
       </POSTransactionSync>
     </NewProtectedRoute>;
 };
+
 export default POSSystem;

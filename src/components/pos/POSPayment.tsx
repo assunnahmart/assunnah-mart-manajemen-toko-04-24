@@ -36,18 +36,26 @@ const POSPayment = ({
 
   // Auto focus on amount input when modal opens
   useEffect(() => {
-    if (selectedPaymentMethod === 'cash' && amountInputRef.current) {
-      setTimeout(() => {
-        amountInputRef.current?.focus();
-        amountInputRef.current?.select();
-      }, 100);
-    }
+    const timer = setTimeout(() => {
+      if (selectedPaymentMethod === 'cash' && amountInputRef.current) {
+        amountInputRef.current.focus();
+        amountInputRef.current.select();
+      }
+    }, 150);
+    
+    return () => clearTimeout(timer);
   }, [selectedPaymentMethod]);
 
   const changeAmount = Math.max(0, amountPaid - totalAmount);
 
   const validateInput = () => {
     setInputError('');
+    
+    // Reset any previous errors
+    if (!amountPaid || amountPaid === 0) {
+      setInputError('Jumlah bayar tidak boleh kosong');
+      return false;
+    }
     
     if (isNaN(amountPaid) || amountPaid < 0) {
       setInputError('Jumlah bayar harus berupa angka positif');
@@ -62,9 +70,21 @@ const POSPayment = ({
     return true;
   };
 
+  const validateStockBeforePayment = () => {
+    for (const item of cartItems) {
+      if (item.stok_saat_ini < item.quantity) {
+        throw new Error(`Stok ${item.nama} tidak mencukupi. Tersisa: ${item.stok_saat_ini}, dibutuhkan: ${item.quantity}`);
+      }
+    }
+  };
+
   const updateStockItems = async (items: any[]) => {
+    console.log('Updating stock for items:', items);
+    
     for (const item of items) {
       try {
+        console.log(`Updating stock for ${item.nama}: current=${item.stok_saat_ini}, quantity=${item.quantity}`);
+        
         const { error } = await supabase
           .rpc('update_stok_barang', {
             barang_id: item.id.toString(),
@@ -75,6 +95,8 @@ const POSPayment = ({
           console.error('Error updating stock for item:', item.id, error);
           throw new Error(`Gagal update stok untuk ${item.nama}: ${error.message}`);
         }
+        
+        console.log(`Successfully updated stock for ${item.nama}`);
       } catch (error) {
         console.error('Stock update error:', error);
         throw error;
@@ -84,6 +106,8 @@ const POSPayment = ({
 
   const updateCustomerDebt = async () => {
     if (selectedPaymentMethod !== 'credit' || !selectedCustomer) return;
+
+    console.log('Updating customer debt for:', selectedCustomer);
 
     try {
       if (selectedCustomer.type === 'unit') {
@@ -113,6 +137,8 @@ const POSPayment = ({
           throw new Error('Gagal update piutang perorangan');
         }
       }
+      
+      console.log('Customer debt updated successfully');
     } catch (error) {
       console.error('Customer debt update error:', error);
       throw error;
@@ -120,19 +146,19 @@ const POSPayment = ({
   };
 
   const handlePayment = async () => {
+    console.log('Starting payment process for cash payment');
+    
     if (!validateInput()) {
+      console.log('Input validation failed');
       return;
     }
 
     setIsProcessing(true);
 
     try {
-      console.log('Starting payment process:', {
-        paymentMethod: selectedPaymentMethod,
-        totalAmount,
-        amountPaid,
-        cartItemsCount: cartItems.length
-      });
+      // Validate stock before processing
+      validateStockBeforePayment();
+      console.log('Stock validation passed');
 
       // Create transaction data
       const transactionData = {
@@ -171,8 +197,10 @@ const POSPayment = ({
       console.log('Stock updated successfully');
 
       // Update customer debt if credit payment
-      await updateCustomerDebt();
-      console.log('Customer debt updated successfully');
+      if (selectedPaymentMethod === 'credit') {
+        await updateCustomerDebt();
+        console.log('Customer debt updated successfully');
+      }
 
       // Dispatch completion event for sync
       const event = new CustomEvent('pos-transaction-complete', {
@@ -184,12 +212,19 @@ const POSPayment = ({
       window.dispatchEvent(event);
       console.log('Transaction completion event dispatched');
 
+      // Show success message
+      const paymentMethodText = selectedPaymentMethod === 'cash' ? 'tunai' : 'kredit';
+      const changeText = selectedPaymentMethod === 'cash' && changeAmount > 0 
+        ? ` | Kembalian: Rp ${changeAmount.toLocaleString('id-ID')}` 
+        : '';
+        
       toast({
         title: "Pembayaran berhasil",
-        description: `Transaksi ${result.transaction.transaction_number} telah disimpan dengan metode ${selectedPaymentMethod === 'cash' ? 'tunai' : 'kredit'}`
+        description: `Transaksi ${result.transaction.transaction_number} dengan metode ${paymentMethodText}${changeText}`
       });
 
       // Reset and close
+      console.log('Payment completed successfully, calling onSuccess');
       onSuccess();
 
     } catch (error: any) {
@@ -198,10 +233,10 @@ const POSPayment = ({
       let errorMessage = 'Terjadi kesalahan saat memproses pembayaran';
       
       if (error.message?.includes('stok')) {
-        errorMessage = 'Gagal memperbarui stok produk';
+        errorMessage = 'Stok tidak mencukupi';
       } else if (error.message?.includes('piutang')) {
         errorMessage = 'Gagal memperbarui piutang pelanggan';
-      } else if (error.message?.includes('transaction')) {
+      } else if (error.message?.includes('transaksi')) {
         errorMessage = 'Gagal menyimpan transaksi';
       }
       
@@ -216,9 +251,17 @@ const POSPayment = ({
   };
 
   const handleAmountChange = (value: string) => {
-    const numValue = parseFloat(value) || 0;
-    setAmountPaid(numValue);
+    const numValue = value === '' ? 0 : parseFloat(value);
+    setAmountPaid(isNaN(numValue) ? 0 : numValue);
     setInputError('');
+  };
+
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !isProcessing && selectedPaymentMethod === 'cash') {
+      if (amountPaid >= totalAmount && !inputError) {
+        handlePayment();
+      }
+    }
   };
 
   return (
@@ -251,12 +294,14 @@ const POSPayment = ({
                   id="amountPaid"
                   ref={amountInputRef}
                   type="number"
-                  value={amountPaid}
+                  value={amountPaid || ''}
                   onChange={(e) => handleAmountChange(e.target.value)}
+                  onKeyPress={handleKeyPress}
                   className={`text-lg font-bold ${inputError ? 'border-red-500' : ''}`}
                   min="0"
                   step="1000"
                   disabled={isProcessing}
+                  placeholder="Masukkan jumlah bayar"
                 />
                 {inputError && (
                   <p className="text-sm text-red-600 mt-1">{inputError}</p>
@@ -291,7 +336,11 @@ const POSPayment = ({
             </Button>
             <Button
               onClick={handlePayment}
-              disabled={isProcessing || (selectedPaymentMethod === 'cash' && (amountPaid < totalAmount || !!inputError))}
+              disabled={
+                isProcessing || 
+                (selectedPaymentMethod === 'cash' && (amountPaid < totalAmount || !!inputError)) ||
+                (selectedPaymentMethod === 'credit' && !selectedCustomer)
+              }
               className="flex-1"
             >
               {isProcessing ? 'Memproses...' : 'Bayar'}

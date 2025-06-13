@@ -156,6 +156,29 @@ const POSSystem = () => {
       });
       return;
     }
+
+    // Pre-transaction validation
+    try {
+      for (const item of cartItems) {
+        if (item.stok_saat_ini < item.quantity) {
+          toast({
+            title: "Stok tidak mencukupi",
+            description: `Stok ${item.nama} hanya tersisa ${item.stok_saat_ini}`,
+            variant: "destructive"
+          });
+          return;
+        }
+      }
+    } catch (error) {
+      console.error('Pre-transaction validation error:', error);
+      toast({
+        title: "Error validasi",
+        description: "Gagal memvalidasi stok produk",
+        variant: "destructive"
+      });
+      return;
+    }
+
     try {
       const transactionData = {
         kasir_username: user?.username || 'unknown',
@@ -168,6 +191,7 @@ const POSSystem = () => {
         status: 'completed' as const,
         notes: `Quick save - ${selectedCustomer ? `Pelanggan: ${selectedCustomer.name}` : 'Tanpa pelanggan'} - Metode: ${selectedPaymentMethod === 'cash' ? 'Tunai' : 'Kredit'} - Transaksi selesai otomatis`
       };
+
       const itemsData = cartItems.map(item => ({
         product_id: item.id.toString(),
         product_name: item.nama,
@@ -176,20 +200,24 @@ const POSSystem = () => {
         subtotal: item.harga_jual * item.quantity,
         unit: item.satuan || 'pcs'
       }));
-      console.log('Saving transaction data:', {
-        transactionData,
-        itemsData
-      });
+
+      console.log('Saving transaction data:', { transactionData, itemsData });
+
       await createTransaction.mutateAsync({
         transaction: transactionData,
         items: itemsData
       });
+
+      // Clear cart and reset state
       setCartItems([]);
       setSelectedCustomer(null);
+      setSelectedPaymentMethod('cash');
+
       toast({
         title: "Transaksi berhasil diselesaikan",
         description: "Transaksi telah disimpan dengan status selesai dan terintegrasi dengan laporan rekap penjualan kasir"
       });
+
     } catch (error) {
       console.error('Error saving transaction:', error);
       toast({
@@ -208,6 +236,7 @@ const POSSystem = () => {
       });
       return;
     }
+
     if (selectedPaymentMethod === 'credit' && !selectedCustomer) {
       toast({
         title: "Pilih pelanggan",
@@ -216,11 +245,25 @@ const POSSystem = () => {
       });
       return;
     }
+
+    // Pre-transaction stock validation
+    for (const item of cartItems) {
+      if (item.stok_saat_ini < item.quantity) {
+        toast({
+          title: "Stok tidak mencukupi",
+          description: `Stok ${item.nama} hanya tersisa ${item.stok_saat_ini}`,
+          variant: "destructive"
+        });
+        return;
+      }
+    }
+
     setShowPayment(true);
   };
   const clearCart = () => {
     setCartItems([]);
     setSelectedCustomer(null);
+    setSelectedPaymentMethod('cash');
   };
   const handleBarcodeScanned = (barcode: string) => {
     console.log('Barcode scanned in POS:', barcode);
@@ -454,11 +497,26 @@ const POSSystem = () => {
           {showDailyReport && user?.full_name && <POSDailyReport isOpen={showDailyReport} onClose={() => setShowDailyReport(false)} kasirName={user.full_name} />}
 
           {/* Payment Modal */}
-          {showPayment && <POSPayment cartItems={cartItems} totalAmount={getTotalAmount()} selectedCustomer={selectedCustomer} selectedPaymentMethod={selectedPaymentMethod} onClose={() => setShowPayment(false)} onSuccess={() => {
-          setCartItems([]);
-          setSelectedCustomer(null);
-          setShowPayment(false);
-        }} />}
+          {showPayment && (
+            <POSPayment
+              cartItems={cartItems}
+              totalAmount={getTotalAmount()}
+              selectedCustomer={selectedCustomer}
+              selectedPaymentMethod={selectedPaymentMethod}
+              onClose={() => setShowPayment(false)}
+              onSuccess={() => {
+                setCartItems([]);
+                setSelectedCustomer(null);
+                setSelectedPaymentMethod('cash');
+                setShowPayment(false);
+                
+                // Force refresh of product data to reflect updated stock
+                setTimeout(() => {
+                  window.location.reload();
+                }, 1000);
+              }}
+            />
+          )}
 
           {/* Regular Barcode Scanner Modal */}
           <POSBarcodeScanner isOpen={showScanner} onScan={handleBarcodeScanned} onClose={() => setShowScanner(false)} />

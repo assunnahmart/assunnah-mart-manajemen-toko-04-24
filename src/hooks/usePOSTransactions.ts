@@ -1,4 +1,3 @@
-
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Tables, TablesInsert } from '@/integrations/supabase/types';
@@ -43,13 +42,15 @@ export const useCreatePOSTransaction = () => {
       transaction: Omit<POSTransactionInsert, 'transaction_number'>; 
       items: Omit<POSTransactionItemInsert, 'transaction_id'>[] 
     }) => {
+      console.log('Starting transaction creation process...');
+      
       // Generate transaction number
       const { data: transactionNumber, error: numberError } = await supabase
         .rpc('generate_pos_transaction_number');
       
       if (numberError) {
         console.error('Error generating transaction number:', numberError);
-        throw numberError;
+        throw new Error(`Gagal generate nomor transaksi: ${numberError.message}`);
       }
       
       console.log('Generated transaction number:', transactionNumber);
@@ -70,7 +71,7 @@ export const useCreatePOSTransaction = () => {
       
       if (transactionError) {
         console.error('Error inserting transaction:', transactionError);
-        throw transactionError;
+        throw new Error(`Gagal menyimpan transaksi: ${transactionError.message}`);
       }
       
       console.log('Transaction inserted successfully:', insertedTransaction);
@@ -90,27 +91,33 @@ export const useCreatePOSTransaction = () => {
       
       if (itemsError) {
         console.error('Error inserting items:', itemsError);
-        throw itemsError;
+        throw new Error(`Gagal menyimpan item transaksi: ${itemsError.message}`);
       }
       
       console.log('Items inserted successfully:', itemsData);
 
-      // Dispatch custom event for transaction completion
-      const event = new CustomEvent('pos-transaction-complete', {
-        detail: {
-          transaction: insertedTransaction,
-          items: itemsData
-        }
-      });
-      window.dispatchEvent(event);
+      // Return the complete transaction data
+      const result = { transaction: insertedTransaction, items: itemsData };
+      console.log('Transaction creation completed:', result);
       
-      return { transaction: insertedTransaction, items: itemsData };
+      return result;
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      console.log('Transaction mutation success, invalidating queries...');
+      
+      // Invalidate all relevant queries
       queryClient.invalidateQueries({ queryKey: ['pos_transactions'] });
       queryClient.invalidateQueries({ queryKey: ['pos_transactions_today'] });
       queryClient.invalidateQueries({ queryKey: ['barang'] });
+      queryClient.invalidateQueries({ queryKey: ['barang_konsinyasi'] });
+      queryClient.invalidateQueries({ queryKey: ['barang-konsinyasi'] });
+      queryClient.invalidateQueries({ queryKey: ['stock_data'] });
+      
+      console.log('All queries invalidated successfully');
     },
+    onError: (error) => {
+      console.error('Transaction mutation error:', error);
+    }
   });
 };
 

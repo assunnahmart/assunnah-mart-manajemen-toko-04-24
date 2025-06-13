@@ -4,336 +4,278 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Search, Plus, Edit, Trash2, Package, Building, Phone, MapPin } from 'lucide-react';
-import { useSupplier, useCreateSupplier, useUpdateSupplier, useDeleteSupplier } from '@/hooks/useSupplier';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Search, Plus, Edit, Trash2, Building2, Phone, Mail, MapPin } from 'lucide-react';
+import { useSupplier } from '@/hooks/useSupplier';
 import { useToast } from '@/hooks/use-toast';
 
 const SupplierManagement = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editingSupplier, setEditingSupplier] = useState(null);
-  const [newSupplier, setNewSupplier] = useState({
+  const [supplierForm, setSupplierForm] = useState({
     nama: '',
+    jenis: '',
     alamat: '',
     telepon: '',
-    email: '',
-    kontak_person: '',
-    jenis: 'supplier'
+    email: ''
   });
 
-  const { data: suppliers } = useSupplier();
-  const createSupplier = useCreateSupplier();
-  const updateSupplier = useUpdateSupplier();
-  const deleteSupplier = useDeleteSupplier();
+  const { data: suppliers, createSupplier, updateSupplier, deleteSupplier } = useSupplier();
   const { toast } = useToast();
 
   const filteredSuppliers = suppliers?.filter(supplier =>
-    supplier.nama.toLowerCase().includes(searchTerm.toLowerCase())
+    supplier.nama.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    supplier.jenis?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    supplier.alamat?.toLowerCase().includes(searchTerm.toLowerCase())
   ) || [];
 
-  const handleCreateSupplier = async () => {
+  const handleSubmit = async () => {
     try {
-      await createSupplier.mutateAsync(newSupplier);
-      toast({
-        title: "Berhasil",
-        description: "Supplier berhasil ditambahkan"
-      });
+      if (editingSupplier) {
+        await updateSupplier.mutateAsync({
+          id: editingSupplier.id,
+          ...supplierForm
+        });
+        toast({
+          title: "Berhasil",
+          description: "Data supplier berhasil diperbarui"
+        });
+      } else {
+        await createSupplier.mutateAsync(supplierForm);
+        toast({
+          title: "Berhasil", 
+          description: "Supplier baru berhasil ditambahkan"
+        });
+      }
+      
+      resetForm();
       setIsDialogOpen(false);
-      setNewSupplier({
-        nama: '',
-        alamat: '',
-        telepon: '',
-        email: '',
-        kontak_person: '',
-        jenis: 'supplier'
-      });
     } catch (error) {
       toast({
-        title: "Gagal",
-        description: "Terjadi kesalahan saat menambahkan supplier",
+        title: "Error",
+        description: error.message,
         variant: "destructive"
       });
     }
   };
 
-  const handleEditSupplier = (supplier) => {
-    setEditingSupplier({
-      ...supplier,
-      kontak_person: supplier.kontak_person || ''
+  const handleEdit = (supplier) => {
+    setEditingSupplier(supplier);
+    setSupplierForm({
+      nama: supplier.nama,
+      jenis: supplier.jenis || '',
+      alamat: supplier.alamat || '',
+      telepon: supplier.telepon || '',
+      email: supplier.email || ''
     });
-    setIsEditDialogOpen(true);
+    setIsDialogOpen(true);
   };
 
-  const handleUpdateSupplier = async () => {
-    try {
-      await updateSupplier.mutateAsync({
-        id: editingSupplier.id,
-        updates: {
-          nama: editingSupplier.nama,
-          alamat: editingSupplier.alamat,
-          telepon: editingSupplier.telepon,
-          email: editingSupplier.email,
-          kontak_person: editingSupplier.kontak_person,
-          jenis: editingSupplier.jenis
-        }
-      });
-      toast({
-        title: "Berhasil",
-        description: "Supplier berhasil diperbarui"
-      });
-      setIsEditDialogOpen(false);
-      setEditingSupplier(null);
-    } catch (error) {
-      toast({
-        title: "Gagal",
-        description: "Terjadi kesalahan saat memperbarui supplier",
-        variant: "destructive"
-      });
-    }
-  };
-
-  const handleDeleteSupplier = async (id) => {
-    if (confirm('Apakah Anda yakin ingin menghapus supplier ini?')) {
+  const handleDelete = async (supplierId) => {
+    if (window.confirm('Apakah Anda yakin ingin menghapus supplier ini?')) {
       try {
-        await deleteSupplier.mutateAsync(id);
+        await deleteSupplier.mutateAsync(supplierId);
         toast({
           title: "Berhasil",
           description: "Supplier berhasil dihapus"
         });
       } catch (error) {
         toast({
-          title: "Gagal",
-          description: "Terjadi kesalahan saat menghapus supplier",
+          title: "Error", 
+          description: error.message,
           variant: "destructive"
         });
       }
     }
   };
 
+  const resetForm = () => {
+    setSupplierForm({
+      nama: '',
+      jenis: '',
+      alamat: '',
+      telepon: '',
+      email: ''
+    });
+    setEditingSupplier(null);
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold">Manajemen Supplier</h1>
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <div>
+          <h1 className="text-3xl font-bold">Manajemen Supplier</h1>
+          <p className="text-gray-600">Kelola data supplier dan vendor</p>
+        </div>
+        <Dialog open={isDialogOpen} onOpenChange={(open) => {
+          setIsDialogOpen(open);
+          if (!open) resetForm();
+        }}>
           <DialogTrigger asChild>
-            <Button className="bg-blue-600 hover:bg-blue-700">
+            <Button>
               <Plus className="h-4 w-4 mr-2" />
               Tambah Supplier
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-2xl">
+          <DialogContent>
             <DialogHeader>
-              <DialogTitle>Tambah Supplier Baru</DialogTitle>
+              <DialogTitle>
+                {editingSupplier ? 'Edit Supplier' : 'Tambah Supplier Baru'}
+              </DialogTitle>
             </DialogHeader>
             <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="nama">Nama Supplier *</Label>
-                  <Input
-                    id="nama"
-                    value={newSupplier.nama}
-                    onChange={(e) => setNewSupplier(prev => ({ ...prev, nama: e.target.value }))}
-                    placeholder="Masukkan nama supplier"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="kontak_person">Kontak Person</Label>
-                  <Input
-                    id="kontak_person"
-                    value={newSupplier.kontak_person}
-                    onChange={(e) => setNewSupplier(prev => ({ ...prev, kontak_person: e.target.value }))}
-                    placeholder="Nama kontak person"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="telepon">Nomor Telepon</Label>
-                  <Input
-                    id="telepon"
-                    value={newSupplier.telepon}
-                    onChange={(e) => setNewSupplier(prev => ({ ...prev, telepon: e.target.value }))}
-                    placeholder="Nomor telepon"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="email">Email</Label>
-                  <Input
-                    id="email"
-                    value={newSupplier.email}
-                    onChange={(e) => setNewSupplier(prev => ({ ...prev, email: e.target.value }))}
-                    placeholder="Email supplier"
-                  />
-                </div>
-              </div>
-
               <div>
-                <Label htmlFor="alamat">Alamat</Label>
-                <Textarea
-                  id="alamat"
-                  value={newSupplier.alamat}
-                  onChange={(e) => setNewSupplier(prev => ({ ...prev, alamat: e.target.value }))}
-                  placeholder="Alamat lengkap supplier"
+                <Label>Nama Supplier</Label>
+                <Input
+                  value={supplierForm.nama}
+                  onChange={(e) => setSupplierForm(prev => ({ ...prev, nama: e.target.value }))}
+                  placeholder="Masukkan nama supplier"
                 />
               </div>
-
-              <Button
-                onClick={handleCreateSupplier}
-                disabled={!newSupplier.nama || createSupplier.isPending}
+              <div>
+                <Label>Jenis/Kategori</Label>
+                <Input
+                  value={supplierForm.jenis}
+                  onChange={(e) => setSupplierForm(prev => ({ ...prev, jenis: e.target.value }))}
+                  placeholder="Masukkan jenis supplier"
+                />
+              </div>
+              <div>
+                <Label>Alamat</Label>
+                <Input
+                  value={supplierForm.alamat}
+                  onChange={(e) => setSupplierForm(prev => ({ ...prev, alamat: e.target.value }))}
+                  placeholder="Masukkan alamat supplier"
+                />
+              </div>
+              <div>
+                <Label>Telepon</Label>
+                <Input
+                  value={supplierForm.telepon}
+                  onChange={(e) => setSupplierForm(prev => ({ ...prev, telepon: e.target.value }))}
+                  placeholder="Masukkan nomor telepon"
+                />
+              </div>
+              <div>
+                <Label>Email</Label>
+                <Input
+                  value={supplierForm.email}
+                  onChange={(e) => setSupplierForm(prev => ({ ...prev, email: e.target.value }))}
+                  placeholder="Masukkan email supplier"
+                  type="email"
+                />
+              </div>
+              <Button 
+                onClick={handleSubmit} 
+                disabled={createSupplier.isPending || updateSupplier.isPending}
                 className="w-full"
               >
-                <Building className="h-4 w-4 mr-2" />
-                {createSupplier.isPending ? 'Menyimpan...' : 'Simpan Supplier'}
+                {(createSupplier.isPending || updateSupplier.isPending) ? 'Menyimpan...' : 
+                 editingSupplier ? 'Update Supplier' : 'Tambah Supplier'}
               </Button>
             </div>
           </DialogContent>
         </Dialog>
       </div>
 
-      {/* Edit Dialog */}
-      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>Edit Supplier</DialogTitle>
-          </DialogHeader>
-          {editingSupplier && (
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="edit_nama">Nama Supplier *</Label>
-                  <Input
-                    id="edit_nama"
-                    value={editingSupplier.nama}
-                    onChange={(e) => setEditingSupplier(prev => ({ ...prev, nama: e.target.value }))}
-                    placeholder="Masukkan nama supplier"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="edit_kontak_person">Kontak Person</Label>
-                  <Input
-                    id="edit_kontak_person"
-                    value={editingSupplier.kontak_person}
-                    onChange={(e) => setEditingSupplier(prev => ({ ...prev, kontak_person: e.target.value }))}
-                    placeholder="Nama kontak person"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="edit_telepon">Nomor Telepon</Label>
-                  <Input
-                    id="edit_telepon"
-                    value={editingSupplier.telepon || ''}
-                    onChange={(e) => setEditingSupplier(prev => ({ ...prev, telepon: e.target.value }))}
-                    placeholder="Nomor telepon"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="edit_email">Email</Label>
-                  <Input
-                    id="edit_email"
-                    value={editingSupplier.email || ''}
-                    onChange={(e) => setEditingSupplier(prev => ({ ...prev, email: e.target.value }))}
-                    placeholder="Email supplier"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <Label htmlFor="edit_alamat">Alamat</Label>
-                <Textarea
-                  id="edit_alamat"
-                  value={editingSupplier.alamat || ''}
-                  onChange={(e) => setEditingSupplier(prev => ({ ...prev, alamat: e.target.value }))}
-                  placeholder="Alamat lengkap supplier"
-                />
-              </div>
-
-              <Button
-                onClick={handleUpdateSupplier}
-                disabled={!editingSupplier.nama || updateSupplier.isPending}
-                className="w-full"
-              >
-                <Building className="h-4 w-4 mr-2" />
-                {updateSupplier.isPending ? 'Menyimpan...' : 'Update Supplier'}
-              </Button>
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
-
+      {/* Search */}
       <Card>
         <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle>Daftar Supplier</CardTitle>
-            <div className="relative w-80">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-              <Input
-                placeholder="Cari nama supplier..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
-              />
-            </div>
-          </div>
+          <CardTitle>Pencarian</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid gap-4">
-            {filteredSuppliers.map((supplier) => (
-              <Card key={supplier.id} className="p-4">
-                <div className="flex justify-between items-start">
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-2">
-                      <h3 className="font-semibold">{supplier.nama}</h3>
-                      <Badge variant="outline">Supplier</Badge>
-                    </div>
-                    <div className="text-sm text-gray-600 space-y-1">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <Input
+              placeholder="Cari supplier berdasarkan nama, jenis, atau alamat..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10"
+            />
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Suppliers List */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Daftar Supplier</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Nama Supplier</TableHead>
+                  <TableHead>Jenis</TableHead>
+                  <TableHead>Alamat</TableHead>
+                  <TableHead>Telepon</TableHead>
+                  <TableHead>Email</TableHead>
+                  <TableHead>Aksi</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredSuppliers.map((supplier) => (
+                  <TableRow key={supplier.id}>
+                    <TableCell>
                       <div className="flex items-center gap-2">
-                        <Phone className="h-4 w-4" />
-                        {supplier.telepon || 'No phone'}
+                        <Building2 className="h-4 w-4 text-gray-500" />
+                        <span className="font-medium">{supplier.nama}</span>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <MapPin className="h-4 w-4" />
-                        {supplier.alamat || 'No address'}
+                    </TableCell>
+                    <TableCell>{supplier.jenis || '-'}</TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-1">
+                        <MapPin className="h-3 w-3 text-gray-400" />
+                        <span className="text-sm">{supplier.alamat || '-'}</span>
                       </div>
-                      {supplier.kontak_person && (
-                        <div className="flex items-center gap-2">
-                          <Building className="h-4 w-4" />
-                          Contact: {supplier.kontak_person}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                  <div className="text-right space-y-2">
-                    <div className="text-sm">
-                      <div>Status: <Badge variant="default">Aktif</Badge></div>
-                    </div>
-                    <div className="flex gap-2">
-                      <Button 
-                        size="sm" 
-                        variant="outline"
-                        onClick={() => handleEditSupplier(supplier)}
-                      >
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button 
-                        size="sm" 
-                        variant="outline"
-                        onClick={() => handleDeleteSupplier(supplier.id)}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              </Card>
-            ))}
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-1">
+                        <Phone className="h-3 w-3 text-gray-400" />
+                        <span className="text-sm">{supplier.telepon || '-'}</span>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-1">
+                        <Mail className="h-3 w-3 text-gray-400" />
+                        <span className="text-sm">{supplier.email || '-'}</span>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleEdit(supplier)}
+                        >
+                          <Edit className="h-3 w-3" />
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleDelete(supplier.id)}
+                          className="text-red-600 hover:text-red-700"
+                        >
+                          <Trash2 className="h-3 w-3" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+            {filteredSuppliers.length === 0 && (
+              <div className="text-center py-8">
+                <Building2 className="mx-auto h-12 w-12 text-gray-400" />
+                <h3 className="mt-2 text-sm font-semibold text-gray-900">Tidak ada supplier</h3>
+                <p className="mt-1 text-sm text-gray-500">
+                  {searchTerm ? 'Tidak ada supplier yang sesuai dengan pencarian.' : 'Mulai dengan menambahkan supplier baru.'}
+                </p>
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>

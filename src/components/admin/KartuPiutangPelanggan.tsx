@@ -58,6 +58,15 @@ const KartuPiutangPelanggan = () => {
       return;
     }
 
+    if (paymentForm.amount > Math.abs(currentBalance)) {
+      toast({
+        title: "Error",
+        description: "Jumlah pembayaran melebihi saldo piutang yang tersisa",
+        variant: "destructive"
+      });
+      return;
+    }
+
     try {
       await recordPayment.mutateAsync({
         pelanggan_name: selectedCustomer.nama,
@@ -101,7 +110,7 @@ const KartuPiutangPelanggan = () => {
         </div>
         <Dialog open={isPaymentDialogOpen} onOpenChange={setIsPaymentDialogOpen}>
           <DialogTrigger asChild>
-            <Button disabled={!selectedCustomer}>
+            <Button disabled={!selectedCustomer || currentBalance <= 0}>
               <Plus className="h-4 w-4 mr-2" />
               Terima Pembayaran
             </Button>
@@ -116,16 +125,21 @@ const KartuPiutangPelanggan = () => {
                 <Input value={selectedCustomer?.nama || ''} disabled />
               </div>
               <div>
-                <Label>Jumlah Pembayaran</Label>
+                <Label>Saldo Piutang Saat Ini</Label>
+                <Input value={formatRupiah(Math.abs(currentBalance))} disabled />
+              </div>
+              <div>
+                <Label>Jumlah Pembayaran *</Label>
                 <Input
                   type="number"
                   value={paymentForm.amount}
                   onChange={(e) => setPaymentForm(prev => ({ ...prev, amount: Number(e.target.value) }))}
                   placeholder="Masukkan jumlah pembayaran"
+                  max={Math.abs(currentBalance)}
                 />
               </div>
               <div>
-                <Label>Nomor Referensi</Label>
+                <Label>Nomor Referensi *</Label>
                 <Input
                   value={paymentForm.reference_number}
                   onChange={(e) => setPaymentForm(prev => ({ ...prev, reference_number: e.target.value }))}

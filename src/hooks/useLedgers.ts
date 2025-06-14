@@ -134,27 +134,38 @@ export const useRecordCustomerPayment = () => {
     }) => {
       console.log('Recording integrated customer payment:', paymentData);
       
-      const { data, error } = await supabase.rpc('record_customer_payment_integrated', {
-        p_pelanggan_name: paymentData.pelanggan_name,
-        p_amount: paymentData.amount,
-        p_payment_date: paymentData.payment_date,
-        p_reference_number: paymentData.reference_number,
-        p_kasir_name: paymentData.kasir_name,
-        p_keterangan: paymentData.keterangan
-      });
+      // Call the stored procedure directly
+      const { data, error } = await supabase
+        .rpc('record_customer_payment_integrated', {
+          p_pelanggan_name: paymentData.pelanggan_name,
+          p_amount: paymentData.amount,
+          p_payment_date: paymentData.payment_date,
+          p_reference_number: paymentData.reference_number,
+          p_kasir_name: paymentData.kasir_name,
+          p_keterangan: paymentData.keterangan
+        });
 
       if (error) {
         console.error('Payment recording error:', error);
         throw error;
       }
 
-      // Check if the result indicates an error
-      if (data && !data.success) {
-        throw new Error(data.message || 'Payment recording failed');
+      // Handle the response data which should be a JSON object
+      let result;
+      try {
+        result = typeof data === 'string' ? JSON.parse(data) : data;
+      } catch (parseError) {
+        console.error('Failed to parse payment result:', parseError);
+        throw new Error('Invalid response format from payment function');
       }
 
-      console.log('Payment recorded successfully:', data);
-      return data;
+      // Check if the result indicates an error
+      if (result && result.success === false) {
+        throw new Error(result.message || 'Payment recording failed');
+      }
+
+      console.log('Payment recorded successfully:', result);
+      return result;
     },
     onSuccess: (data) => {
       console.log('Payment success, invalidating queries:', data);
@@ -184,7 +195,9 @@ export const useSyncPOSReceivables = () => {
 
   return useMutation({
     mutationFn: async () => {
-      const { error } = await supabase.rpc('sync_pos_credit_to_receivables');
+      // Call the sync function directly
+      const { error } = await supabase
+        .rpc('sync_pos_credit_to_receivables');
       if (error) throw error;
     },
     onSuccess: () => {
@@ -220,6 +233,31 @@ export const useRecordSupplierPayment = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['supplier_payables_ledger'] });
       queryClient.invalidateQueries({ queryKey: ['supplier_payables_summary'] });
+    },
+  });
+};
+
+// Hook to fix customer receivables balance (specifically for Junaedi)
+export const useFixCustomerBalance = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (customerName: string) => {
+      // First sync POS credit transactions
+      await supabase.rpc('sync_pos_credit_to_receivables');
+      
+      // Then refresh the customer's balance by recalculating from transactions
+      const { error } = await supabase
+        .rpc('recalculate_customer_balance', {
+          p_customer_name: customerName
+        });
+      
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['customer_receivables_ledger'] });
+      queryClient.invalidateQueries({ queryKey: ['customer_receivables_summary'] });
+      queryClient.invalidateQueries({ queryKey: ['pelanggan_kredit'] });
     },
   });
 };

@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -12,6 +11,7 @@ import { usePelangganKredit } from '@/hooks/usePelanggan';
 import { useCustomerReceivablesLedger, useCustomerReceivablesSummary, useRecordCustomerPayment } from '@/hooks/useLedgers';
 import { useSimpleAuth } from '@/hooks/useSimpleAuth';
 import { useToast } from '@/hooks/use-toast';
+import FixCustomerBalance from './FixCustomerBalance';
 
 const KartuPiutangPelanggan = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -155,6 +155,9 @@ const KartuPiutangPelanggan = () => {
 
   return (
     <div className="space-y-6">
+      {/* Fix Customer Balance Component */}
+      <FixCustomerBalance />
+      
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold">Kartu Piutang Pelanggan</h1>

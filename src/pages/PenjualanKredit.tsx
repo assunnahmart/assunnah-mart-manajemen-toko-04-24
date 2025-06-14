@@ -3,13 +3,16 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { CreditCard, Building2, User, AlertCircle, RefreshCw, DollarSign } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { CreditCard, Building2, User, AlertCircle, RefreshCw, DollarSign, Search, Calendar, Receipt, Eye } from "lucide-react";
 import { usePelangganKredit } from "@/hooks/usePelanggan";
 import { useCustomerReceivablesSummary, useSyncPOSReceivables, useRecordCustomerPayment } from "@/hooks/useLedgers";
+import { usePOSTransactions } from "@/hooks/usePOSTransactions";
 import NewProtectedRoute from "@/components/NewProtectedRoute";
 import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
-import PaymentDialog from "@/components/penjualan/PaymentDialog";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useSimpleAuth } from "@/hooks/useSimpleAuth";
@@ -17,14 +20,18 @@ import { useSimpleAuth } from "@/hooks/useSimpleAuth";
 const PenjualanKredit = () => {
   const { data: pelangganKredit } = usePelangganKredit();
   const { data: receivablesSummary } = useCustomerReceivablesSummary();
+  const { data: posTransactions } = usePOSTransactions();
   const syncPOSReceivables = useSyncPOSReceivables();
   const recordPayment = useRecordCustomerPayment();
   const { user } = useSimpleAuth();
   const { toast } = useToast();
+  
   const [selectedCustomer, setSelectedCustomer] = useState(null);
   const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
   const [paymentAmount, setPaymentAmount] = useState('');
   const [paymentReference, setPaymentReference] = useState('');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedDate, setSelectedDate] = useState('');
 
   const formatRupiah = (amount: number) => {
     return new Intl.NumberFormat('id-ID', {
@@ -44,6 +51,18 @@ const PenjualanKredit = () => {
         return 'secondary';
     }
   };
+
+  // Filter credit transactions from POS
+  const creditTransactions = posTransactions?.filter(transaction =>
+    transaction.payment_method === 'credit' &&
+    transaction.status === 'completed' &&
+    (selectedDate === '' || transaction.created_at.split('T')[0] === selectedDate) &&
+    (searchTerm === '' ||
+     transaction.transaction_number.toLowerCase().includes(searchTerm.toLowerCase()) ||
+     transaction.notes?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+     transaction.kasir_name.toLowerCase().includes(searchTerm.toLowerCase())
+    )
+  ) || [];
 
   const getCustomerReceivableBalance = (customerName: string): number => {
     const receivable = receivablesSummary?.find(r => r.pelanggan_name === customerName);
@@ -253,6 +272,7 @@ const PenjualanKredit = () => {
   const totalReceivablesUnit = pelangganKredit?.unit?.reduce((sum, u) => sum + getCustomerReceivableBalance(u.nama), 0) || 0;
   const totalReceivablesPerorangan = pelangganKredit?.perorangan?.reduce((sum, p) => sum + getCustomerReceivableBalance(p.nama), 0) || 0;
   const totalReceivables = receivablesSummary?.reduce((sum, r) => sum + Number(r.total_receivables), 0) || 0;
+  const totalCreditSalesToday = creditTransactions.reduce((sum, t) => sum + t.total_amount, 0);
 
   return (
     <NewProtectedRoute>
@@ -305,20 +325,21 @@ const PenjualanKredit = () => {
                   </Card>
                   <Card>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                      <CardTitle className="text-sm font-medium">Total Piutang Unit</CardTitle>
+                      <CardTitle className="text-sm font-medium">Total Piutang</CardTitle>
                       <CreditCard className="h-4 w-4 text-red-500" />
                     </CardHeader>
                     <CardContent>
-                      <div className="text-2xl font-bold text-red-600">{formatRupiah(totalReceivablesUnit)}</div>
+                      <div className="text-2xl font-bold text-red-600">{formatRupiah(totalReceivables)}</div>
                     </CardContent>
                   </Card>
                   <Card>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                      <CardTitle className="text-sm font-medium">Total Piutang Perorangan</CardTitle>
-                      <AlertCircle className="h-4 w-4 text-orange-500" />
+                      <CardTitle className="text-sm font-medium">Penjualan Kredit Hari Ini</CardTitle>
+                      <Receipt className="h-4 w-4 text-orange-500" />
                     </CardHeader>
                     <CardContent>
-                      <div className="text-2xl font-bold text-orange-600">{formatRupiah(totalReceivablesPerorangan)}</div>
+                      <div className="text-2xl font-bold text-orange-600">{formatRupiah(totalCreditSalesToday)}</div>
+                      <p className="text-xs text-muted-foreground">{creditTransactions.length} transaksi</p>
                     </CardContent>
                   </Card>
                 </div>
@@ -340,9 +361,10 @@ const PenjualanKredit = () => {
 
                 {/* Tabs */}
                 <Tabs defaultValue="unit" className="space-y-4">
-                  <TabsList className="grid w-full grid-cols-2">
+                  <TabsList className="grid w-full grid-cols-3">
                     <TabsTrigger value="unit">Kredit Unit</TabsTrigger>
                     <TabsTrigger value="perorangan">Piutang Perorangan</TabsTrigger>
+                    <TabsTrigger value="pos-transactions">Transaksi POS Kredit</TabsTrigger>
                   </TabsList>
 
                   <TabsContent value="unit">
@@ -395,6 +417,108 @@ const PenjualanKredit = () => {
                             </p>
                           </div>
                         )}
+                      </CardContent>
+                    </Card>
+                  </TabsContent>
+
+                  <TabsContent value="pos-transactions">
+                    <Card>
+                      <CardHeader>
+                        <CardTitle>Transaksi POS Kredit</CardTitle>
+                        <CardDescription>
+                          Daftar transaksi penjualan kredit dari sistem POS
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        {/* Filter Controls */}
+                        <div className="flex gap-4 mb-4">
+                          <div className="flex-1 max-w-sm">
+                            <Label htmlFor="search">Cari Transaksi</Label>
+                            <div className="relative">
+                              <Search className="absolute left-2 top-2.5 h-4 w-4 text-gray-400" />
+                              <Input
+                                id="search"
+                                placeholder="No. transaksi, pelanggan, kasir..."
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                className="pl-8"
+                              />
+                            </div>
+                          </div>
+                          <div>
+                            <Label htmlFor="date">Tanggal</Label>
+                            <div className="relative">
+                              <Calendar className="absolute left-2 top-2.5 h-4 w-4 text-gray-400" />
+                              <Input
+                                id="date"
+                                type="date"
+                                value={selectedDate}
+                                onChange={(e) => setSelectedDate(e.target.value)}
+                                className="pl-8"
+                              />
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Transactions Table */}
+                        <div className="border rounded-lg">
+                          <Table>
+                            <TableHeader>
+                              <TableRow>
+                                <TableHead>No. Transaksi</TableHead>
+                                <TableHead>Tanggal</TableHead>
+                                <TableHead>Pelanggan</TableHead>
+                                <TableHead>Kasir</TableHead>
+                                <TableHead className="text-right">Total</TableHead>
+                                <TableHead>Status</TableHead>
+                                <TableHead>Aksi</TableHead>
+                              </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                              {creditTransactions.length > 0 ? (
+                                creditTransactions.map((transaction) => (
+                                  <TableRow key={transaction.id}>
+                                    <TableCell className="font-medium">
+                                      {transaction.transaction_number}
+                                    </TableCell>
+                                    <TableCell>
+                                      {new Date(transaction.created_at).toLocaleDateString('id-ID')}
+                                    </TableCell>
+                                    <TableCell>
+                                      {transaction.notes ? transaction.notes.split(':')[1]?.trim() || 'Pelanggan Kredit' : 'Pelanggan Kredit'}
+                                    </TableCell>
+                                    <TableCell>{transaction.kasir_name}</TableCell>
+                                    <TableCell className="text-right font-medium">
+                                      {formatRupiah(transaction.total_amount)}
+                                    </TableCell>
+                                    <TableCell>
+                                      <Badge variant="default">
+                                        {transaction.status}
+                                      </Badge>
+                                    </TableCell>
+                                    <TableCell>
+                                      <Button size="sm" variant="outline">
+                                        <Eye className="h-4 w-4 mr-1" />
+                                        Detail
+                                      </Button>
+                                    </TableCell>
+                                  </TableRow>
+                                ))
+                              ) : (
+                                <TableRow>
+                                  <TableCell colSpan={7} className="text-center py-8">
+                                    <Receipt className="mx-auto h-12 w-12 text-gray-400 mb-2" />
+                                    <p className="text-gray-500">
+                                      {searchTerm || selectedDate 
+                                        ? 'Tidak ada transaksi kredit yang sesuai filter'
+                                        : 'Belum ada transaksi kredit hari ini'}
+                                    </p>
+                                  </TableCell>
+                                </TableRow>
+                              )}
+                            </TableBody>
+                          </Table>
+                        </div>
                       </CardContent>
                     </Card>
                   </TabsContent>

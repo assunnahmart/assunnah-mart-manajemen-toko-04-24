@@ -35,6 +35,35 @@ const SupplierPayablesLedger = () => {
   const recordPayment = useRecordSupplierPayment();
   const { toast } = useToast();
 
+  console.log('SupplierPayablesLedger - DEBUG START');
+  console.log('SupplierPayablesLedger suppliers:', suppliers);
+  
+  // Enhanced validation to filter out suppliers with invalid IDs
+  const validSuppliers = suppliers?.filter(supplier => {
+    const hasValidId = supplier && 
+                      supplier.id && 
+                      typeof supplier.id === 'string' && 
+                      supplier.id.trim() !== '' &&
+                      supplier.id !== null &&
+                      supplier.id !== undefined;
+    
+    console.log('Supplier validation:', { 
+      supplier: supplier?.nama, 
+      id: supplier?.id, 
+      type: typeof supplier?.id,
+      isValid: hasValidId 
+    });
+    
+    if (!hasValidId) {
+      console.error('INVALID SUPPLIER DETECTED:', supplier);
+    }
+    
+    return hasValidId;
+  }) || [];
+
+  console.log('Valid suppliers after filtering:', validSuppliers.length);
+  console.log('SupplierPayablesLedger - DEBUG END');
+
   const handleRecordPayment = async () => {
     if (!selectedSupplier || !paymentForm.amount || !paymentForm.reference_number) {
       toast({
@@ -72,7 +101,7 @@ const SupplierPayablesLedger = () => {
   };
 
   const currentBalance = ledgerEntries?.[0]?.running_balance || 0;
-  const selectedSupplierName = suppliers?.find(s => s.id === selectedSupplier)?.nama || '';
+  const selectedSupplierName = validSuppliers?.find(s => s.id === selectedSupplier)?.nama || '';
 
   return (
     <div className="space-y-6">
@@ -151,17 +180,24 @@ const SupplierPayablesLedger = () => {
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div>
               <Label>Supplier</Label>
-              <Select value={selectedSupplier} onValueChange={setSelectedSupplier}>
+              <Select value={selectedSupplier || ""} onValueChange={setSelectedSupplier}>
                 <SelectTrigger>
                   <SelectValue placeholder="Pilih supplier" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="">Semua Supplier</SelectItem>
-                  {suppliers?.map((supplier) => (
-                    <SelectItem key={supplier.id} value={supplier.id}>
-                      {supplier.nama}
-                    </SelectItem>
-                  ))}
+                  {validSuppliers.map((supplier) => {
+                    console.log('Rendering supplier SelectItem:', { id: supplier.id, nama: supplier.nama });
+                    if (!supplier.id || supplier.id.trim() === '') {
+                      console.error('ATTEMPTING TO RENDER INVALID SUPPLIER:', supplier);
+                      return null;
+                    }
+                    return (
+                      <SelectItem key={supplier.id} value={supplier.id}>
+                        {supplier.nama}
+                      </SelectItem>
+                    );
+                  })}
                 </SelectContent>
               </Select>
             </div>

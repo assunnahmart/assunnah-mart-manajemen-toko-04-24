@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -39,27 +38,35 @@ const SupplierPayablesLedger = () => {
   console.log('SupplierPayablesLedger suppliers:', suppliers);
   
   // Enhanced validation to filter out suppliers with invalid IDs
-  const validSuppliers = suppliers?.filter(supplier => {
+  const validSuppliers = (suppliers || []).filter(supplier => {
+    // More robust validation
     const hasValidId = supplier && 
                       supplier.id && 
                       typeof supplier.id === 'string' && 
                       supplier.id.trim() !== '' &&
                       supplier.id !== null &&
-                      supplier.id !== undefined;
+                      supplier.id !== undefined &&
+                      supplier.id.length > 0;
+    
+    const hasValidName = supplier.nama && 
+                        typeof supplier.nama === 'string' && 
+                        supplier.nama.trim() !== '';
     
     console.log('Supplier validation:', { 
       supplier: supplier?.nama, 
       id: supplier?.id, 
       type: typeof supplier?.id,
-      isValid: hasValidId 
+      idLength: supplier?.id?.length,
+      isValid: hasValidId && hasValidName 
     });
     
-    if (!hasValidId) {
+    if (!hasValidId || !hasValidName) {
       console.error('INVALID SUPPLIER DETECTED:', supplier);
+      return false;
     }
     
-    return hasValidId;
-  }) || [];
+    return true;
+  });
 
   console.log('Valid suppliers after filtering:', validSuppliers.length);
   console.log('SupplierPayablesLedger - DEBUG END');
@@ -188,7 +195,8 @@ const SupplierPayablesLedger = () => {
                   <SelectItem value="">Semua Supplier</SelectItem>
                   {validSuppliers.map((supplier) => {
                     console.log('Rendering supplier SelectItem:', { id: supplier.id, nama: supplier.nama });
-                    if (!supplier.id || supplier.id.trim() === '') {
+                    // Extra safety check to prevent rendering invalid items
+                    if (!supplier.id || supplier.id.trim() === '' || !supplier.nama) {
                       console.error('ATTEMPTING TO RENDER INVALID SUPPLIER:', supplier);
                       return null;
                     }

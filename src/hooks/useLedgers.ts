@@ -99,11 +99,18 @@ export const useSyncPOSReceivables = () => {
   
   return useMutation({
     mutationFn: async () => {
-      // Call the corrected function name
+      // Use direct SQL query to call the function since it's not in types yet
       const { error } = await supabase
-        .rpc('sync_pos_credit_to_receivables');
+        .from('customer_receivables_ledger')
+        .select('id')
+        .limit(1);
       
       if (error) throw error;
+      
+      // Call the function using a workaround for missing types
+      const { error: funcError } = await (supabase as any).rpc('sync_pos_credit_to_receivables');
+      
+      if (funcError) throw funcError;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['customer-receivables-ledger'] });
@@ -181,10 +188,10 @@ export const useFixCustomerBalance = () => {
   
   return useMutation({
     mutationFn: async (customerName: string) => {
-      const { error } = await supabase
-        .rpc('recalculate_customer_balance', {
-          p_customer_name: customerName
-        });
+      // Use a workaround for missing types
+      const { error } = await (supabase as any).rpc('recalculate_customer_balance', {
+        p_customer_name: customerName
+      });
       
       if (error) throw error;
     },

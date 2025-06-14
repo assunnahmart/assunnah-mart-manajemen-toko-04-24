@@ -2361,6 +2361,10 @@ export type Database = {
         Args: { p_retur_id: string }
         Returns: undefined
       }
+      recalculate_customer_balance: {
+        Args: { p_customer_name: string }
+        Returns: undefined
+      }
       record_customer_payment: {
         Args: {
           p_pelanggan_name: string
@@ -2381,6 +2385,10 @@ export type Database = {
           p_kasir_name: string
           p_keterangan?: string
         }
+        Returns: undefined
+      }
+      sync_pos_credit_to_receivables: {
+        Args: Record<PropertyKey, never>
         Returns: undefined
       }
       update_stok_barang: {

@@ -1,21 +1,11 @@
 
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Search, Camera, CreditCard } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import POSSidebar from '@/components/pos/POSSidebar';
-import POSProductSearch from '@/components/pos/POSProductSearch';
-import POSCart from '@/components/pos/POSCart';
-import POSPayment from '@/components/pos/POSPayment';
-import POSBarcodeScanner from '@/components/pos/POSBarcodeScanner';
-import POSCustomerSelect from '@/components/pos/POSCustomerSelect';
-import POSPaymentMethod from '@/components/pos/POSPaymentMethod';
-import CameraBarcodeScanner from '@/components/stock/CameraBarcodeScanner';
 import POSHeader from '@/components/pos/POSHeader';
-import POSMainActions from '@/components/pos/POSMainActions';
-import POSModals from '@/components/pos/POSModals';
+import POSCartManager from '@/components/pos/POSCartManager';
+import POSPaymentManager from '@/components/pos/POSPaymentManager';
+import POSModalManager from '@/components/pos/POSModalManager';
 import { useCreatePOSTransaction } from '@/hooks/usePOSTransactions';
 import { useSimpleAuth } from '@/hooks/useSimpleAuth';
 import { useToast } from '@/hooks/use-toast';
@@ -35,9 +25,6 @@ const POSSystem = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const [cartItems, setCartItems] = useState([]);
-  const [showPayment, setShowPayment] = useState(false);
-  const [showScanner, setShowScanner] = useState(false);
-  const [showQuickScanner, setShowQuickScanner] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState('cash');
@@ -47,6 +34,7 @@ const POSSystem = () => {
   const [showKasirKas, setShowKasirKas] = useState(false);
   const [showStockOpname, setShowStockOpname] = useState(false);
   const [showKasUmum, setShowKasUmum] = useState(false);
+  const [showQuickScanner, setShowQuickScanner] = useState(false);
   const createTransaction = useCreatePOSTransaction();
   const { syncStock, syncCustomerDebt, isSyncingStock, isSyncingDebt } = usePOSTransactionSync();
 
@@ -94,42 +82,6 @@ const POSSystem = () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
   }, [cartItems, selectedPaymentMethod, selectedCustomer, user, createTransaction]);
-
-  // Add logout function
-  const handleLogout = () => {
-    signOut();
-    toast({
-      title: "Logout berhasil",
-      description: "Anda telah keluar dari sistem"
-    });
-    navigate('/login');
-  };
-
-  const addToCart = product => {
-    const existingItem = cartItems.find(item => item.id === product.id);
-    if (existingItem) {
-      setCartItems(cartItems.map(item => item.id === product.id ? {
-        ...item,
-        quantity: item.quantity + 1
-      } : item));
-    } else {
-      setCartItems([...cartItems, {
-        ...product,
-        quantity: 1
-      }]);
-    }
-  };
-
-  const updateCartQuantity = (id, quantity) => {
-    if (quantity === 0) {
-      setCartItems(cartItems.filter(item => item.id !== id));
-    } else {
-      setCartItems(cartItems.map(item => item.id === id ? {
-        ...item,
-        quantity
-      } : item));
-    }
-  };
 
   const getTotalAmount = () => {
     return cartItems.reduce((total, item) => total + item.harga_jual * item.quantity, 0);
@@ -214,66 +166,10 @@ const POSSystem = () => {
     }
   };
 
-  const handleRegularPayment = () => {
-    if (cartItems.length === 0) {
-      toast({
-        title: "Keranjang kosong",
-        description: "Tambahkan produk terlebih dahulu",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    if (selectedPaymentMethod === 'credit' && !selectedCustomer) {
-      toast({
-        title: "Pilih pelanggan",
-        description: "Pembayaran kredit memerlukan pemilihan pelanggan",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    for (const item of cartItems) {
-      if (item.stok_saat_ini < item.quantity) {
-        toast({
-          title: "Stok tidak mencukupi",
-          description: `Stok ${item.nama} hanya tersisa ${item.stok_saat_ini}`,
-          variant: "destructive"
-        });
-        return;
-      }
-    }
-
-    setShowPayment(true);
-  };
-
-  const clearCart = () => {
+  const handlePaymentSuccess = () => {
     setCartItems([]);
     setSelectedCustomer(null);
     setSelectedPaymentMethod('cash');
-  };
-
-  const handleBarcodeScanned = (barcode: string) => {
-    setSearchQuery(barcode);
-    toast({
-      title: "Mencari produk",
-      description: `Mencari produk dengan barcode: ${barcode}`
-    });
-  };
-
-  const handleQuickScanBarcodeScanned = (barcode: string) => {
-    setSearchQuery(barcode);
-    setShowQuickScanner(false);
-    toast({
-      title: "Produk ditemukan",
-      description: `Barcode ${barcode} berhasil di-scan`
-    });
-  };
-
-  const handleProductAutoAdded = () => {
-    setTimeout(() => {
-      setSearchQuery('');
-    }, 1500);
   };
 
   return (
@@ -300,94 +196,24 @@ const POSSystem = () => {
             />
             
             <div className="container mx-auto p-4 max-w-7xl">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-                <Card className="h-[700px] border-red-200">
-                  <CardHeader className="pb-4 bg-gradient-to-r from-red-50 to-yellow-50 rounded-t-lg">
-                    <CardTitle className="flex items-center gap-2 text-red-700">
-                      <Search className="h-5 w-5" />
-                      Cari Produk
-                    </CardTitle>
-                    <div className="flex gap-2">
-                      <div className="relative flex-1">
-                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                        <Input 
-                          placeholder="Cari nama produk atau scan barcode..." 
-                          value={searchQuery} 
-                          onChange={e => setSearchQuery(e.target.value)} 
-                          className="pl-10 border-red-200 focus:border-red-400" 
-                        />
-                      </div>
-                      <Button 
-                        variant="outline" 
-                        onClick={() => setShowScanner(true)} 
-                        className="shrink-0 border-red-300 text-red-700 hover:bg-red-50"
-                      >
-                        <Camera className="h-4 w-4 mr-2" />
-                        Scan
-                      </Button>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="h-[calc(100%-120px)] overflow-hidden">
-                    <POSProductSearch 
-                      searchQuery={searchQuery} 
-                      onAddToCart={addToCart} 
-                      onProductAutoAdded={handleProductAutoAdded} 
-                      enableEnterToAdd={true} 
-                    />
-                  </CardContent>
-                </Card>
-
-                <Card className="h-[700px] border-yellow-200">
-                  <CardHeader className="pb-4 bg-gradient-to-r from-yellow-50 to-orange-50 rounded-t-lg">
-                    <CardTitle className="flex items-center justify-between text-yellow-800">
-                      <span className="flex items-center gap-2">
-                        Keranjang Belanja
-                      </span>
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
-                        onClick={clearCart} 
-                        disabled={cartItems.length === 0} 
-                        className="border-red-300 text-red-700 hover:bg-red-50"
-                      >
-                        Clear
-                      </Button>
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="h-[calc(100%-80px)] overflow-hidden">
-                    <POSCart items={cartItems} onUpdateQuantity={updateCartQuantity} />
-                  </CardContent>
-                </Card>
-              </div>
-
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-                <POSCustomerSelect 
-                  selectedCustomer={selectedCustomer} 
-                  onCustomerSelect={setSelectedCustomer} 
-                />
-                <POSPaymentMethod 
-                  selectedMethod={selectedPaymentMethod} 
-                  onMethodSelect={setSelectedPaymentMethod} 
-                />
-              </div>
-
-              <POSMainActions
-                onQuickSave={handleQuickSave}
-                onRegularPayment={handleRegularPayment}
-                cartItemsLength={cartItems.length}
-                selectedPaymentMethod={selectedPaymentMethod}
-                selectedCustomer={selectedCustomer}
-                isProcessing={createTransaction.isPending}
+              <POSCartManager
+                cartItems={cartItems}
+                setCartItems={setCartItems}
+                searchQuery={searchQuery}
+                setSearchQuery={setSearchQuery}
               />
 
-              {selectedPaymentMethod === 'credit' && !selectedCustomer && (
-                <div className="bg-orange-50 border border-orange-200 p-3 rounded-lg mb-4">
-                  <p className="text-orange-700 text-sm flex items-center gap-2">
-                    <CreditCard className="h-4 w-4" />
-                    Pembayaran kredit memerlukan pemilihan pelanggan
-                  </p>
-                </div>
-              )}
+              <POSPaymentManager
+                cartItems={cartItems}
+                selectedCustomer={selectedCustomer}
+                setSelectedCustomer={setSelectedCustomer}
+                selectedPaymentMethod={selectedPaymentMethod}
+                setSelectedPaymentMethod={setSelectedPaymentMethod}
+                onQuickSave={handleQuickSave}
+                isProcessing={createTransaction.isPending}
+                getTotalAmount={getTotalAmount}
+                onPaymentSuccess={handlePaymentSuccess}
+              />
 
               {(isSyncingStock || isSyncingDebt) && (
                 <div className="bg-blue-50 border border-blue-200 p-3 rounded-lg mb-4">
@@ -400,7 +226,7 @@ const POSSystem = () => {
             </div>
           </div>
 
-          <POSModals
+          <POSModalManager
             showTransactionHistory={showTransactionHistory}
             setShowTransactionHistory={setShowTransactionHistory}
             showKonsinyasi={showKonsinyasi}
@@ -413,38 +239,10 @@ const POSSystem = () => {
             setShowKasUmum={setShowKasUmum}
             showDailyReport={showDailyReport}
             setShowDailyReport={setShowDailyReport}
+            showQuickScanner={showQuickScanner}
+            setShowQuickScanner={setShowQuickScanner}
+            setSearchQuery={setSearchQuery}
             userFullName={user?.full_name}
-          />
-
-          {showPayment && (
-            <POSPayment
-              cartItems={cartItems}
-              totalAmount={getTotalAmount()}
-              selectedCustomer={selectedCustomer}
-              selectedPaymentMethod={selectedPaymentMethod}
-              onClose={() => setShowPayment(false)}
-              onSuccess={() => {
-                setCartItems([]);
-                setSelectedCustomer(null);
-                setSelectedPaymentMethod('cash');
-                setShowPayment(false);
-                setTimeout(() => {
-                  window.location.reload();
-                }, 1000);
-              }}
-            />
-          )}
-
-          <POSBarcodeScanner 
-            isOpen={showScanner} 
-            onScan={handleBarcodeScanned} 
-            onClose={() => setShowScanner(false)} 
-          />
-
-          <CameraBarcodeScanner 
-            isOpen={showQuickScanner} 
-            onScan={handleQuickScanBarcodeScanned} 
-            onClose={() => setShowQuickScanner(false)} 
           />
         </div>
       </POSTransactionSync>

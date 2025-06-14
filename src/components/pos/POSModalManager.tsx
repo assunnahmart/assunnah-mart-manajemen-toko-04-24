@@ -55,6 +55,8 @@ const POSModalManager = ({
   return (
     <>
       <POSModals
+        showTransactionHistory={showTransactionHistory}
+        setShowTransactionHistory={setShowTransactionHistory}
         showKonsinyasi={showKonsinyasi}
         setShowKonsinyasi={setShowKonsinyasi}
         showStockOpname={showStockOpname}

@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Search, Package, Edit, Trash2, Plus, ShoppingCart } from 'lucide-react';
-import { useBarang } from '@/hooks/useBarang';
+import { useBarangKonsinyasi } from '@/hooks/useBarangKonsinyasi';
 import { useToast } from '@/hooks/use-toast';
 
 interface POSProductListProps {
@@ -16,14 +16,14 @@ interface POSProductListProps {
 
 const POSProductList = ({ onAddToCart, showAddToCart = false }: POSProductListProps) => {
   const [searchQuery, setSearchQuery] = useState('');
-  const { data: products, isLoading } = useBarang();
+  const { data: products, isLoading } = useBarangKonsinyasi();
   const { toast } = useToast();
 
   // Filter products based on search query
   const filteredProducts = products?.filter(product =>
     product.nama.toLowerCase().includes(searchQuery.toLowerCase()) ||
     product.barcode?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    product.kategori?.toLowerCase().includes(searchQuery.toLowerCase())
+    product.kategori_pembelian?.toLowerCase().includes(searchQuery.toLowerCase())
   ) || [];
 
   const handleAddToCart = (product: any) => {
@@ -69,7 +69,7 @@ const POSProductList = ({ onAddToCart, showAddToCart = false }: POSProductListPr
           <div className="text-center py-8">Loading produk...</div>
         ) : filteredProducts.length === 0 ? (
           <div className="text-center py-8 text-gray-500">
-            {searchQuery ? 'Tidak ada produk yang ditemukan' : 'Belum ada data produk'}
+            {searchQuery ? '무 ada produk yang ditemukan' : 'Belum ada data produk'}
           </div>
         ) : (
           <div className="overflow-x-auto max-h-96 overflow-y-auto">
@@ -91,14 +91,14 @@ const POSProductList = ({ onAddToCart, showAddToCart = false }: POSProductListPr
                     <TableCell className="font-medium">{product.nama}</TableCell>
                     <TableCell>{product.barcode || '-'}</TableCell>
                     <TableCell>
-                      <Badge variant="outline">{product.kategori || 'Umum'}</Badge>
+                      <Badge variant="outline">{product.kategori_pembelian || 'Umum'}</Badge>
                     </TableCell>
                     <TableCell className="font-semibold text-green-600">
                       {formatRupiah(product.harga_jual)}
                     </TableCell>
                     <TableCell>
                       <span className={`font-medium ${
-                        product.stok_saat_ini <= (product.stok_minimum || 0) 
+                        product.stok_saat_ini <= (product.stok_minimal || 0) 
                           ? 'text-red-600' 
                           : 'text-blue-600'
                       }`}>
@@ -109,13 +109,13 @@ const POSProductList = ({ onAddToCart, showAddToCart = false }: POSProductListPr
                       <Badge variant={
                         product.stok_saat_ini <= 0 
                           ? 'destructive' 
-                          : product.stok_saat_ini <= (product.stok_minimum || 0)
+                          : product.stok_saat_ini <= (product.stok_minimal || 0)
                           ? 'secondary'
                           : 'default'
                       }>
                         {product.stok_saat_ini <= 0 
                           ? 'Habis' 
-                          : product.stok_saat_ini <= (product.stok_minimum || 0)
+                          : product.stok_saat_ini <= (product.stok_minimal || 0)
                           ? 'Stok Rendah'
                           : 'Tersedia'
                         }

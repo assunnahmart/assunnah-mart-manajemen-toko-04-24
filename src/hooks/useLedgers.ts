@@ -1,3 +1,4 @@
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -145,7 +146,8 @@ export const useRecordCustomerPayment = () => {
           credit_amount: data.amount,
           debit_amount: 0,
           reference_number: data.reference_number,
-          kasir_name: data.kasir_name
+          kasir_name: data.kasir_name,
+          reference_type: 'payment'
         });
       
       if (ledgerError) {

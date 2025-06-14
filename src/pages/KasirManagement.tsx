@@ -21,8 +21,8 @@ const KasirManagement = () => {
     nama: "",
     email: "",
     telepon: "",
-    status: "aktif",
-    shift: "pagi"
+    status: "aktif" as const,
+    shift: "pagi" as const
   });
 
   const { data: kasirData, isLoading } = useKasir();
@@ -254,8 +254,8 @@ const KasirManagement = () => {
                         <div>
                           <Label htmlFor="shift">Shift</Label>
                           <Select 
-                            value={formData.shift || "pagi"} 
-                            onValueChange={(value) => setFormData(prev => ({ ...prev, shift: value }))}
+                            value={formData.shift} 
+                            onValueChange={(value: "pagi" | "siang") => setFormData(prev => ({ ...prev, shift: value }))}
                           >
                             <SelectTrigger>
                               <SelectValue placeholder="Pilih shift" />
@@ -269,8 +269,8 @@ const KasirManagement = () => {
                         <div>
                           <Label htmlFor="status">Status</Label>
                           <Select 
-                            value={formData.status || "aktif"} 
-                            onValueChange={(value) => setFormData(prev => ({ ...prev, status: value }))}
+                            value={formData.status} 
+                            onValueChange={(value: "aktif" | "nonaktif" | "libur") => setFormData(prev => ({ ...prev, status: value }))}
                           >
                             <SelectTrigger>
                               <SelectValue />

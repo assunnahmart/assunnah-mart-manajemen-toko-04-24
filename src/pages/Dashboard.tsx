@@ -13,6 +13,7 @@ import { useSimpleAuth } from '@/hooks/useSimpleAuth';
 import { usePOSTransactionsToday } from '@/hooks/usePOSTransactions';
 import { useBarangStokRendah } from '@/hooks/useBarangKonsinyasi';
 import { useKasUmumSummary } from '@/hooks/useKasUmum';
+import DashboardCharts from '@/components/DashboardCharts';
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -175,6 +176,11 @@ const Dashboard = () => {
                   </CardContent>
                 </Card>
               </div>
+
+              {/* Dashboard Charts - Only show for non-kasir users */}
+              {user?.role !== 'kasir' && (
+                <DashboardCharts />
+              )}
 
               {/* Quick Actions - Show appropriate menu for kasir */}
               <Card>

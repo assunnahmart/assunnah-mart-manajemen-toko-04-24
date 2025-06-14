@@ -100,7 +100,7 @@ export const useCustomerReceivablesSummary = () => {
   return useQuery({
     queryKey: ['customer_receivables_summary'],
     queryFn: async () => {
-      const { data, error } = await supabase.rpc('get_customer_receivables_summary');
+      const { data, error } = await supabase.rpc('get_customer_receivables_summary' as any);
       
       if (error) throw error;
       return data;
@@ -112,7 +112,7 @@ export const useSupplierPayablesSummary = () => {
   return useQuery({
     queryKey: ['supplier_payables_summary'],
     queryFn: async () => {
-      const { data, error } = await supabase.rpc('get_supplier_payables_summary');
+      const { data, error } = await supabase.rpc('get_supplier_payables_summary' as any);
       
       if (error) throw error;
       return data;
@@ -134,9 +134,9 @@ export const useRecordCustomerPayment = () => {
     }) => {
       console.log('Recording integrated customer payment:', paymentData);
       
-      // Call the stored procedure directly
+      // Call the stored procedure directly using raw SQL approach
       const { data, error } = await supabase
-        .rpc('record_customer_payment_integrated', {
+        .rpc('record_customer_payment_integrated' as any, {
           p_pelanggan_name: paymentData.pelanggan_name,
           p_amount: paymentData.amount,
           p_payment_date: paymentData.payment_date,
@@ -195,9 +195,9 @@ export const useSyncPOSReceivables = () => {
 
   return useMutation({
     mutationFn: async () => {
-      // Call the sync function directly
+      // Call the sync function directly using raw SQL approach
       const { error } = await supabase
-        .rpc('sync_pos_credit_to_receivables');
+        .rpc('sync_pos_credit_to_receivables' as any);
       if (error) throw error;
     },
     onSuccess: () => {
@@ -219,7 +219,7 @@ export const useRecordSupplierPayment = () => {
       kasir_name: string;
       keterangan?: string;
     }) => {
-      const { error } = await supabase.rpc('record_supplier_payment', {
+      const { error } = await supabase.rpc('record_supplier_payment' as any, {
         p_supplier_id: paymentData.supplier_id,
         p_amount: paymentData.amount,
         p_payment_date: paymentData.payment_date,
@@ -243,12 +243,12 @@ export const useFixCustomerBalance = () => {
 
   return useMutation({
     mutationFn: async (customerName: string) => {
-      // First sync POS credit transactions
-      await supabase.rpc('sync_pos_credit_to_receivables');
+      // First sync POS credit transactions using raw SQL approach
+      await supabase.rpc('sync_pos_credit_to_receivables' as any);
       
       // Then refresh the customer's balance by recalculating from transactions
       const { error } = await supabase
-        .rpc('recalculate_customer_balance', {
+        .rpc('recalculate_customer_balance' as any, {
           p_customer_name: customerName
         });
       

@@ -2,105 +2,42 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
-export interface CustomerReceivablesEntry {
-  id: string;
-  pelanggan_id?: string;
-  pelanggan_name: string;
-  transaction_date: string;
-  reference_type: string;
-  reference_id?: string;
-  reference_number?: string;
-  description?: string;
-  debit_amount: number;
-  credit_amount: number;
-  running_balance: number;
-  transaction_type?: string;
-  kasir_name?: string;
-  created_at: string;
-}
-
-export interface SupplierPayablesEntry {
-  id: string;
-  supplier_id?: string;
-  supplier_name: string;
-  transaction_date: string;
-  reference_type: string;
-  reference_id?: string;
-  reference_number?: string;
-  description?: string;
-  debit_amount: number;
-  credit_amount: number;
-  running_balance: number;
-  transaction_type?: string;
-  kasir_name?: string;
-  created_at: string;
-}
-
-export const useCustomerReceivablesLedger = (pelangganName?: string, startDate?: string, endDate?: string) => {
+export const useCustomerReceivablesLedger = () => {
   return useQuery({
-    queryKey: ['customer_receivables_ledger', pelangganName, startDate, endDate],
+    queryKey: ['customer-receivables-ledger'],
     queryFn: async () => {
-      let query = supabase
+      const { data, error } = await supabase
         .from('customer_receivables_ledger')
         .select('*')
-        .order('transaction_date', { ascending: false })
         .order('created_at', { ascending: false });
-
-      if (pelangganName) {
-        query = query.eq('pelanggan_name', pelangganName);
-      }
-
-      if (startDate) {
-        query = query.gte('transaction_date', startDate);
-      }
-
-      if (endDate) {
-        query = query.lte('transaction_date', endDate);
-      }
-
-      const { data, error } = await query;
       
       if (error) throw error;
-      return data as CustomerReceivablesEntry[];
+      return data;
     },
   });
 };
 
-export const useSupplierPayablesLedger = (supplierId?: string, startDate?: string, endDate?: string) => {
+export const useSupplierPayablesLedger = () => {
   return useQuery({
-    queryKey: ['supplier_payables_ledger', supplierId, startDate, endDate],
+    queryKey: ['supplier-payables-ledger'],
     queryFn: async () => {
-      let query = supabase
+      const { data, error } = await supabase
         .from('supplier_payables_ledger')
         .select('*')
-        .order('transaction_date', { ascending: false })
         .order('created_at', { ascending: false });
-
-      if (supplierId) {
-        query = query.eq('supplier_id', supplierId);
-      }
-
-      if (startDate) {
-        query = query.gte('transaction_date', startDate);
-      }
-
-      if (endDate) {
-        query = query.lte('transaction_date', endDate);
-      }
-
-      const { data, error } = await query;
       
       if (error) throw error;
-      return data as SupplierPayablesEntry[];
+      return data;
     },
   });
 };
 
 export const useCustomerReceivablesSummary = () => {
   return useQuery({
-    queryKey: ['customer_receivables_summary'],
+    queryKey: ['customer-receivables-summary'],
     queryFn: async () => {
-      const { data, error } = await supabase.rpc('get_customer_receivables_summary' as any);
+      const { data, error } = await supabase
+        .rpc('get_customer_receivables_summary');
       
       if (error) throw error;
       return data;
@@ -110,9 +47,10 @@ export const useCustomerReceivablesSummary = () => {
 
 export const useSupplierPayablesSummary = () => {
   return useQuery({
-    queryKey: ['supplier_payables_summary'],
+    queryKey: ['supplier-payables-summary'],
     queryFn: async () => {
-      const { data, error } = await supabase.rpc('get_supplier_payables_summary' as any);
+      const { data, error } = await supabase
+        .rpc('get_supplier_payables_summary');
       
       if (error) throw error;
       return data;
@@ -120,11 +58,29 @@ export const useSupplierPayablesSummary = () => {
   });
 };
 
+export const useSyncPOSReceivables = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase
+        .rpc('sync_pos_credit_to_receivables');
+      
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['customer-receivables-ledger'] });
+      queryClient.invalidateQueries({ queryKey: ['customer-receivables-summary'] });
+      queryClient.invalidateQueries({ queryKey: ['pos-transactions'] });
+    },
+  });
+};
+
 export const useRecordCustomerPayment = () => {
   const queryClient = useQueryClient();
-
+  
   return useMutation({
-    mutationFn: async (paymentData: {
+    mutationFn: async (data: {
       pelanggan_name: string;
       amount: number;
       payment_date: string;
@@ -132,86 +88,30 @@ export const useRecordCustomerPayment = () => {
       kasir_name: string;
       keterangan?: string;
     }) => {
-      console.log('Recording integrated customer payment:', paymentData);
-      
-      // Call the stored procedure directly using raw SQL approach
-      const { data, error } = await supabase
-        .rpc('record_customer_payment_integrated' as any, {
-          p_pelanggan_name: paymentData.pelanggan_name,
-          p_amount: paymentData.amount,
-          p_payment_date: paymentData.payment_date,
-          p_reference_number: paymentData.reference_number,
-          p_kasir_name: paymentData.kasir_name,
-          p_keterangan: paymentData.keterangan
-        });
-
-      if (error) {
-        console.error('Payment recording error:', error);
-        throw error;
-      }
-
-      // Handle the response data which should be a JSON object
-      let result;
-      try {
-        result = typeof data === 'string' ? JSON.parse(data) : data;
-      } catch (parseError) {
-        console.error('Failed to parse payment result:', parseError);
-        throw new Error('Invalid response format from payment function');
-      }
-
-      // Check if the result indicates an error
-      if (result && result.success === false) {
-        throw new Error(result.message || 'Payment recording failed');
-      }
-
-      console.log('Payment recorded successfully:', result);
-      return result;
-    },
-    onSuccess: (data) => {
-      console.log('Payment success, invalidating queries:', data);
-      
-      // Invalidate all related queries
-      queryClient.invalidateQueries({ queryKey: ['customer_receivables_ledger'] });
-      queryClient.invalidateQueries({ queryKey: ['customer_receivables_summary'] });
-      queryClient.invalidateQueries({ queryKey: ['kas_umum_transactions'] });
-      queryClient.invalidateQueries({ queryKey: ['kas_umum_summary'] });
-      queryClient.invalidateQueries({ queryKey: ['piutang_pelanggan'] });
-      queryClient.invalidateQueries({ queryKey: ['today_credit_sales'] });
-      
-      // Also invalidate pelanggan queries to refresh debt status
-      queryClient.invalidateQueries({ queryKey: ['pelanggan_unit'] });
-      queryClient.invalidateQueries({ queryKey: ['pelanggan_perorangan'] });
-      queryClient.invalidateQueries({ queryKey: ['pelanggan_kredit'] });
-    },
-    onError: (error) => {
-      console.error('Payment recording failed:', error);
-    }
-  });
-};
-
-// New hook for syncing POS transactions with receivables
-export const useSyncPOSReceivables = () => {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async () => {
-      // Call the sync function directly using raw SQL approach
       const { error } = await supabase
-        .rpc('sync_pos_credit_to_receivables' as any);
+        .rpc('record_customer_payment', {
+          p_pelanggan_name: data.pelanggan_name,
+          p_amount: data.amount,
+          p_payment_date: data.payment_date,
+          p_reference_number: data.reference_number,
+          p_kasir_name: data.kasir_name,
+          p_keterangan: data.keterangan
+        });
+      
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['customer_receivables_ledger'] });
-      queryClient.invalidateQueries({ queryKey: ['customer_receivables_summary'] });
+      queryClient.invalidateQueries({ queryKey: ['customer-receivables-ledger'] });
+      queryClient.invalidateQueries({ queryKey: ['customer-receivables-summary'] });
     },
   });
 };
 
 export const useRecordSupplierPayment = () => {
   const queryClient = useQueryClient();
-
+  
   return useMutation({
-    mutationFn: async (paymentData: {
+    mutationFn: async (data: {
       supplier_id: string;
       amount: number;
       payment_date: string;
@@ -219,45 +119,21 @@ export const useRecordSupplierPayment = () => {
       kasir_name: string;
       keterangan?: string;
     }) => {
-      const { error } = await supabase.rpc('record_supplier_payment' as any, {
-        p_supplier_id: paymentData.supplier_id,
-        p_amount: paymentData.amount,
-        p_payment_date: paymentData.payment_date,
-        p_reference_number: paymentData.reference_number,
-        p_kasir_name: paymentData.kasir_name,
-        p_keterangan: paymentData.keterangan
-      });
-
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['supplier_payables_ledger'] });
-      queryClient.invalidateQueries({ queryKey: ['supplier_payables_summary'] });
-    },
-  });
-};
-
-// Hook to fix customer receivables balance (specifically for Junaedi)
-export const useFixCustomerBalance = () => {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async (customerName: string) => {
-      // First sync POS credit transactions using raw SQL approach
-      await supabase.rpc('sync_pos_credit_to_receivables' as any);
-      
-      // Then refresh the customer's balance by recalculating from transactions
       const { error } = await supabase
-        .rpc('recalculate_customer_balance' as any, {
-          p_customer_name: customerName
+        .rpc('record_supplier_payment', {
+          p_supplier_id: data.supplier_id,
+          p_amount: data.amount,
+          p_payment_date: data.payment_date,
+          p_reference_number: data.reference_number,
+          p_kasir_name: data.kasir_name,
+          p_keterangan: data.keterangan
         });
       
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['customer_receivables_ledger'] });
-      queryClient.invalidateQueries({ queryKey: ['customer_receivables_summary'] });
-      queryClient.invalidateQueries({ queryKey: ['pelanggan_kredit'] });
+      queryClient.invalidateQueries({ queryKey: ['supplier-payables-ledger'] });
+      queryClient.invalidateQueries({ queryKey: ['supplier-payables-summary'] });
     },
   });
 };

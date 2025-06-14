@@ -47,8 +47,13 @@ const KartuPiutangPelanggan = () => {
     (customer.nama_unit && customer.nama_unit.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
-  // Get actual current balance from the latest entry
-  const currentBalance = ledgerEntries && ledgerEntries.length > 0 ? ledgerEntries[0].running_balance : 0;
+  // Calculate actual current balance from receivables ledger
+  const getActualBalance = (customerName: string) => {
+    const customerReceivable = customerSummary?.find(c => c.pelanggan_name === customerName);
+    return customerReceivable?.total_receivables || 0;
+  };
+
+  const currentBalance = selectedCustomer ? getActualBalance(selectedCustomer.nama) : 0;
   const totalReceivables = customerSummary?.reduce((sum, item) => sum + Number(item.total_receivables), 0) || 0;
 
   const handleSyncPOS = async () => {
@@ -305,7 +310,7 @@ const KartuPiutangPelanggan = () => {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Piutang</CardTitle>
+            <CardTitle className="text-sm font-medium">Total Piutang Aktual</CardTitle>
             <DollarSign className="h-4 w-4 text-blue-500" />
           </CardHeader>
           <CardContent>
@@ -362,8 +367,8 @@ const KartuPiutangPelanggan = () => {
           <CardContent className="max-h-96 overflow-y-auto">
             <div className="space-y-2">
               {filteredCustomers.map((customer) => {
-                const customerReceivables = customerSummary?.find(c => c.pelanggan_name === customer.nama);
-                const hasDebt = Number(customerReceivables?.total_receivables || 0) > 0;
+                const actualBalance = getActualBalance(customer.nama);
+                const hasDebt = actualBalance > 0;
                 
                 return (
                   <div
@@ -382,10 +387,10 @@ const KartuPiutangPelanggan = () => {
                     <div className="text-sm text-gray-500">{customer.telepon || 'No phone'}</div>
                     <div className="flex justify-between items-center mt-1">
                       <Badge variant={hasDebt ? 'destructive' : 'default'}>
-                        {formatRupiah(Number(customerReceivables?.total_receivables || 0))}
+                        {formatRupiah(actualBalance)}
                       </Badge>
-                      <Badge variant="outline">
-                        {customerReceivables?.total_transactions || 0} transaksi
+                      <Badge variant="outline" className="text-xs">
+                        {hasDebt ? 'Ada Piutang' : 'Lunas'}
                       </Badge>
                     </div>
                   </div>

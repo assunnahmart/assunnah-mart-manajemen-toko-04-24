@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -289,7 +290,7 @@ const POSSystem = () => {
             onKasUmum={() => setShowKasUmum(true)}
           />
 
-          <div className="flex-1 transition-all duration-300 ml-16">
+          <div className="flex-1 transition-all duration-300 ml-64">
             <POSHeader
               totalAmount={getTotalAmount()}
               cartItemsCount={cartItems.length}

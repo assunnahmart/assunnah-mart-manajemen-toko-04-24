@@ -134,31 +134,47 @@ export const useRecordCustomerPayment = () => {
       kasir_name: string;
       keterangan?: string;
     }) => {
-      console.log('Recording customer payment with integrated function:', data);
+      console.log('Recording customer payment:', data);
       
-      // Use the new integrated payment function
-      const { data: result, error } = await supabase
-        .rpc('record_customer_payment_integrated', {
-          p_pelanggan_name: data.pelanggan_name,
-          p_amount: data.amount,
-          p_payment_date: data.payment_date,
-          p_reference_number: data.reference_number,
-          p_kasir_name: data.kasir_name,
-          p_keterangan: data.keterangan
+      // Insert payment directly into customer_receivables_ledger
+      const { error: ledgerError } = await supabase
+        .from('customer_receivables_ledger')
+        .insert({
+          pelanggan_name: data.pelanggan_name,
+          transaction_date: data.payment_date,
+          description: `Pembayaran piutang - ${data.reference_number}`,
+          credit_amount: data.amount,
+          debit_amount: 0,
+          reference_number: data.reference_number,
+          kasir_name: data.kasir_name,
+          keterangan: data.keterangan
         });
       
-      if (error) {
-        console.error('Payment recording error:', error);
-        throw error;
+      if (ledgerError) {
+        console.error('Ledger payment error:', ledgerError);
+        throw ledgerError;
       }
       
-      console.log('Payment result:', result);
+      // Insert into kas_umum_transactions
+      const { error: kasError } = await supabase
+        .from('kas_umum_transactions')
+        .insert({
+          tanggal_transaksi: data.payment_date,
+          jenis_transaksi: 'masuk',
+          kategori: 'Penerimaan Piutang',
+          deskripsi: `Pembayaran piutang dari ${data.pelanggan_name}`,
+          jumlah: data.amount,
+          referensi: data.reference_number,
+          kasir_name: data.kasir_name,
+          keterangan: data.keterangan
+        });
       
-      if (!result.success) {
-        throw new Error(result.message);
+      if (kasError) {
+        console.error('Kas payment error:', kasError);
+        throw kasError;
       }
       
-      return result;
+      return { success: true, message: 'Payment recorded successfully' };
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['customer-receivables-ledger'] });

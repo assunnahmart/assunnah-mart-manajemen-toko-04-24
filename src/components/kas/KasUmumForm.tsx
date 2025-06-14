@@ -91,7 +91,7 @@ const KasUmumForm = () => {
                 <SelectValue placeholder="Pilih akun..." />
               </SelectTrigger>
               <SelectContent>
-                {accounts?.map((account) => (
+                {accounts?.filter(account => account.id && account.id.trim() !== '').map((account) => (
                   <SelectItem key={account.id} value={account.id}>
                     {account.kode_akun} - {account.nama_akun}
                   </SelectItem>

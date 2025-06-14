@@ -37,7 +37,7 @@ const PurchaseFormHeader = ({
           </SelectTrigger>
           <SelectContent>
             {suppliers?.map((supplier) => (
-              <SelectItem key={supplier.id} value={supplier.id}>
+              <SelectItem key={supplier.id} value={supplier.id || "default"}>
                 {supplier.nama}
               </SelectItem>
             ))}

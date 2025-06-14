@@ -34,42 +34,20 @@ const SupplierPayablesLedger = () => {
   const recordPayment = useRecordSupplierPayment();
   const { toast } = useToast();
 
-  console.log('SupplierPayablesLedger - DEBUG START');
-  console.log('SupplierPayablesLedger suppliers:', suppliers);
-  
-  // Enhanced validation to filter out suppliers with invalid IDs
+  // Enhanced validation with better null checking
   const validSuppliers = (suppliers || []).filter(supplier => {
-    // More robust validation
-    const hasValidId = supplier && 
-                      supplier.id && 
-                      typeof supplier.id === 'string' && 
-                      supplier.id.trim() !== '' &&
-                      supplier.id !== null &&
-                      supplier.id !== undefined &&
-                      supplier.id.length > 0;
-    
-    const hasValidName = supplier.nama && 
-                        typeof supplier.nama === 'string' && 
-                        supplier.nama.trim() !== '';
-    
-    console.log('Supplier validation:', { 
-      supplier: supplier?.nama, 
-      id: supplier?.id, 
-      type: typeof supplier?.id,
-      idLength: supplier?.id?.length,
-      isValid: hasValidId && hasValidName 
-    });
-    
-    if (!hasValidId || !hasValidName) {
-      console.error('INVALID SUPPLIER DETECTED:', supplier);
-      return false;
-    }
+    // Comprehensive validation
+    if (!supplier) return false;
+    if (!supplier.id || typeof supplier.id !== 'string') return false;
+    if (supplier.id.trim() === '') return false;
+    if (!supplier.nama || typeof supplier.nama !== 'string') return false;
+    if (supplier.nama.trim() === '') return false;
     
     return true;
   });
 
-  console.log('Valid suppliers after filtering:', validSuppliers.length);
-  console.log('SupplierPayablesLedger - DEBUG END');
+  console.log('SupplierPayablesLedger suppliers data:', suppliers);
+  console.log('Valid suppliers count:', validSuppliers.length);
 
   const handleRecordPayment = async () => {
     if (!selectedSupplier || !paymentForm.amount || !paymentForm.reference_number) {
@@ -193,19 +171,17 @@ const SupplierPayablesLedger = () => {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="">Semua Supplier</SelectItem>
-                  {validSuppliers.map((supplier) => {
-                    console.log('Rendering supplier SelectItem:', { id: supplier.id, nama: supplier.nama });
-                    // Extra safety check to prevent rendering invalid items
-                    if (!supplier.id || supplier.id.trim() === '' || !supplier.nama) {
-                      console.error('ATTEMPTING TO RENDER INVALID SUPPLIER:', supplier);
-                      return null;
-                    }
-                    return (
+                  {validSuppliers.length > 0 ? (
+                    validSuppliers.map((supplier) => (
                       <SelectItem key={supplier.id} value={supplier.id}>
                         {supplier.nama}
                       </SelectItem>
-                    );
-                  })}
+                    ))
+                  ) : (
+                    <SelectItem value="no-suppliers" disabled>
+                      Tidak ada supplier tersedia
+                    </SelectItem>
+                  )}
                 </SelectContent>
               </Select>
             </div>

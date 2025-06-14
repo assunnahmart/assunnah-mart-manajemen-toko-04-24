@@ -13,7 +13,9 @@ export const useCustomerReceivablesLedger = (
       let query = supabase
         .from('customer_receivables_ledger')
         .select('*')
-        .order('created_at', { ascending: false });
+        .order('transaction_date', { ascending: false })
+        .order('created_at', { ascending: false })
+        .order('id', { ascending: false });
       
       if (customerName) {
         query = query.eq('pelanggan_name', customerName);
@@ -132,8 +134,11 @@ export const useRecordCustomerPayment = () => {
       kasir_name: string;
       keterangan?: string;
     }) => {
-      const { error } = await supabase
-        .rpc('record_customer_payment', {
+      console.log('Recording customer payment with integrated function:', data);
+      
+      // Use the new integrated payment function
+      const { data: result, error } = await supabase
+        .rpc('record_customer_payment_integrated', {
           p_pelanggan_name: data.pelanggan_name,
           p_amount: data.amount,
           p_payment_date: data.payment_date,
@@ -142,11 +147,24 @@ export const useRecordCustomerPayment = () => {
           p_keterangan: data.keterangan
         });
       
-      if (error) throw error;
+      if (error) {
+        console.error('Payment recording error:', error);
+        throw error;
+      }
+      
+      console.log('Payment result:', result);
+      
+      if (!result.success) {
+        throw new Error(result.message);
+      }
+      
+      return result;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['customer-receivables-ledger'] });
       queryClient.invalidateQueries({ queryKey: ['customer-receivables-summary'] });
+      queryClient.invalidateQueries({ queryKey: ['kas_umum_transactions'] });
+      queryClient.invalidateQueries({ queryKey: ['general_ledger'] });
     },
   });
 };

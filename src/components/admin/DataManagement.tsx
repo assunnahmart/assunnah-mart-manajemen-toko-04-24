@@ -16,6 +16,7 @@ interface DeleteOperation {
   tables: Array<keyof typeof tableMap>;
   confirmText: string;
   color: string;
+  hasFK?: boolean;
 }
 
 // Map untuk TypeScript type safety
@@ -31,7 +32,10 @@ const tableMap = {
   'konsinyasi_detail': 'konsinyasi_detail',
   'konsinyasi_harian': 'konsinyasi_harian',
   'kasir_kas_transactions': 'kasir_kas_transactions',
-  'mutasi_stok': 'mutasi_stok'
+  'mutasi_stok': 'mutasi_stok',
+  'general_ledger': 'general_ledger',
+  'customer_receivables_ledger': 'customer_receivables_ledger',
+  'supplier_payables_ledger': 'supplier_payables_ledger'
 } as const;
 
 const DataManagement = () => {
@@ -69,10 +73,11 @@ const DataManagement = () => {
     {
       id: 'purchases',
       title: 'Data Pembelian',
-      description: 'Hapus semua transaksi pembelian dan detail pembelian',
-      tables: ['transaksi_pembelian', 'detail_transaksi_pembelian', 'hutang_supplier'],
+      description: 'Hapus semua transaksi pembelian (hutang dihapus dulu)',
+      tables: ['hutang_supplier', 'detail_transaksi_pembelian', 'transaksi_pembelian'],
       confirmText: 'HAPUS PEMBELIAN',
-      color: 'bg-blue-100 text-blue-800'
+      color: 'bg-blue-100 text-blue-800',
+      hasFK: true
     },
     {
       id: 'konsinyasi',
@@ -97,6 +102,30 @@ const DataManagement = () => {
       tables: ['mutasi_stok'],
       confirmText: 'HAPUS MUTASI STOK',
       color: 'bg-indigo-100 text-indigo-800'
+    },
+    {
+      id: 'general_ledger',
+      title: 'Jurnal Umum',
+      description: 'Hapus semua data jurnal umum dan buku besar',
+      tables: ['general_ledger'],
+      confirmText: 'HAPUS JURNAL UMUM',
+      color: 'bg-pink-100 text-pink-800'
+    },
+    {
+      id: 'receivables_ledger',
+      title: 'Buku Piutang',
+      description: 'Hapus semua data buku piutang pelanggan',
+      tables: ['customer_receivables_ledger'],
+      confirmText: 'HAPUS BUKU PIUTANG',
+      color: 'bg-cyan-100 text-cyan-800'
+    },
+    {
+      id: 'payables_ledger',
+      title: 'Buku Hutang',
+      description: 'Hapus semua data buku hutang supplier',
+      tables: ['supplier_payables_ledger'],
+      confirmText: 'HAPUS BUKU HUTANG',
+      color: 'bg-teal-100 text-teal-800'
     }
   ];
 
@@ -104,16 +133,34 @@ const DataManagement = () => {
     setIsDeleting(operation.id);
     
     try {
-      // Delete data from each table in the operation
-      for (const tableName of operation.tables) {
-        const mappedTable = tableMap[tableName];
-        const { error } = await supabase
-          .from(mappedTable)
-          .delete()
-          .neq('id', '00000000-0000-0000-0000-000000000000'); // Delete all records
-        
-        if (error) {
-          throw new Error(`Error deleting from ${tableName}: ${error.message}`);
+      // Special handling for purchases (FK constraint)
+      if (operation.hasFK) {
+        // Delete in correct order to handle foreign key constraints
+        for (const tableName of operation.tables) {
+          const mappedTable = tableMap[tableName];
+          console.log(`Deleting from ${tableName}...`);
+          
+          const { error } = await supabase
+            .from(mappedTable)
+            .delete()
+            .neq('id', '00000000-0000-0000-0000-000000000000');
+          
+          if (error) {
+            throw new Error(`Error deleting from ${tableName}: ${error.message}`);
+          }
+        }
+      } else {
+        // Normal deletion for other operations
+        for (const tableName of operation.tables) {
+          const mappedTable = tableMap[tableName];
+          const { error } = await supabase
+            .from(mappedTable)
+            .delete()
+            .neq('id', '00000000-0000-0000-0000-000000000000');
+          
+          if (error) {
+            throw new Error(`Error deleting from ${tableName}: ${error.message}`);
+          }
         }
       }
       
@@ -126,7 +173,7 @@ const DataManagement = () => {
       setConfirmText('');
       setSelectedDeleteType(null);
       
-    } catch (error) {
+    } catch (error: any) {
       console.error('Delete error:', error);
       toast({
         title: "Error",
@@ -190,6 +237,9 @@ const DataManagement = () => {
               
               <div className="text-xs text-gray-500">
                 <strong>Tabel:</strong> {operation.tables.join(', ')}
+                {operation.hasFK && (
+                  <div className="text-orange-600 mt-1">⚠️ Dengan foreign key handling</div>
+                )}
               </div>
               
               <Button

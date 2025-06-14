@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -6,9 +7,9 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Search, Plus, FileText, Calendar, DollarSign, User, Building2, TrendingUp } from 'lucide-react';
+import { Search, Plus, FileText, Calendar, DollarSign, User, Building2, TrendingUp, RefreshCw } from 'lucide-react';
 import { usePelangganKredit } from '@/hooks/usePelanggan';
-import { useCustomerReceivablesLedger, useCustomerReceivablesSummary, useRecordCustomerPayment } from '@/hooks/useLedgers';
+import { useCustomerReceivablesLedger, useCustomerReceivablesSummary, useRecordCustomerPayment, useSyncPOSReceivables } from '@/hooks/useLedgers';
 import { useSimpleAuth } from '@/hooks/useSimpleAuth';
 import { useToast } from '@/hooks/use-toast';
 import FixCustomerBalance from './FixCustomerBalance';
@@ -32,6 +33,7 @@ const KartuPiutangPelanggan = () => {
     undefined
   );
   const recordPayment = useRecordCustomerPayment();
+  const syncPOSReceivables = useSyncPOSReceivables();
   const { toast } = useToast();
 
   // Combine both unit and perorangan customers
@@ -45,8 +47,32 @@ const KartuPiutangPelanggan = () => {
     (customer.nama_unit && customer.nama_unit.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
-  const currentBalance = ledgerEntries?.[0]?.running_balance || 0;
+  // Get actual current balance from the latest entry
+  const currentBalance = ledgerEntries && ledgerEntries.length > 0 ? ledgerEntries[0].running_balance : 0;
   const totalReceivables = customerSummary?.reduce((sum, item) => sum + Number(item.total_receivables), 0) || 0;
+
+  const handleSyncPOS = async () => {
+    try {
+      await syncPOSReceivables.mutateAsync();
+      toast({
+        title: "Sinkronisasi Berhasil",
+        description: "Data POS kredit berhasil disinkronkan ke buku piutang"
+      });
+      
+      // Refresh all data
+      setTimeout(() => {
+        refetchLedger();
+        refetchSummary();
+        refetchPelanggan();
+      }, 500);
+    } catch (error: any) {
+      toast({
+        title: "Error Sinkronisasi",
+        description: error.message || "Gagal sinkronisasi data POS",
+        variant: "destructive"
+      });
+    }
+  };
 
   const handleRecordPayment = async () => {
     const amount = parseFloat(paymentForm.amount);
@@ -119,7 +145,7 @@ const KartuPiutangPelanggan = () => {
 
       toast({
         title: "Pembayaran Berhasil!",
-        description: `Pembayaran piutang sebesar ${formatRupiah(amount)} untuk ${selectedCustomer.nama} berhasil dicatat dan terintegrasi dengan Kas Umum`
+        description: `Pembayaran piutang sebesar ${formatRupiah(amount)} untuk ${selectedCustomer.nama} berhasil dicatat dan terintegrasi dengan Kas Umum & Jurnal`
       });
 
       // Reset form and close dialog
@@ -163,101 +189,116 @@ const KartuPiutangPelanggan = () => {
           <h1 className="text-3xl font-bold">Kartu Piutang Pelanggan</h1>
           <p className="text-gray-600">Kelola piutang pelanggan terintegrasi dengan POS System dan Kas Umum</p>
         </div>
-        <Dialog open={isPaymentDialogOpen} onOpenChange={setIsPaymentDialogOpen}>
-          <DialogTrigger asChild>
-            <Button 
-              disabled={!isPaymentButtonEnabled}
-              className={isPaymentButtonEnabled ? "bg-green-600 hover:bg-green-700" : ""}
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              Terima Pembayaran
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-md">
-            <DialogHeader>
-              <DialogTitle>Terima Pembayaran Terintegrasi</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4">
-              <div className="bg-blue-50 p-3 rounded-lg">
-                <p className="text-blue-800 text-sm font-medium">
-                  🔄 Pembayaran akan otomatis masuk ke Kas Umum dan General Ledger
-                </p>
-              </div>
-              
-              <div>
-                <Label>Pelanggan</Label>
-                <Input value={selectedCustomer?.nama || ''} disabled className="bg-gray-50" />
-              </div>
-              <div>
-                <Label>Saldo Piutang Saat Ini</Label>
-                <Input 
-                  value={formatRupiah(Math.abs(currentBalance))} 
-                  disabled 
-                  className="bg-gray-50 text-red-600 font-semibold" 
-                />
-              </div>
-              <div>
-                <Label>Jumlah Pembayaran *</Label>
-                <Input
-                  type="number"
-                  value={paymentForm.amount}
-                  onChange={(e) => setPaymentForm(prev => ({ ...prev, amount: e.target.value }))}
-                  placeholder="0"
-                  max={Math.abs(currentBalance)}
-                  min={0}
-                  step={1000}
-                />
-                <div className="text-xs text-gray-500 mt-1">
-                  Maksimal: {formatRupiah(Math.abs(currentBalance))}
+        <div className="flex gap-2">
+          <Button 
+            onClick={handleSyncPOS}
+            disabled={syncPOSReceivables.isPending}
+            variant="outline"
+            className="flex items-center gap-2"
+          >
+            {syncPOSReceivables.isPending ? (
+              <RefreshCw className="h-4 w-4 animate-spin" />
+            ) : (
+              <RefreshCw className="h-4 w-4" />
+            )}
+            Sync POS
+          </Button>
+          <Dialog open={isPaymentDialogOpen} onOpenChange={setIsPaymentDialogOpen}>
+            <DialogTrigger asChild>
+              <Button 
+                disabled={!isPaymentButtonEnabled}
+                className={isPaymentButtonEnabled ? "bg-green-600 hover:bg-green-700" : ""}
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Terima Pembayaran
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-md">
+              <DialogHeader>
+                <DialogTitle>Terima Pembayaran Terintegrasi</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4">
+                <div className="bg-blue-50 p-3 rounded-lg">
+                  <p className="text-blue-800 text-sm font-medium">
+                    🔄 Pembayaran akan otomatis masuk ke Kas Umum dan General Ledger
+                  </p>
+                </div>
+                
+                <div>
+                  <Label>Pelanggan</Label>
+                  <Input value={selectedCustomer?.nama || ''} disabled className="bg-gray-50" />
+                </div>
+                <div>
+                  <Label>Saldo Piutang Saat Ini</Label>
+                  <Input 
+                    value={formatRupiah(Math.abs(currentBalance))} 
+                    disabled 
+                    className="bg-gray-50 text-red-600 font-semibold" 
+                  />
+                </div>
+                <div>
+                  <Label>Jumlah Pembayaran *</Label>
+                  <Input
+                    type="number"
+                    value={paymentForm.amount}
+                    onChange={(e) => setPaymentForm(prev => ({ ...prev, amount: e.target.value }))}
+                    placeholder="0"
+                    max={Math.abs(currentBalance)}
+                    min={0}
+                    step={1000}
+                  />
+                  <div className="text-xs text-gray-500 mt-1">
+                    Maksimal: {formatRupiah(Math.abs(currentBalance))}
+                  </div>
+                </div>
+                <div>
+                  <Label>Nomor Referensi *</Label>
+                  <Input
+                    value={paymentForm.reference_number}
+                    onChange={(e) => setPaymentForm(prev => ({ ...prev, reference_number: e.target.value }))}
+                    placeholder="No. Bukti/Kwitansi"
+                  />
+                </div>
+                <div>
+                  <Label>Keterangan</Label>
+                  <Input
+                    value={paymentForm.keterangan}
+                    onChange={(e) => setPaymentForm(prev => ({ ...prev, keterangan: e.target.value }))}
+                    placeholder="Keterangan pembayaran (opsional)"
+                  />
+                </div>
+                
+                <div className="bg-green-50 p-3 rounded-lg">
+                  <div className="text-sm text-green-800">
+                    <p className="font-medium">Integrasi Otomatis:</p>
+                    <ul className="mt-1 text-xs space-y-1">
+                      <li>✓ Kas Umum (Pemasukan)</li>
+                      <li>✓ General Ledger (Jurnal)</li>
+                      <li>✓ Saldo Piutang (Update)</li>
+                    </ul>
+                  </div>
+                </div>
+                
+                <div className="flex gap-2 pt-4">
+                  <Button 
+                    variant="outline" 
+                    onClick={() => setIsPaymentDialogOpen(false)}
+                    className="flex-1"
+                  >
+                    Batal
+                  </Button>
+                  <Button 
+                    onClick={handleRecordPayment} 
+                    disabled={recordPayment.isPending || !paymentForm.amount || !paymentForm.reference_number}
+                    className="flex-1 bg-green-600 hover:bg-green-700"
+                  >
+                    {recordPayment.isPending ? 'Memproses...' : 'Terima Pembayaran'}
+                  </Button>
                 </div>
               </div>
-              <div>
-                <Label>Nomor Referensi *</Label>
-                <Input
-                  value={paymentForm.reference_number}
-                  onChange={(e) => setPaymentForm(prev => ({ ...prev, reference_number: e.target.value }))}
-                  placeholder="No. Bukti/Kwitansi"
-                />
-              </div>
-              <div>
-                <Label>Keterangan</Label>
-                <Input
-                  value={paymentForm.keterangan}
-                  onChange={(e) => setPaymentForm(prev => ({ ...prev, keterangan: e.target.value }))}
-                  placeholder="Keterangan pembayaran (opsional)"
-                />
-              </div>
-              
-              <div className="bg-green-50 p-3 rounded-lg">
-                <div className="text-sm text-green-800">
-                  <p className="font-medium">Integrasi Otomatis:</p>
-                  <ul className="mt-1 text-xs space-y-1">
-                    <li>✓ Kas Umum (Pemasukan)</li>
-                    <li>✓ General Ledger (Jurnal)</li>
-                    <li>✓ Saldo Piutang (Update)</li>
-                  </ul>
-                </div>
-              </div>
-              
-              <div className="flex gap-2 pt-4">
-                <Button 
-                  variant="outline" 
-                  onClick={() => setIsPaymentDialogOpen(false)}
-                  className="flex-1"
-                >
-                  Batal
-                </Button>
-                <Button 
-                  onClick={handleRecordPayment} 
-                  disabled={recordPayment.isPending || !paymentForm.amount || !paymentForm.reference_number}
-                  className="flex-1 bg-green-600 hover:bg-green-700"
-                >
-                  {recordPayment.isPending ? 'Memproses...' : 'Terima Pembayaran'}
-                </Button>
-              </div>
-            </div>
-          </DialogContent>
-        </Dialog>
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
 
       {/* Summary Cards */}
@@ -387,11 +428,14 @@ const KartuPiutangPelanggan = () => {
                     <div className="font-medium">{selectedCustomer.telepon || '-'}</div>
                   </div>
                   <div>
-                    <Label className="text-sm font-medium text-gray-600">Saldo Piutang</Label>
+                    <Label className="text-sm font-medium text-gray-600">Saldo Piutang Aktual</Label>
                     <div className={`font-bold text-lg ${currentBalance > 0 ? 'text-red-600' : 'text-green-600'}`}>
                       {formatRupiah(Math.abs(currentBalance))}
                       {currentBalance > 0 && (
                         <span className="text-sm text-red-500 ml-2">(Belum Lunas)</span>
+                      )}
+                      {currentBalance === 0 && (
+                        <span className="text-sm text-green-500 ml-2">(Lunas)</span>
                       )}
                     </div>
                   </div>

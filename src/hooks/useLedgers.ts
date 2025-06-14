@@ -2,14 +2,32 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
-export const useCustomerReceivablesLedger = () => {
+export const useCustomerReceivablesLedger = (
+  customerName?: string,
+  startDate?: string,
+  endDate?: string
+) => {
   return useQuery({
-    queryKey: ['customer-receivables-ledger'],
+    queryKey: ['customer-receivables-ledger', customerName, startDate, endDate],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let query = supabase
         .from('customer_receivables_ledger')
         .select('*')
         .order('created_at', { ascending: false });
+      
+      if (customerName) {
+        query = query.eq('pelanggan_name', customerName);
+      }
+      
+      if (startDate) {
+        query = query.gte('transaction_date', startDate);
+      }
+      
+      if (endDate) {
+        query = query.lte('transaction_date', endDate);
+      }
+      
+      const { data, error } = await query;
       
       if (error) throw error;
       return data;
@@ -17,14 +35,32 @@ export const useCustomerReceivablesLedger = () => {
   });
 };
 
-export const useSupplierPayablesLedger = () => {
+export const useSupplierPayablesLedger = (
+  supplierId?: string,
+  startDate?: string,
+  endDate?: string
+) => {
   return useQuery({
-    queryKey: ['supplier-payables-ledger'],
+    queryKey: ['supplier-payables-ledger', supplierId, startDate, endDate],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let query = supabase
         .from('supplier_payables_ledger')
         .select('*')
         .order('created_at', { ascending: false });
+      
+      if (supplierId) {
+        query = query.eq('supplier_id', supplierId);
+      }
+      
+      if (startDate) {
+        query = query.gte('transaction_date', startDate);
+      }
+      
+      if (endDate) {
+        query = query.lte('transaction_date', endDate);
+      }
+      
+      const { data, error } = await query;
       
       if (error) throw error;
       return data;
@@ -63,6 +99,7 @@ export const useSyncPOSReceivables = () => {
   
   return useMutation({
     mutationFn: async () => {
+      // Call the corrected function name
       const { error } = await supabase
         .rpc('sync_pos_credit_to_receivables');
       
@@ -134,6 +171,26 @@ export const useRecordSupplierPayment = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['supplier-payables-ledger'] });
       queryClient.invalidateQueries({ queryKey: ['supplier-payables-summary'] });
+    },
+  });
+};
+
+// Add the missing useFixCustomerBalance hook
+export const useFixCustomerBalance = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async (customerName: string) => {
+      const { error } = await supabase
+        .rpc('recalculate_customer_balance', {
+          p_customer_name: customerName
+        });
+      
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['customer-receivables-ledger'] });
+      queryClient.invalidateQueries({ queryKey: ['customer-receivables-summary'] });
     },
   });
 };

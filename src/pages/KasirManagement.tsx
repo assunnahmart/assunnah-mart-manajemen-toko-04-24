@@ -254,7 +254,7 @@ const KasirManagement = () => {
                         <div>
                           <Label htmlFor="shift">Shift</Label>
                           <Select 
-                            value={formData.shift} 
+                            value={formData.shift || "pagi"} 
                             onValueChange={(value) => setFormData(prev => ({ ...prev, shift: value }))}
                           >
                             <SelectTrigger>
@@ -269,7 +269,7 @@ const KasirManagement = () => {
                         <div>
                           <Label htmlFor="status">Status</Label>
                           <Select 
-                            value={formData.status} 
+                            value={formData.status || "aktif"} 
                             onValueChange={(value) => setFormData(prev => ({ ...prev, status: value }))}
                           >
                             <SelectTrigger>

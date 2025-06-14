@@ -1,7 +1,6 @@
 
 import { useSimpleAuth } from '@/hooks/useSimpleAuth';
 import NewLoginForm from './NewLoginForm';
-import Layout from './Layout';
 
 interface NewProtectedRouteProps {
   children: React.ReactNode;
@@ -33,23 +32,19 @@ const NewProtectedRoute = ({ children, requiredRole }: NewProtectedRouteProps) =
   if (requiredRole && user.role !== requiredRole) {
     console.log('NewProtectedRoute: User role mismatch:', { userRole: user.role, requiredRole });
     return (
-      <Layout>
-        <div className="min-h-screen flex items-center justify-center">
-          <div className="text-center">
-            <h2 className="text-xl font-semibold mb-2">Akses Ditolak</h2>
-            <p>Anda tidak memiliki akses ke halaman ini.</p>
-          </div>
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-xl font-semibold mb-2">Akses Ditolak</h2>
+          <p>Anda tidak memiliki akses ke halaman ini.</p>
+          <p className="text-sm text-gray-500 mt-2">Role yang diperlukan: {requiredRole}</p>
+          <p className="text-sm text-gray-500">Role Anda: {user.role}</p>
         </div>
-      </Layout>
+      </div>
     );
   }
 
   console.log('NewProtectedRoute: Access granted, showing protected content');
-  return (
-    <Layout>
-      {children}
-    </Layout>
-  );
+  return <>{children}</>;
 };
 
 export default NewProtectedRoute;

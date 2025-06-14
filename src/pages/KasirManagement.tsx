@@ -14,15 +14,23 @@ import NewProtectedRoute from "@/components/NewProtectedRoute";
 import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 
+type KasirFormData = {
+  nama: string;
+  email: string;
+  telepon: string;
+  status: "aktif" | "nonaktif" | "libur";
+  shift: "pagi" | "siang";
+};
+
 const KasirManagement = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingKasir, setEditingKasir] = useState<any>(null);
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<KasirFormData>({
     nama: "",
     email: "",
     telepon: "",
-    status: "aktif" as const,
-    shift: "pagi" as const
+    status: "aktif",
+    shift: "pagi"
   });
 
   const { data: kasirData, isLoading } = useKasir();

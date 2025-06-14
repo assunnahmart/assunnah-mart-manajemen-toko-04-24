@@ -36,8 +36,8 @@ const PurchaseFormHeader = ({
             <SelectValue placeholder="Pilih supplier..." />
           </SelectTrigger>
           <SelectContent>
-            {suppliers?.map((supplier) => (
-              <SelectItem key={supplier.id} value={supplier.id || "default"}>
+            {suppliers?.filter(supplier => supplier.id && supplier.id.trim() !== '').map((supplier) => (
+              <SelectItem key={supplier.id} value={supplier.id}>
                 {supplier.nama}
               </SelectItem>
             ))}

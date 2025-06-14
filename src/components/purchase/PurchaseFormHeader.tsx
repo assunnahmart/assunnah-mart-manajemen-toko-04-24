@@ -27,16 +27,27 @@ const PurchaseFormHeader = ({
   setCatatan,
   suppliers
 }: PurchaseFormHeaderProps) => {
+  console.log('PurchaseFormHeader suppliers:', suppliers);
+  
+  // Filter out suppliers with invalid IDs
+  const validSuppliers = suppliers?.filter(supplier => {
+    const isValid = supplier && supplier.id && typeof supplier.id === 'string' && supplier.id.trim() !== '';
+    console.log('Supplier validation:', { supplier: supplier?.nama, id: supplier?.id, isValid });
+    return isValid;
+  }) || [];
+
+  console.log('Valid suppliers:', validSuppliers);
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       <div>
         <Label htmlFor="supplier">Supplier</Label>
-        <Select value={supplierId} onValueChange={setSupplierId}>
+        <Select value={supplierId || ""} onValueChange={setSupplierId}>
           <SelectTrigger>
             <SelectValue placeholder="Pilih supplier..." />
           </SelectTrigger>
           <SelectContent>
-            {suppliers?.filter(supplier => supplier.id && supplier.id.trim() !== '').map((supplier) => (
+            {validSuppliers.map((supplier) => (
               <SelectItem key={supplier.id} value={supplier.id}>
                 {supplier.nama}
               </SelectItem>
@@ -47,7 +58,7 @@ const PurchaseFormHeader = ({
 
       <div>
         <Label htmlFor="jenis">Jenis Pembayaran</Label>
-        <Select value={jenisTransaksi} onValueChange={(value: 'cash' | 'kredit') => setJenisTransaksi(value)}>
+        <Select value={jenisTransaksi || "cash"} onValueChange={(value: 'cash' | 'kredit') => setJenisTransaksi(value)}>
           <SelectTrigger>
             <SelectValue />
           </SelectTrigger>

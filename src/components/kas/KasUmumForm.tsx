@@ -23,6 +23,17 @@ const KasUmumForm = () => {
   const createTransaction = useCreateKasTransaction();
   const { toast } = useToast();
 
+  console.log('KasUmumForm accounts:', accounts);
+  
+  // Filter out accounts with invalid IDs
+  const validAccounts = accounts?.filter(account => {
+    const isValid = account && account.id && typeof account.id === 'string' && account.id.trim() !== '';
+    console.log('Account validation:', { account: account?.nama_akun, id: account?.id, isValid });
+    return isValid;
+  }) || [];
+
+  console.log('Valid accounts:', validAccounts);
+
   const handleSubmit = async () => {
     if (!akunId || jumlah <= 0) {
       toast({
@@ -73,7 +84,7 @@ const KasUmumForm = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <Label htmlFor="jenis">Jenis Transaksi</Label>
-            <Select value={jenisTransaksi} onValueChange={(value: 'masuk' | 'keluar') => setJenisTransaksi(value)}>
+            <Select value={jenisTransaksi || "masuk"} onValueChange={(value: 'masuk' | 'keluar') => setJenisTransaksi(value)}>
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
@@ -86,12 +97,12 @@ const KasUmumForm = () => {
 
           <div>
             <Label htmlFor="akun">Akun</Label>
-            <Select value={akunId} onValueChange={setAkunId}>
+            <Select value={akunId || ""} onValueChange={setAkunId}>
               <SelectTrigger>
                 <SelectValue placeholder="Pilih akun..." />
               </SelectTrigger>
               <SelectContent>
-                {accounts?.filter(account => account.id && account.id.trim() !== '').map((account) => (
+                {validAccounts.map((account) => (
                   <SelectItem key={account.id} value={account.id}>
                     {account.kode_akun} - {account.nama_akun}
                   </SelectItem>

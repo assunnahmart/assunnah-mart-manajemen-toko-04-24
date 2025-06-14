@@ -28,16 +28,34 @@ const PurchaseItemForm = ({
   supplierId,
   onAddItem
 }: PurchaseItemFormProps) => {
+  console.log('PurchaseItemForm - DEBUG START');
   console.log('PurchaseItemForm filteredProducts:', filteredProducts);
   
-  // Filter out products with invalid IDs
+  // Enhanced validation to filter out products with invalid IDs
   const validProducts = filteredProducts?.filter(product => {
-    const isValid = product && product.id && typeof product.id === 'string' && product.id.trim() !== '';
-    console.log('Product validation:', { product: product?.nama, id: product?.id, isValid });
-    return isValid;
+    const hasValidId = product && 
+                      product.id && 
+                      typeof product.id === 'string' && 
+                      product.id.trim() !== '' &&
+                      product.id !== null &&
+                      product.id !== undefined;
+    
+    console.log('Product validation:', { 
+      product: product?.nama, 
+      id: product?.id, 
+      type: typeof product?.id,
+      isValid: hasValidId 
+    });
+    
+    if (!hasValidId) {
+      console.error('INVALID PRODUCT DETECTED:', product);
+    }
+    
+    return hasValidId;
   }) || [];
 
-  console.log('Valid products:', validProducts);
+  console.log('Valid products after filtering:', validProducts.length);
+  console.log('PurchaseItemForm - DEBUG END');
 
   return (
     <div className="border rounded-lg p-4">
@@ -50,11 +68,18 @@ const PurchaseItemForm = ({
               <SelectValue placeholder={supplierId ? "Pilih produk..." : "Pilih supplier dulu..."} />
             </SelectTrigger>
             <SelectContent>
-              {validProducts.map((product) => (
-                <SelectItem key={product.id} value={product.id}>
-                  {product.nama}
-                </SelectItem>
-              ))}
+              {validProducts.map((product) => {
+                console.log('Rendering product SelectItem:', { id: product.id, nama: product.nama });
+                if (!product.id || product.id.trim() === '') {
+                  console.error('ATTEMPTING TO RENDER INVALID PRODUCT:', product);
+                  return null;
+                }
+                return (
+                  <SelectItem key={product.id} value={product.id}>
+                    {product.nama}
+                  </SelectItem>
+                );
+              })}
             </SelectContent>
           </Select>
         </div>

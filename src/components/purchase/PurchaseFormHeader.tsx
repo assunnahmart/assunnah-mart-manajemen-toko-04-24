@@ -27,16 +27,34 @@ const PurchaseFormHeader = ({
   setCatatan,
   suppliers
 }: PurchaseFormHeaderProps) => {
+  console.log('PurchaseFormHeader - DEBUG START');
   console.log('PurchaseFormHeader suppliers:', suppliers);
   
-  // Filter out suppliers with invalid IDs
+  // Enhanced validation to filter out suppliers with invalid IDs
   const validSuppliers = suppliers?.filter(supplier => {
-    const isValid = supplier && supplier.id && typeof supplier.id === 'string' && supplier.id.trim() !== '';
-    console.log('Supplier validation:', { supplier: supplier?.nama, id: supplier?.id, isValid });
-    return isValid;
+    const hasValidId = supplier && 
+                      supplier.id && 
+                      typeof supplier.id === 'string' && 
+                      supplier.id.trim() !== '' &&
+                      supplier.id !== null &&
+                      supplier.id !== undefined;
+    
+    console.log('Supplier validation:', { 
+      supplier: supplier?.nama, 
+      id: supplier?.id, 
+      type: typeof supplier?.id,
+      isValid: hasValidId 
+    });
+    
+    if (!hasValidId) {
+      console.error('INVALID SUPPLIER DETECTED:', supplier);
+    }
+    
+    return hasValidId;
   }) || [];
 
-  console.log('Valid suppliers:', validSuppliers);
+  console.log('Valid suppliers after filtering:', validSuppliers.length);
+  console.log('PurchaseFormHeader - DEBUG END');
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -47,11 +65,18 @@ const PurchaseFormHeader = ({
             <SelectValue placeholder="Pilih supplier..." />
           </SelectTrigger>
           <SelectContent>
-            {validSuppliers.map((supplier) => (
-              <SelectItem key={supplier.id} value={supplier.id}>
-                {supplier.nama}
-              </SelectItem>
-            ))}
+            {validSuppliers.map((supplier) => {
+              console.log('Rendering supplier SelectItem:', { id: supplier.id, nama: supplier.nama });
+              if (!supplier.id || supplier.id.trim() === '') {
+                console.error('ATTEMPTING TO RENDER INVALID SUPPLIER:', supplier);
+                return null;
+              }
+              return (
+                <SelectItem key={supplier.id} value={supplier.id}>
+                  {supplier.nama}
+                </SelectItem>
+              );
+            })}
           </SelectContent>
         </Select>
       </div>

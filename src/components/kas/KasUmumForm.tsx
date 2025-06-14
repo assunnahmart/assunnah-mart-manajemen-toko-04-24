@@ -23,16 +23,34 @@ const KasUmumForm = () => {
   const createTransaction = useCreateKasTransaction();
   const { toast } = useToast();
 
+  console.log('KasUmumForm - DEBUG START');
   console.log('KasUmumForm accounts:', accounts);
   
-  // Filter out accounts with invalid IDs
+  // Enhanced validation to filter out accounts with invalid IDs
   const validAccounts = accounts?.filter(account => {
-    const isValid = account && account.id && typeof account.id === 'string' && account.id.trim() !== '';
-    console.log('Account validation:', { account: account?.nama_akun, id: account?.id, isValid });
-    return isValid;
+    const hasValidId = account && 
+                      account.id && 
+                      typeof account.id === 'string' && 
+                      account.id.trim() !== '' &&
+                      account.id !== null &&
+                      account.id !== undefined;
+    
+    console.log('Account validation:', { 
+      account: account?.nama_akun, 
+      id: account?.id, 
+      type: typeof account?.id,
+      isValid: hasValidId 
+    });
+    
+    if (!hasValidId) {
+      console.error('INVALID ACCOUNT DETECTED:', account);
+    }
+    
+    return hasValidId;
   }) || [];
 
-  console.log('Valid accounts:', validAccounts);
+  console.log('Valid accounts after filtering:', validAccounts.length);
+  console.log('KasUmumForm - DEBUG END');
 
   const handleSubmit = async () => {
     if (!akunId || jumlah <= 0) {
@@ -102,11 +120,18 @@ const KasUmumForm = () => {
                 <SelectValue placeholder="Pilih akun..." />
               </SelectTrigger>
               <SelectContent>
-                {validAccounts.map((account) => (
-                  <SelectItem key={account.id} value={account.id}>
-                    {account.kode_akun} - {account.nama_akun}
-                  </SelectItem>
-                ))}
+                {validAccounts.map((account) => {
+                  console.log('Rendering account SelectItem:', { id: account.id, nama: account.nama_akun });
+                  if (!account.id || account.id.trim() === '') {
+                    console.error('ATTEMPTING TO RENDER INVALID ACCOUNT:', account);
+                    return null;
+                  }
+                  return (
+                    <SelectItem key={account.id} value={account.id}>
+                      {account.kode_akun} - {account.nama_akun}
+                    </SelectItem>
+                  );
+                })}
               </SelectContent>
             </Select>
           </div>

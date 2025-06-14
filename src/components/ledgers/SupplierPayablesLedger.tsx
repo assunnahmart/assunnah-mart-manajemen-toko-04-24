@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -25,7 +26,7 @@ const SupplierPayablesLedger = () => {
   });
 
   const { user } = useSimpleAuth();
-  const { data: suppliers } = useSupplier();
+  const { data: suppliers, isLoading: suppliersLoading } = useSupplier();
   const { data: ledgerEntries, isLoading } = useSupplierPayablesLedger(
     selectedSupplier || undefined,
     startDate || undefined,
@@ -48,6 +49,7 @@ const SupplierPayablesLedger = () => {
 
   console.log('SupplierPayablesLedger suppliers data:', suppliers);
   console.log('Valid suppliers count:', validSuppliers.length);
+  console.log('Suppliers loading state:', suppliersLoading);
 
   const handleRecordPayment = async () => {
     if (!selectedSupplier || !paymentForm.amount || !paymentForm.reference_number) {
@@ -87,6 +89,20 @@ const SupplierPayablesLedger = () => {
 
   const currentBalance = ledgerEntries?.[0]?.running_balance || 0;
   const selectedSupplierName = validSuppliers?.find(s => s.id === selectedSupplier)?.nama || '';
+
+  // Don't render if suppliers are still loading
+  if (suppliersLoading) {
+    return (
+      <div className="space-y-6">
+        <div className="flex justify-between items-center">
+          <div>
+            <h1 className="text-3xl font-bold">Buku Besar Hutang Per Supplier</h1>
+            <p className="text-gray-600">Memuat data supplier...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -165,25 +181,25 @@ const SupplierPayablesLedger = () => {
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div>
               <Label>Supplier</Label>
-              <Select value={selectedSupplier || ""} onValueChange={setSelectedSupplier}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Pilih supplier" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="">Semua Supplier</SelectItem>
-                  {validSuppliers.length > 0 ? (
-                    validSuppliers.map((supplier) => (
+              {validSuppliers.length > 0 ? (
+                <Select value={selectedSupplier || ""} onValueChange={setSelectedSupplier}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Pilih supplier" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Semua Supplier</SelectItem>
+                    {validSuppliers.map((supplier) => (
                       <SelectItem key={supplier.id} value={supplier.id}>
                         {supplier.nama}
                       </SelectItem>
-                    ))
-                  ) : (
-                    <SelectItem value="no-suppliers" disabled>
-                      Tidak ada supplier tersedia
-                    </SelectItem>
-                  )}
-                </SelectContent>
-              </Select>
+                    ))}
+                  </SelectContent>
+                </Select>
+              ) : (
+                <div className="p-3 text-sm text-gray-500 border rounded-md bg-gray-50">
+                  Tidak ada supplier tersedia
+                </div>
+              )}
             </div>
             <div>
               <Label>Tanggal Mulai</Label>
@@ -215,7 +231,7 @@ const SupplierPayablesLedger = () => {
       </Card>
 
       {/* Summary Card */}
-      {selectedSupplier && (
+      {selectedSupplier && selectedSupplier !== 'all' && (
         <Card className="bg-orange-50 border-orange-200">
           <CardHeader>
             <CardTitle className="text-orange-900 flex items-center gap-2">

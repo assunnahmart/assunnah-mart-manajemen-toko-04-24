@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -28,7 +29,7 @@ const BukuBesarHutang = () => {
 
   const { data: ledgerData, isLoading } = useSupplierPayablesLedger(selectedSupplier, startDate, endDate);
   const { data: summaryData } = useSupplierPayablesSummary();
-  const { data: suppliers } = useSupplier();
+  const { data: suppliers, isLoading: suppliersLoading } = useSupplier();
   const recordPayment = useRecordSupplierPayment();
   const { toast } = useToast();
 
@@ -47,6 +48,7 @@ const BukuBesarHutang = () => {
   console.log('BukuBesarHutang suppliers data:', suppliers);
   console.log('Valid suppliers count:', validSuppliers.length);
   console.log('Valid suppliers:', validSuppliers);
+  console.log('Suppliers loading state:', suppliersLoading);
 
   const formatRupiah = (amount: number) => {
     return new Intl.NumberFormat('id-ID', {
@@ -81,6 +83,20 @@ const BukuBesarHutang = () => {
     }
   };
 
+  // Don't render Select components if suppliers are still loading or no valid suppliers
+  if (suppliersLoading) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-2xl font-bold">Buku Besar Hutang</h2>
+            <p className="text-gray-600">Memuat data supplier...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -102,24 +118,24 @@ const BukuBesarHutang = () => {
             <div className="space-y-4">
               <div>
                 <Label htmlFor="supplier">Supplier</Label>
-                <Select value={paymentData.supplier_id || ""} onValueChange={(value) => setPaymentData(prev => ({ ...prev, supplier_id: value }))}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Pilih supplier" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {validSuppliers.length > 0 ? (
-                      validSuppliers.map((supplier) => (
+                {validSuppliers.length > 0 ? (
+                  <Select value={paymentData.supplier_id || ""} onValueChange={(value) => setPaymentData(prev => ({ ...prev, supplier_id: value }))}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Pilih supplier" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {validSuppliers.map((supplier) => (
                         <SelectItem key={supplier.id} value={supplier.id}>
                           {supplier.nama}
                         </SelectItem>
-                      ))
-                    ) : (
-                      <SelectItem value="no-suppliers" disabled>
-                        Tidak ada supplier tersedia
-                      </SelectItem>
-                    )}
-                  </SelectContent>
-                </Select>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                ) : (
+                  <div className="p-3 text-sm text-gray-500 border rounded-md bg-gray-50">
+                    Tidak ada supplier tersedia
+                  </div>
+                )}
               </div>
               <div>
                 <Label htmlFor="amount">Jumlah Pembayaran</Label>
@@ -226,25 +242,25 @@ const BukuBesarHutang = () => {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
               <Label htmlFor="supplier-filter">Supplier</Label>
-              <Select value={selectedSupplier || ""} onValueChange={setSelectedSupplier}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Pilih supplier" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="">Semua Supplier</SelectItem>
-                  {validSuppliers.length > 0 ? (
-                    validSuppliers.map((supplier) => (
+              {validSuppliers.length > 0 ? (
+                <Select value={selectedSupplier || ""} onValueChange={setSelectedSupplier}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Pilih supplier" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Semua Supplier</SelectItem>
+                    {validSuppliers.map((supplier) => (
                       <SelectItem key={supplier.id} value={supplier.id}>
                         {supplier.nama}
                       </SelectItem>
-                    ))
-                  ) : (
-                    <SelectItem value="no-suppliers" disabled>
-                      Tidak ada supplier tersedia
-                    </SelectItem>
-                  )}
-                </SelectContent>
-              </Select>
+                    ))}
+                  </SelectContent>
+                </Select>
+              ) : (
+                <div className="p-3 text-sm text-gray-500 border rounded-md bg-gray-50">
+                  Tidak ada supplier tersedia
+                </div>
+              )}
             </div>
             <div>
               <Label htmlFor="start-date">Tanggal Mulai</Label>

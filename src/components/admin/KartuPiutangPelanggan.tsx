@@ -97,7 +97,7 @@ const KartuPiutangPelanggan = () => {
     }
 
     try {
-      console.log('Recording payment:', {
+      console.log('Recording integrated payment:', {
         pelanggan_name: selectedCustomer.nama,
         amount: amount,
         payment_date: new Date().toISOString().split('T')[0],
@@ -106,7 +106,7 @@ const KartuPiutangPelanggan = () => {
         keterangan: paymentForm.keterangan
       });
 
-      await recordPayment.mutateAsync({
+      const result = await recordPayment.mutateAsync({
         pelanggan_name: selectedCustomer.nama,
         amount: amount,
         payment_date: new Date().toISOString().split('T')[0],
@@ -114,26 +114,30 @@ const KartuPiutangPelanggan = () => {
         kasir_name: user?.full_name || 'Unknown',
         keterangan: paymentForm.keterangan
       });
+
+      console.log('Payment result:', result);
 
       toast({
-        title: "Berhasil!",
-        description: `Pembayaran piutang sebesar ${formatRupiah(amount)} untuk ${selectedCustomer.nama} berhasil dicatat`
+        title: "Pembayaran Berhasil!",
+        description: `Pembayaran piutang sebesar ${formatRupiah(amount)} untuk ${selectedCustomer.nama} berhasil dicatat dan terintegrasi dengan Kas Umum`
       });
 
       // Reset form and close dialog
       setPaymentForm({ amount: '', reference_number: '', keterangan: '' });
       setIsPaymentDialogOpen(false);
       
-      // Refresh data
-      refetchLedger();
-      refetchSummary();
-      refetchPelanggan();
+      // Auto-refresh data after successful payment
+      setTimeout(() => {
+        refetchLedger();
+        refetchSummary();
+        refetchPelanggan();
+      }, 500);
 
     } catch (error: any) {
-      console.error('Payment error:', error);
+      console.error('Integrated payment error:', error);
       toast({
         title: "Error",
-        description: error.message || "Terjadi kesalahan saat memproses pembayaran",
+        description: error.message || "Terjadi kesalahan saat memproses pembayaran terintegrasi",
         variant: "destructive"
       });
     }
@@ -154,7 +158,7 @@ const KartuPiutangPelanggan = () => {
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold">Kartu Piutang Pelanggan</h1>
-          <p className="text-gray-600">Kelola piutang pelanggan secara terintegrasi</p>
+          <p className="text-gray-600">Kelola piutang pelanggan terintegrasi dengan POS System dan Kas Umum</p>
         </div>
         <Dialog open={isPaymentDialogOpen} onOpenChange={setIsPaymentDialogOpen}>
           <DialogTrigger asChild>
@@ -168,9 +172,15 @@ const KartuPiutangPelanggan = () => {
           </DialogTrigger>
           <DialogContent className="max-w-md">
             <DialogHeader>
-              <DialogTitle>Terima Pembayaran Piutang</DialogTitle>
+              <DialogTitle>Terima Pembayaran Terintegrasi</DialogTitle>
             </DialogHeader>
             <div className="space-y-4">
+              <div className="bg-blue-50 p-3 rounded-lg">
+                <p className="text-blue-800 text-sm font-medium">
+                  🔄 Pembayaran akan otomatis masuk ke Kas Umum dan General Ledger
+                </p>
+              </div>
+              
               <div>
                 <Label>Pelanggan</Label>
                 <Input value={selectedCustomer?.nama || ''} disabled className="bg-gray-50" />
@@ -214,6 +224,18 @@ const KartuPiutangPelanggan = () => {
                   placeholder="Keterangan pembayaran (opsional)"
                 />
               </div>
+              
+              <div className="bg-green-50 p-3 rounded-lg">
+                <div className="text-sm text-green-800">
+                  <p className="font-medium">Integrasi Otomatis:</p>
+                  <ul className="mt-1 text-xs space-y-1">
+                    <li>✓ Kas Umum (Pemasukan)</li>
+                    <li>✓ General Ledger (Jurnal)</li>
+                    <li>✓ Saldo Piutang (Update)</li>
+                  </ul>
+                </div>
+              </div>
+              
               <div className="flex gap-2 pt-4">
                 <Button 
                   variant="outline" 

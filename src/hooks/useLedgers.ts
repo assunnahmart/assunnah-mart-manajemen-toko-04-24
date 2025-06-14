@@ -132,7 +132,9 @@ export const useRecordCustomerPayment = () => {
       kasir_name: string;
       keterangan?: string;
     }) => {
-      const { error } = await supabase.rpc('record_customer_payment', {
+      console.log('Recording integrated customer payment:', paymentData);
+      
+      const { data, error } = await supabase.rpc('record_customer_payment_integrated', {
         p_pelanggan_name: paymentData.pelanggan_name,
         p_amount: paymentData.amount,
         p_payment_date: paymentData.payment_date,
@@ -141,6 +143,48 @@ export const useRecordCustomerPayment = () => {
         p_keterangan: paymentData.keterangan
       });
 
+      if (error) {
+        console.error('Payment recording error:', error);
+        throw error;
+      }
+
+      // Check if the result indicates an error
+      if (data && !data.success) {
+        throw new Error(data.message || 'Payment recording failed');
+      }
+
+      console.log('Payment recorded successfully:', data);
+      return data;
+    },
+    onSuccess: (data) => {
+      console.log('Payment success, invalidating queries:', data);
+      
+      // Invalidate all related queries
+      queryClient.invalidateQueries({ queryKey: ['customer_receivables_ledger'] });
+      queryClient.invalidateQueries({ queryKey: ['customer_receivables_summary'] });
+      queryClient.invalidateQueries({ queryKey: ['kas_umum_transactions'] });
+      queryClient.invalidateQueries({ queryKey: ['kas_umum_summary'] });
+      queryClient.invalidateQueries({ queryKey: ['piutang_pelanggan'] });
+      queryClient.invalidateQueries({ queryKey: ['today_credit_sales'] });
+      
+      // Also invalidate pelanggan queries to refresh debt status
+      queryClient.invalidateQueries({ queryKey: ['pelanggan_unit'] });
+      queryClient.invalidateQueries({ queryKey: ['pelanggan_perorangan'] });
+      queryClient.invalidateQueries({ queryKey: ['pelanggan_kredit'] });
+    },
+    onError: (error) => {
+      console.error('Payment recording failed:', error);
+    }
+  });
+};
+
+// New hook for syncing POS transactions with receivables
+export const useSyncPOSReceivables = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase.rpc('sync_pos_credit_to_receivables');
       if (error) throw error;
     },
     onSuccess: () => {

@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -21,7 +22,7 @@ const KasirManagement = () => {
     email: "",
     telepon: "",
     status: "aktif",
-    shift: ""
+    shift: "pagi"
   });
 
   const { data: kasirData, isLoading } = useKasir();
@@ -36,7 +37,7 @@ const KasirManagement = () => {
       email: "",
       telepon: "",
       status: "aktif",
-      shift: ""
+      shift: "pagi"
     });
     setEditingKasir(null);
   };
@@ -90,7 +91,7 @@ const KasirManagement = () => {
       email: kasir.email || "",
       telepon: kasir.telepon || "",
       status: kasir.status || "aktif",
-      shift: kasir.shift || ""
+      shift: kasir.shift || "pagi"
     });
     setIsDialogOpen(true);
   };

@@ -28,18 +28,29 @@ const PurchaseItemForm = ({
   supplierId,
   onAddItem
 }: PurchaseItemFormProps) => {
+  console.log('PurchaseItemForm filteredProducts:', filteredProducts);
+  
+  // Filter out products with invalid IDs
+  const validProducts = filteredProducts?.filter(product => {
+    const isValid = product && product.id && typeof product.id === 'string' && product.id.trim() !== '';
+    console.log('Product validation:', { product: product?.nama, id: product?.id, isValid });
+    return isValid;
+  }) || [];
+
+  console.log('Valid products:', validProducts);
+
   return (
     <div className="border rounded-lg p-4">
       <h3 className="text-lg font-medium mb-4">Tambah Produk</h3>
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
         <div>
           <Label>Produk</Label>
-          <Select value={selectedProduct} onValueChange={setSelectedProduct}>
+          <Select value={selectedProduct || ""} onValueChange={setSelectedProduct}>
             <SelectTrigger>
               <SelectValue placeholder={supplierId ? "Pilih produk..." : "Pilih supplier dulu..."} />
             </SelectTrigger>
             <SelectContent>
-              {filteredProducts?.map((product) => (
+              {validProducts.map((product) => (
                 <SelectItem key={product.id} value={product.id}>
                   {product.nama}
                 </SelectItem>

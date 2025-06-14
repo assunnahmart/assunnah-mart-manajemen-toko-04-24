@@ -1,6 +1,7 @@
 
 import POSModals from '@/components/pos/POSModals';
 import CameraBarcodeScanner from '@/components/stock/CameraBarcodeScanner';
+import POSFastTransactionHistory from '@/components/pos/POSFastTransactionHistory';
 import { useToast } from '@/hooks/use-toast';
 
 interface POSModalManagerProps {
@@ -54,8 +55,6 @@ const POSModalManager = ({
   return (
     <>
       <POSModals
-        showTransactionHistory={showTransactionHistory}
-        setShowTransactionHistory={setShowTransactionHistory}
         showKonsinyasi={showKonsinyasi}
         setShowKonsinyasi={setShowKonsinyasi}
         showStockOpname={showStockOpname}
@@ -67,6 +66,12 @@ const POSModalManager = ({
         showDailyReport={showDailyReport}
         setShowDailyReport={setShowDailyReport}
         userFullName={userFullName}
+      />
+
+      <POSFastTransactionHistory
+        isOpen={showTransactionHistory}
+        onClose={() => setShowTransactionHistory(false)}
+        kasirName={userFullName}
       />
 
       <CameraBarcodeScanner 

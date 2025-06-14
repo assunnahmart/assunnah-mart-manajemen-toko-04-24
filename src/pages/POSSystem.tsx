@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import POSSidebar from '@/components/pos/POSSidebar';
@@ -12,6 +11,7 @@ import { useToast } from '@/hooks/use-toast';
 import NewProtectedRoute from '@/components/NewProtectedRoute';
 import POSTransactionSync from '@/components/pos/POSTransactionSync';
 import { usePOSTransactionSync } from '@/hooks/usePOSTransactionSync';
+import POSProductList from '@/components/pos/POSProductList';
 
 interface Customer {
   id: string;
@@ -35,6 +35,7 @@ const POSSystem = () => {
   const [showStockOpname, setShowStockOpname] = useState(false);
   const [showKasUmum, setShowKasUmum] = useState(false);
   const [showQuickScanner, setShowQuickScanner] = useState(false);
+  const [showProductList, setShowProductList] = useState(false);
   const createTransaction = useCreatePOSTransaction();
   const { syncStock, syncCustomerDebt, isSyncingStock, isSyncingDebt } = usePOSTransactionSync();
 
@@ -172,6 +173,22 @@ const POSSystem = () => {
     setSelectedPaymentMethod('cash');
   };
 
+  const addToCart = (product: any) => {
+    const existingItem = cartItems.find(item => item.id === product.id);
+    if (existingItem) {
+      setCartItems(cartItems.map(item => item.id === product.id ? {
+        ...item,
+        quantity: item.quantity + 1
+      } : item));
+    } else {
+      setCartItems([...cartItems, {
+        ...product,
+        quantity: 1
+      }]);
+    }
+    setShowProductList(false); // Close product list after adding
+  };
+
   return (
     <NewProtectedRoute>
       <POSTransactionSync onTransactionComplete={handleTransactionSync}>
@@ -184,6 +201,7 @@ const POSSystem = () => {
             onKasirKas={() => setShowKasirKas(true)} 
             onDailyReport={() => setShowDailyReport(true)}
             onKasUmum={() => setShowKasUmum(true)}
+            onShowProductList={() => setShowProductList(true)}
           />
 
           <div className="flex-1 transition-all duration-300 ml-64">
@@ -244,6 +262,29 @@ const POSSystem = () => {
             setSearchQuery={setSearchQuery}
             userFullName={user?.full_name}
           />
+
+          {/* Product List Modal */}
+          {showProductList && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+              <div className="bg-white rounded-lg w-full max-w-6xl h-[90vh] flex flex-col">
+                <div className="p-4 border-b flex justify-between items-center">
+                  <h2 className="text-xl font-bold">Daftar Produk - POS System</h2>
+                  <button
+                    onClick={() => setShowProductList(false)}
+                    className="text-gray-500 hover:text-gray-700"
+                  >
+                    ✕
+                  </button>
+                </div>
+                <div className="flex-1 p-4">
+                  <POSProductList 
+                    onAddToCart={addToCart}
+                    showAddToCart={true}
+                  />
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </POSTransactionSync>
     </NewProtectedRoute>

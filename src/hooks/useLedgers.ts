@@ -1,4 +1,3 @@
-
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -146,8 +145,7 @@ export const useRecordCustomerPayment = () => {
           credit_amount: data.amount,
           debit_amount: 0,
           reference_number: data.reference_number,
-          kasir_name: data.kasir_name,
-          keterangan: data.keterangan
+          kasir_name: data.kasir_name
         });
       
       if (ledgerError) {
@@ -155,18 +153,17 @@ export const useRecordCustomerPayment = () => {
         throw ledgerError;
       }
       
-      // Insert into kas_umum_transactions
+      // Insert into kas_umum_transactions with correct field names
       const { error: kasError } = await supabase
         .from('kas_umum_transactions')
         .insert({
           tanggal_transaksi: data.payment_date,
           jenis_transaksi: 'masuk',
-          kategori: 'Penerimaan Piutang',
-          deskripsi: `Pembayaran piutang dari ${data.pelanggan_name}`,
           jumlah: data.amount,
-          referensi: data.reference_number,
+          referensi_id: data.reference_number,
           kasir_name: data.kasir_name,
-          keterangan: data.keterangan
+          keterangan: data.keterangan,
+          transaction_number: `PAY-${Date.now()}`
         });
       
       if (kasError) {

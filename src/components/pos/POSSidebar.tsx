@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Menu, X, History, Package, ClipboardList, Wallet, FileText, LogOut, Scan, ChevronLeft, ChevronRight, DollarSign } from 'lucide-react';
+import { Menu, X, History, Package, ClipboardList, Wallet, FileText, LogOut, Scan, ChevronLeft, ChevronRight, DollarSign, ShoppingBag } from 'lucide-react';
 import { useSimpleAuth } from '@/hooks/useSimpleAuth';
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
@@ -15,6 +15,7 @@ interface POSSidebarProps {
   onKasirKas: () => void;
   onDailyReport: () => void;
   onKasUmum: () => void;
+  onShowProductList?: () => void;
 }
 
 const POSSidebar = ({
@@ -24,7 +25,8 @@ const POSSidebar = ({
   onStockOpname,
   onKasirKas,
   onDailyReport,
-  onKasUmum
+  onKasUmum,
+  onShowProductList
 }: POSSidebarProps) => {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const { user, signOut } = useSimpleAuth();
@@ -46,6 +48,12 @@ const POSSidebar = ({
     onClick: onQuickScan,
     color: 'bg-green-600 hover:bg-green-700',
     description: 'Scan barcode cepat'
+  }, {
+    icon: ShoppingBag,
+    label: 'Daftar Produk',
+    onClick: onShowProductList,
+    color: 'bg-cyan-600 hover:bg-cyan-700',
+    description: 'Lihat semua produk'
   }, {
     icon: History,
     label: 'Riwayat',

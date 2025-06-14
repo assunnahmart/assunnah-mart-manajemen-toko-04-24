@@ -1,5 +1,5 @@
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import NewProtectedRoute from '@/components/NewProtectedRoute';
 import NewNavbar from '@/components/NewNavbar';
@@ -14,6 +14,7 @@ import { usePOSTransactionsToday } from '@/hooks/usePOSTransactions';
 import { useBarangStokRendah } from '@/hooks/useBarangKonsinyasi';
 import { useKasUmumSummary } from '@/hooks/useKasUmum';
 import DashboardCharts from '@/components/DashboardCharts';
+import DashboardFilter from '@/components/DashboardFilter';
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -21,6 +22,24 @@ const Dashboard = () => {
   const { data: todayTransactions } = usePOSTransactionsToday();
   const { data: stockAlerts } = useBarangStokRendah();
   const { data: kasSummary } = useKasUmumSummary();
+
+  // Filter state
+  const [selectedPeriod, setSelectedPeriod] = useState('7days');
+  const [customStartDate, setCustomStartDate] = useState('');
+  const [customEndDate, setCustomEndDate] = useState('');
+
+  const handlePeriodChange = (period: string) => {
+    setSelectedPeriod(period);
+    if (period !== 'custom') {
+      setCustomStartDate('');
+      setCustomEndDate('');
+    }
+  };
+
+  const handleCustomDateChange = (startDate: string, endDate: string) => {
+    setCustomStartDate(startDate);
+    setCustomEndDate(endDate);
+  };
 
   // Quick actions for kasir only include POS, Konsinyasi Harian, and Kas
   const kasirQuickActions = [
@@ -177,9 +196,21 @@ const Dashboard = () => {
                 </Card>
               </div>
 
-              {/* Dashboard Charts - Only show for non-kasir users */}
+              {/* Dashboard Filter and Charts - Only show for non-kasir users */}
               {user?.role !== 'kasir' && (
-                <DashboardCharts />
+                <>
+                  <DashboardFilter 
+                    onPeriodChange={handlePeriodChange}
+                    onCustomDateChange={handleCustomDateChange}
+                    selectedPeriod={selectedPeriod}
+                  />
+                  
+                  <DashboardCharts 
+                    startDate={customStartDate}
+                    endDate={customEndDate}
+                    period={selectedPeriod}
+                  />
+                </>
               )}
 
               {/* Quick Actions - Show appropriate menu for kasir */}

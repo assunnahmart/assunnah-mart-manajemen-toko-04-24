@@ -27,8 +27,8 @@ const PembayaranHutangPage = () => {
   const [filterDate, setFilterDate] = useState('');
 
   const { user } = useSimpleAuth();
-  const { data: summary, isLoading: summaryLoading } = useSupplierPayablesSummary();
-  const { data: suppliers } = useSupplier();
+  const { data: summary, isLoading: summaryLoading, error: summaryError } = useSupplierPayablesSummary();
+  const { data: suppliers, isLoading: suppliersLoading, error: suppliersError } = useSupplier();
   const { data: recentPayments, isLoading: paymentsLoading } = useSupplierPayablesLedger(
     filterSupplier || undefined,
     filterDate || undefined,
@@ -126,13 +126,62 @@ const PembayaranHutangPage = () => {
         payment_date: new Date().toISOString().split('T')[0]
       });
     } catch (error: any) {
+      console.error('Payment error:', error);
       toast({
         title: "Error",
-        description: error && error.message ? error.message : "Terjadi kesalahan saat menyimpan pembayaran.",
+        description: error?.message || "Terjadi kesalahan saat menyimpan pembayaran.",
         variant: "destructive"
       });
     }
   };
+
+  // Show loading state if any critical data is loading
+  if (summaryLoading || suppliersLoading) {
+    return (
+      <SidebarProvider>
+        <div className="flex min-h-screen w-full">
+          <AppSidebar />
+          <SidebarInset className="flex-1">
+            <div className="p-6 space-y-6">
+              <div className="flex justify-center items-center min-h-[400px]">
+                <div className="text-center">
+                  <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary mx-auto"></div>
+                  <p className="mt-4 text-gray-600">Memuat data pembayaran hutang...</p>
+                </div>
+              </div>
+            </div>
+          </SidebarInset>
+        </div>
+      </SidebarProvider>
+    );
+  }
+
+  // Show error state if there are critical errors
+  if (summaryError || suppliersError) {
+    return (
+      <SidebarProvider>
+        <div className="flex min-h-screen w-full">
+          <AppSidebar />
+          <SidebarInset className="flex-1">
+            <div className="p-6 space-y-6">
+              <div className="flex justify-center items-center min-h-[400px]">
+                <div className="text-center">
+                  <div className="text-red-600 text-xl mb-4">⚠️ Terjadi Kesalahan</div>
+                  <p className="text-gray-600 mb-4">
+                    {summaryError?.message || suppliersError?.message || 'Gagal memuat data'}
+                  </p>
+                  <Button onClick={handleRefresh} variant="outline">
+                    <RefreshCw className="h-4 w-4 mr-2" />
+                    Coba Lagi
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </SidebarInset>
+        </div>
+      </SidebarProvider>
+    );
+  }
 
   const totalPayables = summary?.reduce((sum, item) => sum + item.total_payables, 0) || 0;
   const totalSuppliers = summary?.length || 0;
@@ -169,7 +218,7 @@ const PembayaranHutangPage = () => {
 
             {/* Outstanding Payables */}
             <OutstandingPayablesTable
-              summary={summary}
+              summary={summary || []}
               loading={summaryLoading}
               onSelectSupplier={handleSelectSupplier}
             />

@@ -3,7 +3,13 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Tables, TablesInsert } from '@/integrations/supabase/types';
 
-type PurchaseTransaction = Tables<'transaksi_pembelian'>;
+type PurchaseTransaction = Tables<'transaksi_pembelian'> & {
+  sisa_hutang?: number;
+  supplier?: { id: string; nama: string } | null;
+  kasir?: { nama: string } | null;
+  detail_transaksi_pembelian?: any[];
+};
+
 type PurchaseTransactionInsert = TablesInsert<'transaksi_pembelian'>;
 type PurchaseTransactionItem = Tables<'detail_transaksi_pembelian'>;
 type PurchaseTransactionItemInsert = TablesInsert<'detail_transaksi_pembelian'>;
@@ -23,7 +29,7 @@ export const usePurchaseTransactions = () => {
         .order('created_at', { ascending: false });
       
       if (error) throw error;
-      return data;
+      return data as PurchaseTransaction[];
     },
   });
 };

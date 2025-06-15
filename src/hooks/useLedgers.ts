@@ -331,9 +331,18 @@ export const useRecordCustomerPaymentIntegrated = () => {
       if (error) {
         throw new Error(error.message || 'Gagal mencatat pembayaran piutang');
       }
-      // tipe result bisa string/JSON, tipe any supaya typescript tidak error
+
       let res: any = result;
       if (!res?.success) {
+        // Tangani error not_null khusus transaction_number (kode PostgreSQL: 23502)
+        if (
+          res?.error_code === "23502" &&
+          (res?.message?.includes("transaction_number") || res?.message?.includes("kas_umum_transactions")) // lebih general
+        ) {
+          throw new Error(
+            "Gagal mencatat pembayaran: Database belum bisa membuat nomor transaksi kas otomatis (transaction_number kas umum kosong/null). Silakan hubungi admin untuk memperbaiki prosedur di database."
+          );
+        }
         throw new Error(res?.message || 'Gagal mencatat pembayaran piutang');
       }
       return res;

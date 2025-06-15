@@ -78,10 +78,10 @@ BEGIN
   
   -- Record in Kas Umum (cash in)
   INSERT INTO kas_umum_transactions (
-    tanggal_transaksi, jenis_transaksi, kategori, jumlah,
+    tanggal_transaksi, jenis_transaksi, jumlah,
     keterangan, referensi, kasir_name, created_at
   ) VALUES (
-    p_payment_date, 'masuk', 'Piutang Pelanggan', p_amount,
+    p_payment_date, 'masuk', p_amount,
     'Pembayaran piutang dari ' || p_pelanggan_name || ' - ' || COALESCE(p_keterangan, ''),
     p_reference_number, p_kasir_name, NOW()
   ) RETURNING id INTO kas_transaction_id;

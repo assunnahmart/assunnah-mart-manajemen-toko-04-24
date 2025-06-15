@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -19,7 +20,6 @@ import KasUmumPage from '@/pages/KasUmumPage';
 import KasirManagement from '@/pages/KasirManagement';
 import JurnalUmumPage from '@/pages/JurnalUmumPage';
 import LedgerPage from '@/pages/LedgerPage';
-import NewStokPage from '@/pages/NewStokPage';
 import ReturnsPage from '@/pages/ReturnsPage';
 import NotFound from '@/pages/NotFound';
 import AdminPanel from '@/pages/AdminPanel';
@@ -48,7 +48,6 @@ function App() {
             <Route path="/kasir-management" element={<KasirManagement />} />
             <Route path="/jurnal-umum" element={<JurnalUmumPage />} />
             <Route path="/ledger" element={<LedgerPage />} />
-            <Route path="/new-stok" element={<NewStokPage />} />
             <Route path="/returns" element={<ReturnsPage />} />
             
             {/* Admin routes */}

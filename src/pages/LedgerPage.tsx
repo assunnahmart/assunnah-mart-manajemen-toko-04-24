@@ -2,10 +2,14 @@
 import { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Users, Building, FileText, TrendingUp } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Users, Building, FileText, TrendingUp, Download, Trash2 } from 'lucide-react';
 import BukuBesarPiutang from '@/components/admin/BukuBesarPiutang';
 import BukuBesarHutang from '@/components/admin/BukuBesarHutang';
+import DataBackupManager from '@/components/admin/DataBackupManager';
 import { useCustomerReceivablesSummary, useSupplierPayablesSummary } from '@/hooks/useLedgers';
+import { useDataBackup } from '@/hooks/useDataBackup';
+import { useToast } from '@/hooks/use-toast';
 import NewProtectedRoute from '@/components/NewProtectedRoute';
 import { SidebarProvider, SidebarInset, SidebarTrigger } from '@/components/ui/sidebar';
 import { AppSidebar } from '@/components/AppSidebar';
@@ -13,6 +17,8 @@ import { AppSidebar } from '@/components/AppSidebar';
 const LedgerPage = () => {
   const { data: customerSummary } = useCustomerReceivablesSummary();
   const { data: supplierSummary } = useSupplierPayablesSummary();
+  const { exportAllData } = useDataBackup();
+  const { toast } = useToast();
 
   const totalReceivables = customerSummary?.reduce((sum: number, item: any) => sum + Number(item.total_receivables), 0) || 0;
   const totalPayables = supplierSummary?.reduce((sum: number, item: any) => sum + Number(item.total_payables), 0) || 0;
@@ -25,6 +31,22 @@ const LedgerPage = () => {
       currency: 'IDR',
       minimumFractionDigits: 0,
     }).format(amount);
+  };
+
+  const handleQuickBackup = async () => {
+    try {
+      const result = await exportAllData.mutateAsync();
+      toast({
+        title: "Berhasil",
+        description: `Data berhasil di-backup ke file ${result.fileName}`
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Gagal membuat backup data",
+        variant: "destructive"
+      });
+    }
   };
 
   return (
@@ -44,6 +66,17 @@ const LedgerPage = () => {
                   <div>
                     <h1 className="text-3xl font-bold">Buku Besar Piutang & Hutang</h1>
                     <p className="text-gray-600">Kelola piutang pelanggan dan hutang supplier secara terintegrasi</p>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button 
+                      variant="outline"
+                      onClick={handleQuickBackup}
+                      disabled={exportAllData.isPending}
+                      className="flex items-center gap-2"
+                    >
+                      <Download className="h-4 w-4" />
+                      {exportAllData.isPending ? 'Backup...' : 'Quick Backup'}
+                    </Button>
                   </div>
                 </div>
 
@@ -100,7 +133,7 @@ const LedgerPage = () => {
 
                 {/* Main Content */}
                 <Tabs defaultValue="receivables" className="w-full">
-                  <TabsList className="grid w-full grid-cols-2">
+                  <TabsList className="grid w-full grid-cols-3">
                     <TabsTrigger value="receivables" className="flex items-center gap-2">
                       <Users className="h-4 w-4" />
                       Piutang Pelanggan
@@ -108,6 +141,10 @@ const LedgerPage = () => {
                     <TabsTrigger value="payables" className="flex items-center gap-2">
                       <Building className="h-4 w-4" />
                       Hutang Supplier
+                    </TabsTrigger>
+                    <TabsTrigger value="backup" className="flex items-center gap-2">
+                      <Download className="h-4 w-4" />
+                      Backup & Manage
                     </TabsTrigger>
                   </TabsList>
                   
@@ -117,6 +154,10 @@ const LedgerPage = () => {
                   
                   <TabsContent value="payables">
                     <BukuBesarHutang />
+                  </TabsContent>
+
+                  <TabsContent value="backup">
+                    <DataBackupManager />
                   </TabsContent>
                 </Tabs>
               </div>

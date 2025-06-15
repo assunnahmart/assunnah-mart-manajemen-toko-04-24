@@ -57,10 +57,14 @@ export const useCreateKasTransaction = () => {
       // Generate transaction number
       const { data: transactionNumber, error: numberError } = await supabase
         .rpc('generate_kas_transaction_number');
-      
+
       if (numberError) {
         console.error('Error generating transaction number:', numberError);
         throw new Error('Gagal membuat nomor transaksi');
+      }
+      if (!transactionNumber || typeof transactionNumber !== 'string' || transactionNumber.trim() === '') {
+        console.error('Received invalid transaction_number from rpc:', transactionNumber);
+        throw new Error('Gagal membuat nomor transaksi (nomor tidak valid)');
       }
       
       // Prepare transaction data

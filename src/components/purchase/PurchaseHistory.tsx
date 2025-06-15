@@ -50,6 +50,7 @@ const PurchaseHistory = () => {
                     <TableHead>Supplier</TableHead>
                     <TableHead>Tanggal</TableHead>
                     <TableHead>Total</TableHead>
+                    <TableHead>Sisa Hutang</TableHead>
                     <TableHead>Pembayaran</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead>Kasir</TableHead>
@@ -57,51 +58,61 @@ const PurchaseHistory = () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {transactions?.map((transaction) => (
-                    <TableRow key={transaction.id}>
-                      <TableCell className="font-medium">
-                        {transaction.nomor_transaksi}
-                      </TableCell>
-                      <TableCell>
-                        {transaction.supplier?.nama || '-'}
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-1">
-                          <Calendar className="h-4 w-4 text-gray-400" />
-                          {new Date(transaction.tanggal_pembelian).toLocaleDateString('id-ID')}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        Rp {transaction.total.toLocaleString('id-ID')}
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant={transaction.jenis_pembayaran === 'cash' ? 'default' : 'secondary'}>
-                          {transaction.jenis_pembayaran === 'cash' ? 'Tunai' : 'Kredit'}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant={transaction.status === 'completed' ? 'default' : 'secondary'}>
-                          {transaction.status === 'completed' ? 'Selesai' : transaction.status}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        {transaction.kasir?.nama || '-'}
-                      </TableCell>
-                      <TableCell>
-                        {transaction.jenis_pembayaran === 'kredit' && transaction.status === 'completed' && (
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => handlePayment(transaction)}
-                            className="flex items-center gap-1"
-                          >
-                            <CreditCard className="h-3 w-3" />
-                            Bayar
-                          </Button>
-                        )}
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                  {transactions?.map((transaction) => {
+                    const sisaHutang = transaction.sisa_hutang || (transaction.jenis_pembayaran === 'kredit' ? transaction.total : 0);
+                    const isHutangLunas = sisaHutang <= 0;
+                    
+                    return (
+                      <TableRow key={transaction.id}>
+                        <TableCell className="font-medium">
+                          {transaction.nomor_transaksi}
+                        </TableCell>
+                        <TableCell>
+                          {transaction.supplier?.nama || '-'}
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-1">
+                            <Calendar className="h-4 w-4 text-gray-400" />
+                            {new Date(transaction.tanggal_pembelian).toLocaleDateString('id-ID')}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          Rp {transaction.total.toLocaleString('id-ID')}
+                        </TableCell>
+                        <TableCell>
+                          <span className={sisaHutang > 0 ? 'text-red-600 font-medium' : 'text-green-600'}>
+                            Rp {sisaHutang.toLocaleString('id-ID')}
+                          </span>
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant={transaction.jenis_pembayaran === 'cash' ? 'default' : 'secondary'}>
+                            {transaction.jenis_pembayaran === 'cash' ? 'Tunai' : 'Kredit'}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant={isHutangLunas ? 'default' : 'destructive'}>
+                            {isHutangLunas ? 'Lunas' : 'Belum Lunas'}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          {transaction.kasir?.nama || '-'}
+                        </TableCell>
+                        <TableCell>
+                          {transaction.jenis_pembayaran === 'kredit' && sisaHutang > 0 && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handlePayment(transaction)}
+                              className="flex items-center gap-1"
+                            >
+                              <CreditCard className="h-3 w-3" />
+                              Bayar
+                            </Button>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
                 </TableBody>
               </Table>
             </div>

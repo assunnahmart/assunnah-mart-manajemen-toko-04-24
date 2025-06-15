@@ -17,9 +17,10 @@ interface PurchasePaymentDialogProps {
   transaction: {
     id: string;
     nomor_transaksi: string;
-    supplier: { nama: string };
+    supplier: { nama: string; id: string };
     total: number;
     sisa_hutang?: number;
+    jenis_pembayaran: string;
   };
 }
 
@@ -39,7 +40,7 @@ const PurchasePaymentDialog = ({
   const queryClient = useQueryClient();
 
   const userKasir = kasirData?.find(k => k.nama === user?.full_name);
-  const maxPayment = transaction.sisa_hutang || transaction.total;
+  const currentDebt = transaction.sisa_hutang || (transaction.jenis_pembayaran === 'kredit' ? transaction.total : 0);
 
   const handlePayment = async () => {
     if (!amount || amount <= 0) {
@@ -51,10 +52,10 @@ const PurchasePaymentDialog = ({
       return;
     }
 
-    if (amount > maxPayment) {
+    if (amount > currentDebt) {
       toast({
         title: "Error", 
-        description: `Pembayaran tidak boleh melebihi sisa hutang (Rp ${maxPayment.toLocaleString('id-ID')})`,
+        description: `Pembayaran tidak boleh melebihi sisa hutang (Rp ${currentDebt.toLocaleString('id-ID')})`,
         variant: "destructive"
       });
       return;
@@ -99,6 +100,20 @@ const PurchasePaymentDialog = ({
         throw new Error('Akun kas tidak ditemukan');
       }
 
+      // Calculate new debt amount
+      const newDebtAmount = currentDebt - amount;
+
+      // Update transaksi_pembelian with new sisa_hutang
+      const { error: updateError } = await supabase
+        .from('transaksi_pembelian')
+        .update({ 
+          sisa_hutang: newDebtAmount,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', transaction.id);
+
+      if (updateError) throw updateError;
+
       // Create kas keluar entry
       const { error: kasError } = await supabase
         .from('kas_umum_transactions')
@@ -117,10 +132,10 @@ const PurchasePaymentDialog = ({
       
       if (kasError) throw kasError;
 
-      // Record supplier payment
+      // Record supplier payment in ledger
       const { error: supplierPaymentError } = await supabase
         .rpc('record_supplier_payment', {
-          p_supplier_id: transaction.id, // This should be supplier_id from the transaction
+          p_supplier_id: transaction.supplier.id,
           p_amount: amount,
           p_payment_date: new Date().toISOString().split('T')[0],
           p_reference_number: referenceNumber,
@@ -171,8 +186,8 @@ const PurchasePaymentDialog = ({
             <div className="text-sm text-gray-600 mb-2">
               Supplier: {transaction.supplier.nama}
             </div>
-            <div className="font-bold">
-              Sisa Hutang: Rp {maxPayment.toLocaleString('id-ID')}
+            <div className="font-bold text-red-600">
+              Sisa Hutang: Rp {currentDebt.toLocaleString('id-ID')}
             </div>
           </div>
 
@@ -184,7 +199,7 @@ const PurchasePaymentDialog = ({
               value={amount || ''}
               onChange={(e) => setAmount(Number(e.target.value))}
               placeholder="Masukkan jumlah pembayaran"
-              max={maxPayment}
+              max={currentDebt}
             />
           </div>
 

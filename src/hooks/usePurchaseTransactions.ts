@@ -16,7 +16,7 @@ export const usePurchaseTransactions = () => {
         .from('transaksi_pembelian')
         .select(`
           *,
-          supplier (nama),
+          supplier (id, nama),
           kasir (nama),
           detail_transaksi_pembelian (*)
         `)
@@ -45,13 +45,17 @@ export const useCreatePurchaseTransaction = () => {
       
       if (numberError) throw numberError;
       
+      // Set sisa_hutang for credit transactions
+      const transactionData = {
+        ...transaction,
+        nomor_transaksi: transactionNumber as string,
+        sisa_hutang: transaction.jenis_pembayaran === 'kredit' ? transaction.total : 0
+      };
+      
       // Insert transaction
       const { data: insertedTransaction, error: transactionError } = await supabase
         .from('transaksi_pembelian')
-        .insert({
-          ...transaction,
-          nomor_transaksi: transactionNumber as string
-        })
+        .insert(transactionData)
         .select()
         .single();
       

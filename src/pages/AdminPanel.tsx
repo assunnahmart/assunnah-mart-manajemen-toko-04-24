@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import NewProtectedRoute from '@/components/NewProtectedRoute';
-import { SidebarProvider, SidebarInset, SidebarTrigger } from '@/components/ui/sidebar';
+import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
 import { AppSidebar } from '@/components/AppSidebar';
 import AdminDashboard from '@/components/admin/AdminDashboard';
 import PelangganManagement from '@/components/admin/PelangganManagement';
@@ -18,10 +18,10 @@ import DataBackupManager from '@/components/admin/DataBackupManager';
 import KartuHutangSupplier from '@/components/admin/KartuHutangSupplier';
 import KartuPiutangPelanggan from '@/components/admin/KartuPiutangPelanggan';
 
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 
-// Helper: mapping pathname ke tab
-const routeToTabMap: { [key: string]: string } = {
+// Mapping routes ke nama tab-nya (konstanta, agar mudah dicek/diedit)
+const ROUTE_TO_TAB: Record<string, string> = {
   '/admin': 'dashboard',
   '/admin/pelanggan': 'pelanggan',
   '/admin/supplier': 'supplier',
@@ -37,20 +37,32 @@ const routeToTabMap: { [key: string]: string } = {
   '/admin/kartu-piutang': 'kartu-piutang',
 };
 
+const TAB_TO_ROUTE: Record<string, string> = Object.entries(ROUTE_TO_TAB)
+  .reduce((acc, [route, tab]) => ({ ...acc, [tab]: route }), {});
+
+// Component utama
 const AdminPanel = () => {
   const location = useLocation();
+  const navigate = useNavigate();
 
-  // Tentukan tab awal berdasarkan URL
-  const initialTab = routeToTabMap[location.pathname] || 'dashboard';
+  // Tentukan tab awal
+  const initialTab = ROUTE_TO_TAB[location.pathname] || 'dashboard';
   const [activeTab, setActiveTab] = useState(initialTab);
 
-  // Sync tab dengan route saat location berubah
+  // Sync tab ketika location berubah (misal klik sidebar, back dsb)
   useEffect(() => {
-    const targetTab = routeToTabMap[location.pathname];
-    if (targetTab && targetTab !== activeTab) {
-      setActiveTab(targetTab);
-    }
+    const routeTab = ROUTE_TO_TAB[location.pathname];
+    if (routeTab && routeTab !== activeTab) setActiveTab(routeTab);
   }, [location.pathname]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Saat user klik tab, ubah path agar URL sinkron
+  const handleTabChange = (value: string) => {
+    setActiveTab(value);
+    const route = TAB_TO_ROUTE[value];
+    if (route && location.pathname !== route) {
+      navigate(route);
+    }
+  };
 
   return (
     <NewProtectedRoute>
@@ -59,7 +71,7 @@ const AdminPanel = () => {
           <AppSidebar />
           <SidebarInset>
             <div className="flex-1 p-6">
-              <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+              <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
                 <TabsList className="grid w-full grid-cols-5 lg:grid-cols-12">
                   <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
                   <TabsTrigger value="pelanggan">Pelanggan</TabsTrigger>
@@ -78,43 +90,33 @@ const AdminPanel = () => {
                 <TabsContent value="dashboard">
                   <AdminDashboard />
                 </TabsContent>
-                
                 <TabsContent value="pelanggan">
                   <PelangganManagement />
                 </TabsContent>
-                
                 <TabsContent value="supplier">
                   <SupplierManagement />
                 </TabsContent>
-                
                 <TabsContent value="buku-besar-piutang">
                   <BukuBesarPiutang />
                 </TabsContent>
-                
                 <TabsContent value="buku-besar-hutang">
                   <BukuBesarHutang />
                 </TabsContent>
-                
                 <TabsContent value="kas-umum">
                   <KasUmum />
                 </TabsContent>
-                
                 <TabsContent value="laba-rugi">
                   <LabaRugi />
                 </TabsContent>
-                
                 <TabsContent value="financial-reports">
                   <FinancialReports />
                 </TabsContent>
-                
                 <TabsContent value="data-management">
                   <DataManagement />
                 </TabsContent>
-
                 <TabsContent value="backup-manager">
                   <DataBackupManager />
                 </TabsContent>
-                
                 <TabsContent value="kartu-hutang">
                   <KartuHutangSupplier />
                 </TabsContent>

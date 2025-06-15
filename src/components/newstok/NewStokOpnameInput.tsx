@@ -10,7 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Search, Scan, Plus, Package, Info } from 'lucide-react';
 import { useStockData } from '@/hooks/useStockManagement';
-import { useCreateNewStokOpname } from '@/hooks/useStockOpnameRecap';
+import { useCreateNewStokOpname } from '@/hooks/useCreateNewStokOpname';
 import { useKasir } from '@/hooks/useKasir';
 import { useSimpleAuth } from '@/hooks/useSimpleAuth';
 import { useToast } from '@/hooks/use-toast';

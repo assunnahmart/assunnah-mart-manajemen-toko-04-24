@@ -1,140 +1,230 @@
 
+import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Package, Users, Calculator, TrendingUp, AlertTriangle, CheckCircle } from 'lucide-react';
-import { useStockOpnameRealTime } from '@/hooks/useStockOpnameRecap';
-import { useStockData } from '@/hooks/useStockManagement';
+import { TrendingUp, TrendingDown, Package, Users, AlertTriangle, RefreshCw, Info } from 'lucide-react';
+import { useStockOpnameRecap } from '@/hooks/useStockOpnameRecap';
+import { useStockOpnameRealTime } from '@/hooks/useStockOpnameRealTime';
+import { Button } from '@/components/ui/button';
 
 const NewStokDashboard = () => {
-  const { data: realtimeData, isLoading } = useStockOpnameRealTime();
-  const { data: stockData } = useStockData();
+  const [dateFrom] = useState(
+    new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+  );
+  const [dateTo] = useState(new Date().toISOString().split('T')[0]);
 
-  const stats = [
-    {
-      title: 'Total Produk Sistem',
-      value: stockData?.length || 0,
-      icon: Package,
-      color: 'text-blue-600',
-      bgColor: 'bg-blue-100'
-    },
-    {
-      title: 'Produk Sudah Diinput Hari Ini',
-      value: realtimeData?.summary?.totalItems || 0,
-      icon: CheckCircle,
-      color: 'text-green-600',
-      bgColor: 'bg-green-100'
-    },
-    {
-      title: 'Total Selisih Stok',
-      value: realtimeData?.summary?.totalVariance || 0,
-      icon: Calculator,
-      color: 'text-orange-600',
-      bgColor: 'bg-orange-100'
-    },
-    {
-      title: 'Tingkat Akurasi',
-      value: `${realtimeData?.summary?.accuracyRate || '100'}%`,
-      icon: TrendingUp,
-      color: 'text-purple-600',
-      bgColor: 'bg-purple-100'
-    }
-  ];
+  const { data: recapData, isLoading: isLoadingRecap, refetch: refetchRecap } = useStockOpnameRecap(dateFrom, dateTo);
+  const { data: realTimeData, isLoading: isLoadingRealTime } = useStockOpnameRealTime();
 
-  const accuracyRate = parseFloat(realtimeData?.summary?.accuracyRate || '100');
+  const getVarianceStats = () => {
+    if (!recapData) return { positive: 0, negative: 0, zero: 0, totalItems: 0, totalVariance: 0 };
+    
+    return recapData.reduce(
+      (acc, item) => {
+        acc.totalItems++;
+        acc.totalVariance += Math.abs(item.selisih_stok);
+        
+        if (item.selisih_stok > 0) acc.positive++;
+        else if (item.selisih_stok < 0) acc.negative++;
+        else acc.zero++;
+        
+        return acc;
+      },
+      { positive: 0, negative: 0, zero: 0, totalItems: 0, totalVariance: 0 }
+    );
+  };
 
-  return (
-    <div className="space-y-6">
-      <Alert>
-        <AlertTriangle className="h-4 w-4" />
-        <AlertDescription>
-          <strong>Sistem New Stok:</strong> Perhitungan selisih berdasarkan stok sistem tetap vs total real stok dari semua pengguna untuk barang yang sama.
-        </AlertDescription>
-      </Alert>
+  const getRealTimeStats = () => {
+    if (!realTimeData) return { totalInputs: 0, uniqueProducts: 0, activeUsers: 0 };
+    
+    const uniqueProducts = new Set(realTimeData.map(item => item.barang_id)).size;
+    const activeUsers = new Set(realTimeData.map(item => item.kasir_id)).size;
+    
+    return {
+      totalInputs: realTimeData.length,
+      uniqueProducts,
+      activeUsers
+    };
+  };
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        {stats.map((stat, index) => {
-          const Icon = stat.icon;
-          return (
-            <Card key={index}>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium text-gray-600">
-                  {stat.title}
-                </CardTitle>
-                <div className={`p-2 rounded-full ${stat.bgColor}`}>
-                  <Icon className={`h-4 w-4 ${stat.color}`} />
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{stat.value}</div>
-              </CardContent>
-            </Card>
-          );
-        })}
-      </div>
+  const stats = getVarianceStats();
+  const realTimeStats = getRealTimeStats();
 
-      {/* Accuracy Progress */}
+  if (isLoadingRecap || isLoadingRealTime) {
+    return (
       <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <TrendingUp className="h-5 w-5" />
-            Tingkat Akurasi Stok Opname Hari Ini
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex items-center justify-between">
-            <span className="text-sm text-gray-600">Akurasi Perhitungan</span>
-            <Badge variant={accuracyRate >= 90 ? "default" : accuracyRate >= 75 ? "secondary" : "destructive"}>
-              {accuracyRate}%
-            </Badge>
-          </div>
-          <Progress value={accuracyRate} className="h-2" />
-          <div className="text-xs text-gray-500">
-            {accuracyRate >= 90 ? 'Excellent - Akurasi sangat tinggi' : 
-             accuracyRate >= 75 ? 'Good - Akurasi baik' : 
-             'Needs Attention - Perlu perhatian khusus'}
+        <CardContent className="py-8">
+          <div className="text-center flex items-center justify-center gap-2">
+            <RefreshCw className="h-4 w-4 animate-spin" />
+            Memuat dashboard...
           </div>
         </CardContent>
       </Card>
+    );
+  }
 
-      {/* Recent Input Summary */}
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-2xl font-bold text-gray-900">Dashboard New Stok</h2>
+          <p className="text-gray-600">
+            Overview sistem new stok dengan perhitungan selisih real-time
+          </p>
+        </div>
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={() => refetchRecap()}
+          className="flex items-center gap-2"
+        >
+          <RefreshCw className="h-4 w-4" />
+          Refresh Data
+        </Button>
+      </div>
+
+      <Alert>
+        <Info className="h-4 w-4" />
+        <AlertDescription>
+          <strong>New Stok System:</strong> Sistem ini memungkinkan multiple user input untuk barang yang sama. 
+          Stok sistem tetap tidak berubah, total real stok dihitung dari semua input pengguna.
+        </AlertDescription>
+      </Alert>
+
+      {/* Real-time Stats */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-gray-600">Total Input Hari Ini</CardTitle>
+          </CardHeader>
+          <CardContent className="pt-0">
+            <div className="flex items-center gap-2">
+              <Package className="h-5 w-5 text-blue-500" />
+              <span className="text-2xl font-bold text-blue-600">{realTimeStats.totalInputs}</span>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-gray-600">Produk Terinput</CardTitle>
+          </CardHeader>
+          <CardContent className="pt-0">
+            <div className="flex items-center gap-2">
+              <Package className="h-5 w-5 text-green-500" />
+              <span className="text-2xl font-bold text-green-600">{realTimeStats.uniqueProducts}</span>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-gray-600">User Aktif</CardTitle>
+          </CardHeader>
+          <CardContent className="pt-0">
+            <div className="flex items-center gap-2">
+              <Users className="h-5 w-5 text-purple-500" />
+              <span className="text-2xl font-bold text-purple-600">{realTimeStats.activeUsers}</span>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-gray-600">Total Selisih</CardTitle>
+          </CardHeader>
+          <CardContent className="pt-0">
+            <div className="flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5 text-orange-500" />
+              <span className="text-2xl font-bold text-orange-600">{stats.totalVariance}</span>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Variance Analysis */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-gray-600">Lebih Sistem</CardTitle>
+          </CardHeader>
+          <CardContent className="pt-0">
+            <div className="flex items-center gap-2">
+              <TrendingUp className="h-5 w-5 text-yellow-500" />
+              <span className="text-2xl font-bold text-yellow-600">{stats.positive}</span>
+              <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">produk</Badge>
+            </div>
+            <p className="text-xs text-gray-500 mt-1">Stok sistem lebih besar dari real</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-gray-600">Lebih Real</CardTitle>
+          </CardHeader>
+          <CardContent className="pt-0">
+            <div className="flex items-center gap-2">
+              <TrendingDown className="h-5 w-5 text-red-500" />
+              <span className="text-2xl font-bold text-red-600">{stats.negative}</span>
+              <Badge variant="secondary" className="bg-red-100 text-red-800">produk</Badge>
+            </div>
+            <p className="text-xs text-gray-500 mt-1">Stok real lebih besar dari sistem</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-gray-600">Seimbang</CardTitle>
+          </CardHeader>
+          <CardContent className="pt-0">
+            <div className="flex items-center gap-2">
+              <Package className="h-5 w-5 text-green-500" />
+              <span className="text-2xl font-bold text-green-600">{stats.zero}</span>
+              <Badge variant="secondary" className="bg-green-100 text-green-800">produk</Badge>
+            </div>
+            <p className="text-xs text-gray-500 mt-1">Stok sistem sama dengan real</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Recent Activity */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Users className="h-5 w-5" />
-            Ringkasan Input Hari Ini
-          </CardTitle>
+          <CardTitle>Aktivitas Terbaru (Real-time)</CardTitle>
         </CardHeader>
         <CardContent>
-          {isLoading ? (
-            <div className="text-center py-4 text-gray-500">Memuat data...</div>
-          ) : realtimeData?.todayOpname?.length === 0 ? (
-            <div className="text-center py-8">
-              <Package className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <p className="text-gray-500">Belum ada input stok opname hari ini</p>
-            </div>
-          ) : (
+          {realTimeData && realTimeData.length > 0 ? (
             <div className="space-y-3">
-              {realtimeData?.todayOpname?.slice(0, 5).map((opname, index) => (
-                <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+              {realTimeData.slice(0, 5).map((item) => (
+                <div key={item.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                   <div>
-                    <p className="font-medium">{opname.barang_konsinyasi?.nama}</p>
+                    <p className="font-medium">{item.produk_pembelian?.nama_produk}</p>
                     <p className="text-sm text-gray-600">
-                      Kasir: {opname.kasir?.nama} | Stok Real: {opname.stok_fisik}
+                      Input oleh: {item.kasir?.nama} • Stok Real: {item.stok_fisik} {item.produk_pembelian?.satuan}
                     </p>
                   </div>
-                  <Badge variant={opname.stok_fisik === opname.stok_sistem ? "default" : "secondary"}>
-                    {opname.stok_fisik === opname.stok_sistem ? 'Sesuai' : 'Selisih'}
-                  </Badge>
+                  <div className="text-right">
+                    <Badge variant={
+                      item.stok_fisik === item.stok_sistem 
+                        ? "default" 
+                        : item.stok_fisik > item.stok_sistem 
+                          ? "secondary" 
+                          : "destructive"
+                    }>
+                      Selisih: {item.stok_fisik - item.stok_sistem}
+                    </Badge>
+                    <p className="text-xs text-gray-500 mt-1">
+                      {new Date(item.created_at).toLocaleTimeString('id-ID')}
+                    </p>
+                  </div>
                 </div>
               ))}
-              {(realtimeData?.todayOpname?.length || 0) > 5 && (
-                <p className="text-sm text-gray-500 text-center">
-                  Dan {(realtimeData?.todayOpname?.length || 0) - 5} input lainnya...
-                </p>
-              )}
+            </div>
+          ) : (
+            <div className="text-center py-8">
+              <Package className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+              <p className="text-gray-500">Belum ada aktivitas input stok hari ini</p>
             </div>
           )}
         </CardContent>

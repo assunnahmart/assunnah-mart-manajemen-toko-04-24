@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -6,240 +5,262 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { FileText, Download, Send, Filter, RefreshCw } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { AlertTriangle, RefreshCw, WhatsappLogo } from 'lucide-react';
 import { usePiutangTransactionRecap } from '@/hooks/usePiutangTransactionRecap';
-import { useCustomerReceivablesSummary } from '@/hooks/useLedgers';
+import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 
-const PiutangTransactionRecap = () => {
-  const [customerName, setCustomerName] = useState('');
-  const [startDate, setStartDate] = useState('');
-  const [endDate, setEndDate] = useState('');
-  const [referenceNumber, setReferenceNumber] = useState('');
+interface PiutangTransaction {
+  pelanggan_name: string;
+  transaction_date: string;
+  reference_number: string;
+  description: string;
+  debit_amount: number;
+  credit_amount: number;
+  running_balance: number;
+  kasir_name: string;
+  transaction_type: string;
+  reference_type: string;
+  jenis_transaksi: string;
+  piutang_bertambah: number;
+  piutang_berkurang: number;
+  kas_transaction_number?: string;
+}
 
-  const { data: transactionData, isLoading, refetch } = usePiutangTransactionRecap(
-    customerName || undefined,
-    startDate || undefined, 
-    endDate || undefined,
-    referenceNumber || undefined
+const PiutangTransactionRecap = () => {
+  const [selectedCustomer, setSelectedCustomer] = useState('');
+  const [startDate, setStartDate] = useState(
+    new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
   );
-  
-  const { data: customerSummary } = useCustomerReceivablesSummary();
+  const [endDate, setEndDate] = useState(new Date().toISOString().split('T')[0]);
+  const [referenceNumber, setReferenceNumber] = useState('');
   const { toast } = useToast();
 
-  const handleExportPDF = () => {
-    toast({
-      title: "Export PDF",
-      description: "Fitur export PDF akan segera tersedia",
-    });
-  };
+  const { data: transactionData, isLoading, error, refetch } = usePiutangTransactionRecap(
+    selectedCustomer,
+    startDate,
+    endDate,
+    referenceNumber
+  );
 
-  const handleSendWhatsApp = () => {
-    if (!transactionData?.length) {
+  // Cast data to proper type
+  const typedData = transactionData as PiutangTransaction[] | undefined;
+
+  const exportToWhatsApp = () => {
+    if (!typedData || typedData.length === 0) {
       toast({
         title: "Tidak ada data",
-        description: "Tidak ada transaksi untuk dikirim",
+        description: "Tidak ada data untuk diekspor",
         variant: "destructive"
       });
       return;
     }
 
-    const message = `*REKAP TRANSAKSI PIUTANG*\n\n${transactionData.map(t => 
-      `${t.transaction_date} - ${t.pelanggan_name}\n${t.jenis_transaksi}: Rp ${t.debit_amount || t.credit_amount}\nSaldo: Rp ${t.running_balance}`
-    ).join('\n\n')}`;
-    
+    const summary = typedData.reduce((acc, item) => ({
+      totalDebit: acc.totalDebit + (item.piutang_bertambah || 0),
+      totalCredit: acc.totalCredit + (item.piutang_berkurang || 0),
+      finalBalance: item.running_balance
+    }), { totalDebit: 0, totalCredit: 0, finalBalance: 0 });
+
+    const message = `*REKAP TRANSAKSI PIUTANG*\n\n` +
+      `Periode: ${format(new Date(startDate), 'dd/MM/yyyy')} - ${format(new Date(endDate), 'dd/MM/yyyy')}\n` +
+      `Pelanggan: ${selectedCustomer || 'Semua Pelanggan'}\n\n` +
+      `*RINGKASAN:*\n` +
+      `Total Piutang Bertambah: Rp ${summary.totalDebit.toLocaleString('id-ID')}\n` +
+      `Total Pembayaran: Rp ${summary.totalCredit.toLocaleString('id-ID')}\n` +
+      `Saldo Akhir: Rp ${summary.finalBalance.toLocaleString('id-ID')}\n\n` +
+      `*DETAIL TRANSAKSI:*\n` +
+      typedData.map((item, index) => 
+        `${index + 1}. ${format(new Date(item.transaction_date), 'dd/MM/yyyy')}\n` +
+        `   Pelanggan: ${item.pelanggan_name}\n` +
+        `   Ref: ${item.reference_number}\n` +
+        `   Jenis: ${item.jenis_transaksi}\n` +
+        `   Keterangan: ${item.description}\n` +
+        `   Debit: Rp ${(item.piutang_bertambah || 0).toLocaleString('id-ID')}\n` +
+        `   Kredit: Rp ${(item.piutang_berkurang || 0).toLocaleString('id-ID')}\n`
+      ).join('\n');
+
     const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
     window.open(whatsappUrl, '_blank');
   };
 
-  const clearFilters = () => {
-    setCustomerName('');
-    setStartDate('');
-    setEndDate('');
-    setReferenceNumber('');
-  };
+  if (isLoading) {
+    return (
+      <Card>
+        <CardContent className="py-8">
+          <div className="text-center flex items-center justify-center gap-2">
+            <RefreshCw className="h-4 w-4 animate-spin" />
+            Memuat data piutang...
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
 
-  const formatRupiah = (amount: number) => {
-    return new Intl.NumberFormat('id-ID', {
-      style: 'currency',
-      currency: 'IDR',
-      minimumFractionDigits: 0,
-    }).format(amount);
-  };
+  if (error) {
+    return (
+      <Card>
+        <CardContent className="py-8">
+          <Alert variant="destructive">
+            <AlertTriangle className="h-4 w-4" />
+            <AlertDescription>
+              <div className="space-y-2">
+                <p className="font-medium">Error: {error.message}</p>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => refetch()}
+                  className="flex items-center gap-2"
+                >
+                  <RefreshCw className="h-4 w-4" />
+                  Coba Lagi
+                </Button>
+              </div>
+            </AlertDescription>
+          </Alert>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
+      <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold text-gray-900">Rekap Transaksi Piutang</h2>
-          <p className="text-gray-600">Filter dan export data transaksi piutang pelanggan</p>
+          <p className="text-gray-600">
+            Rekap transaksi piutang pelanggan
+          </p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" onClick={() => refetch()}>
-            <RefreshCw className="h-4 w-4 mr-2" />
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={exportToWhatsApp}
+            className="flex items-center gap-2"
+          >
+            <WhatsappLogo className="h-4 w-4" />
+            Export ke WhatsApp
+          </Button>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => refetch()}
+            className="flex items-center gap-2"
+          >
+            <RefreshCw className="h-4 w-4" />
             Refresh
-          </Button>
-          <Button variant="outline" onClick={handleExportPDF}>
-            <Download className="h-4 w-4 mr-2" />
-            Export PDF
-          </Button>
-          <Button onClick={handleSendWhatsApp}>
-            <Send className="h-4 w-4 mr-2" />
-            Kirim WA
           </Button>
         </div>
       </div>
 
-      {/* Filter Section */}
+      {/* Filter */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Filter className="h-5 w-5" />
-            Filter Transaksi
-          </CardTitle>
+          <CardTitle>Filter Transaksi</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
             <div>
-              <Label>Nama Pelanggan</Label>
-              <Select value={customerName} onValueChange={setCustomerName}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Pilih pelanggan" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="">Semua Pelanggan</SelectItem>
-                  {customerSummary?.map((customer) => (
-                    <SelectItem key={customer.pelanggan_name} value={customer.pelanggan_name}>
-                      {customer.pelanggan_name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Label htmlFor="customer">Nama Pelanggan</Label>
+              <Input
+                id="customer"
+                type="text"
+                placeholder="Cari nama pelanggan..."
+                value={selectedCustomer}
+                onChange={(e) => setSelectedCustomer(e.target.value)}
+              />
             </div>
             <div>
-              <Label>Tanggal Mulai</Label>
+              <Label htmlFor="startDate">Tanggal Mulai</Label>
               <Input
+                id="startDate"
                 type="date"
                 value={startDate}
                 onChange={(e) => setStartDate(e.target.value)}
               />
             </div>
             <div>
-              <Label>Tanggal Selesai</Label>
+              <Label htmlFor="endDate">Tanggal Selesai</Label>
               <Input
+                id="endDate"
                 type="date"
                 value={endDate}
                 onChange={(e) => setEndDate(e.target.value)}
               />
             </div>
             <div>
-              <Label>Nomor Referensi</Label>
+              <Label htmlFor="referenceNumber">Nomor Referensi</Label>
               <Input
-                placeholder="Cari nomor nota..."
+                id="referenceNumber"
+                type="text"
+                placeholder="Cari nomor referensi..."
                 value={referenceNumber}
                 onChange={(e) => setReferenceNumber(e.target.value)}
               />
-            </div>
-            <div className="flex items-end">
-              <Button variant="outline" onClick={clearFilters} className="w-full">
-                Reset Filter
-              </Button>
             </div>
           </div>
         </CardContent>
       </Card>
 
-      {/* Transaction Table */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <FileText className="h-5 w-5" />
-            Daftar Transaksi Piutang
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {isLoading ? (
-            <div className="text-center py-8">
-              <RefreshCw className="h-8 w-8 animate-spin mx-auto mb-4" />
-              <p>Memuat data transaksi...</p>
-            </div>
-          ) : transactionData?.length === 0 ? (
-            <div className="text-center py-8 text-gray-500">
-              Tidak ada data transaksi ditemukan
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Tanggal</TableHead>
-                    <TableHead>Pelanggan</TableHead>
-                    <TableHead>No. Referensi</TableHead>
-                    <TableHead>Jenis Transaksi</TableHead>
-                    <TableHead>Deskripsi</TableHead>
-                    <TableHead className="text-right">Piutang (+)</TableHead>
-                    <TableHead className="text-right">Pembayaran (-)</TableHead>
-                    <TableHead className="text-right">Saldo</TableHead>
-                    <TableHead>Kasir</TableHead>
-                    <TableHead>No. Kas</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {transactionData?.map((transaction) => (
-                    <TableRow key={transaction.id || `${transaction.pelanggan_name}-${transaction.created_at}`}>
-                      <TableCell>
-                        {new Date(transaction.transaction_date).toLocaleDateString('id-ID')}
-                      </TableCell>
-                      <TableCell className="font-medium">
-                        {transaction.pelanggan_name}
-                      </TableCell>
-                      <TableCell>
-                        {transaction.reference_number || '-'}
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant={
-                          transaction.transaction_type === 'penjualan_kredit' ? 'destructive' : 'default'
-                        }>
-                          {transaction.jenis_transaksi}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="max-w-xs truncate">
-                        {transaction.description}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        {transaction.piutang_bertambah > 0 ? (
-                          <span className="text-red-600 font-medium">
-                            {formatRupiah(transaction.piutang_bertambah)}
-                          </span>
-                        ) : '-'}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        {transaction.piutang_berkurang > 0 ? (
-                          <span className="text-green-600 font-medium">
-                            {formatRupiah(transaction.piutang_berkurang)}
-                          </span>
-                        ) : '-'}
-                      </TableCell>
-                      <TableCell className={`text-right font-bold ${
-                        transaction.running_balance >= 0 ? 'text-red-600' : 'text-green-600'
-                      }`}>
-                        {formatRupiah(Math.abs(transaction.running_balance))}
-                      </TableCell>
-                      <TableCell>{transaction.kasir_name || '-'}</TableCell>
-                      <TableCell>
-                        {transaction.kas_transaction_number ? (
-                          <Badge variant="outline">{transaction.kas_transaction_number}</Badge>
-                        ) : '-'}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+      {typedData && typedData.length > 0 ? (
+        <div className="overflow-x-auto">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Tanggal</TableHead>
+                <TableHead>Pelanggan</TableHead>
+                <TableHead>Referensi</TableHead>
+                <TableHead>Jenis</TableHead>
+                <TableHead>Deskripsi</TableHead>
+                <TableHead className="text-red-600">Piutang Bertambah</TableHead>
+                <TableHead className="text-green-600">Piutang Berkurang</TableHead>
+                <TableHead>Saldo</TableHead>
+                <TableHead>Kasir</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {typedData.map((item) => (
+                <TableRow key={item.reference_number + item.transaction_date}>
+                  <TableCell>{format(new Date(item.transaction_date), 'dd/MM/yyyy')}</TableCell>
+                  <TableCell className="font-medium">{item.pelanggan_name}</TableCell>
+                  <TableCell>{item.reference_number}</TableCell>
+                  <TableCell>
+                    <Badge variant={
+                      item.transaction_type === 'penjualan_kredit' ? 'destructive' : 'default'
+                    }>
+                      {item.jenis_transaksi}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>{item.description}</TableCell>
+                  <TableCell>
+                    <span className="text-red-600 font-medium">
+                      Rp {(item.piutang_bertambah || 0).toLocaleString('id-ID')}
+                    </span>
+                  </TableCell>
+                  <TableCell>
+                    <span className="text-green-600 font-medium">
+                      Rp {(item.piutang_berkurang || 0).toLocaleString('id-ID')}
+                    </span>
+                  </TableCell>
+                  <TableCell>
+                    <span className={`font-medium ${item.running_balance > 0 ? 'text-red-600' : 'text-green-600'}`}>
+                      Rp {item.running_balance.toLocaleString('id-ID')}
+                    </span>
+                  </TableCell>
+                  <TableCell>{item.kasir_name}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+      ) : (
+        <div className="text-center py-8">
+          <AlertTriangle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+          <p className="text-gray-500">Tidak ada data transaksi piutang untuk periode ini</p>
+        </div>
+      )}
     </div>
   );
 };

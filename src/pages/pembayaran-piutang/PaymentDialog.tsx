@@ -10,7 +10,6 @@ type Props = {
   selectedCustomer: string;
   paymentForm: {
     amount: number;
-    reference_number: string;
     keterangan: string;
     payment_date: string;
   };
@@ -53,14 +52,6 @@ export function PaymentDialog({
               type="number"
               value={paymentForm.amount}
               onChange={e => setPaymentForm((prev: any) => ({ ...prev, amount: Number(e.target.value) }))}
-            />
-          </div>
-          <div>
-            <Label>Nomor Referensi</Label>
-            <Input
-              value={paymentForm.reference_number}
-              onChange={e => setPaymentForm((prev: any) => ({ ...prev, reference_number: e.target.value }))}
-              placeholder="Nomor bukti pembayaran"
             />
           </div>
           <div>

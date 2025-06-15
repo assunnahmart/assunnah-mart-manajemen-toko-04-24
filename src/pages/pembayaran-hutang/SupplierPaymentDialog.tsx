@@ -10,7 +10,6 @@ type Props = {
   selectedSupplier: string;
   paymentForm: {
     amount: number;
-    reference_number: string;
     keterangan: string;
     payment_date: string;
   };
@@ -26,7 +25,7 @@ export function SupplierPaymentDialog({
   paymentForm,
   setPaymentForm,
   onSave,
-  isPending,
+  isPending
 }: Props) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -56,14 +55,6 @@ export function SupplierPaymentDialog({
             />
           </div>
           <div>
-            <Label>Nomor Referensi</Label>
-            <Input
-              value={paymentForm.reference_number}
-              onChange={e => setPaymentForm((prev: any) => ({ ...prev, reference_number: e.target.value }))}
-              placeholder="Nomor bukti pembayaran"
-            />
-          </div>
-          <div>
             <Label>Keterangan</Label>
             <Input
               value={paymentForm.keterangan}
@@ -71,7 +62,7 @@ export function SupplierPaymentDialog({
               placeholder="Keterangan pembayaran"
             />
           </div>
-          <Button
+          <Button 
             onClick={onSave}
             disabled={isPending}
             className="w-full"

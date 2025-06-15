@@ -10,7 +10,6 @@ export function usePembayaranPiutangLogic() {
   const [selectedCustomer, setSelectedCustomer] = useState('');
   const [paymentForm, setPaymentForm] = useState({
     amount: 0,
-    reference_number: '',
     keterangan: '',
     payment_date: new Date().toISOString().split('T')[0]
   });
@@ -42,44 +41,22 @@ export function usePembayaranPiutangLogic() {
     const now = new Date();
     const ymd = now.toISOString().split('T')[0].replace(/-/g, '');
     const hms = now.toTimeString().slice(0, 8).replace(/:/g, '');
-    // Format: REF-YYYYMMDD-HHmmss-nama
     const nama = (customerName || '').replace(/\s+/g, '-').slice(0, 8);
-    return `REF-${ymd}-${hms}-${nama}`;
+    return `PAY-${ymd}-${hms}-${nama}`;
   }
 
-  function getLatestCreditReference(customerName: string) {
-    const allLedgers = recentPayments || [];
-    const forCust = allLedgers.filter(
-      l => 
-        l.pelanggan_name === customerName &&
-        l.reference_type === 'pos_transaction' &&
-        l.reference_number
-    );
-    if (forCust.length > 0) {
-      return forCust[0]?.reference_number;
-    }
-    return null;
-  }
-
-  // Fix: always fill payment_date, amount, reference_number secara default saat pilih customer
   const handleSelectCustomer = (customerName: string, currentBalance: number) => {
     setSelectedCustomer(customerName);
-    const refNumber =
-      getLatestCreditReference(customerName) ||
-      generateReferenceNumber(customerName);
-
     setPaymentForm({
       amount: currentBalance,
-      reference_number: refNumber,
       keterangan: '',
       payment_date: new Date().toISOString().split('T')[0]
     });
     setIsPaymentDialogOpen(true);
   };
 
-  // Memperbaiki logika validasi dan error message
   const handleRecordPayment = async () => {
-    if (!selectedCustomer || !paymentForm.amount || !paymentForm.reference_number) {
+    if (!selectedCustomer || !paymentForm.amount) {
       toast({
         title: "Error",
         description: "Lengkapi semua field yang diperlukan!",
@@ -98,11 +75,14 @@ export function usePembayaranPiutangLogic() {
     }
 
     try {
+      // Generate reference number automatically
+      const referenceNumber = generateReferenceNumber(selectedCustomer);
+      
       await recordPayment.mutateAsync({
         pelanggan_name: selectedCustomer,
         amount: paymentForm.amount,
         payment_date: paymentForm.payment_date,
-        reference_number: paymentForm.reference_number,
+        reference_number: referenceNumber,
         kasir_name: user?.full_name || 'Unknown',
         keterangan: paymentForm.keterangan
       });
@@ -117,7 +97,6 @@ export function usePembayaranPiutangLogic() {
       setSelectedCustomer('');
       setPaymentForm({
         amount: 0,
-        reference_number: '',
         keterangan: '',
         payment_date: new Date().toISOString().split('T')[0]
       });
@@ -130,7 +109,7 @@ export function usePembayaranPiutangLogic() {
     }
   };
 
-  // Select all/mass payment logic (tidak diubah)
+  // Select all/mass payment logic
   const handleSelectAll = () => {
     if (allSelected) {
       setSelectedCustomers([]);
@@ -149,32 +128,11 @@ export function usePembayaranPiutangLogic() {
 
   const [massPaymentForm, setMassPaymentForm] = useState({
     payment_date: new Date().toISOString().split('T')[0],
-    reference_number: '',
     keterangan: ''
   });
 
-  const [prevMassPaymentDialogOpen, setPrevMassPaymentDialogOpen] = useState(false);
   const [isMassPaymentDialogOpen, setIsMassPaymentDialogOpen] = useState(false);
   const [isProcessingMassPayment, setIsProcessingMassPayment] = useState(false);
-
-  const handleOpenMassPaymentDialog = (open: boolean) => {
-    setIsMassPaymentDialogOpen(open);
-    if (open && !prevMassPaymentDialogOpen) {
-      let nomorRef: string | null = null;
-      if (selectedCustomers.length === 1) {
-        nomorRef = getLatestCreditReference(selectedCustomers[0]) || generateReferenceNumber(selectedCustomers[0]);
-      } else if (selectedCustomers.length > 1) {
-        nomorRef = 'BATCH-' + generateReferenceNumber(selectedCustomers[0]);
-      } else {
-        nomorRef = '';
-      }
-      setMassPaymentForm(prev => ({
-        ...prev,
-        reference_number: nomorRef
-      }));
-    }
-    setPrevMassPaymentDialogOpen(open);
-  };
 
   const handleRefresh = () => {
     queryClient.invalidateQueries({ queryKey: ['customer-receivables-summary'] });
@@ -205,7 +163,6 @@ export function usePembayaranPiutangLogic() {
       handleSelectRow,
       handleMassPayment,
       handleRefresh,
-      onOpenMassPayment: handleOpenMassPaymentDialog,
     },
     recordPayment,
   };

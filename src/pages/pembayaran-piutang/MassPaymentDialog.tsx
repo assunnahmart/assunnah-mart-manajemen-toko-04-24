@@ -3,7 +3,6 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Badge } from '@/components/ui/badge';
 
 type Props = {
   open: boolean;
@@ -11,7 +10,6 @@ type Props = {
   selectedCustomers: string[];
   massPaymentForm: {
     payment_date: string;
-    reference_number: string;
     keterangan: string;
   };
   setMassPaymentForm: React.Dispatch<React.SetStateAction<any>>;
@@ -26,20 +24,20 @@ export function MassPaymentDialog({
   massPaymentForm,
   setMassPaymentForm,
   onSave,
-  isProcessing,
+  isProcessing
 }: Props) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Catat Pembayaran Massal ({selectedCustomers.length} pelanggan)</DialogTitle>
+          <DialogTitle>Pembayaran Massal</DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
           <div>
-            <Label>Pelanggan Terpilih</Label>
-            <div className="flex flex-wrap gap-2">
-              {selectedCustomers.map(name => (
-                <Badge variant="outline" key={name}>{name}</Badge>
+            <Label>Pelanggan Terpilih ({selectedCustomers.length})</Label>
+            <div className="max-h-32 overflow-y-auto border rounded p-2 text-sm">
+              {selectedCustomers.map((customer, index) => (
+                <div key={index}>{customer}</div>
               ))}
             </div>
           </div>
@@ -52,27 +50,19 @@ export function MassPaymentDialog({
             />
           </div>
           <div>
-            <Label>Nomor Referensi</Label>
-            <Input
-              value={massPaymentForm.reference_number}
-              onChange={e => setMassPaymentForm((prev: any) => ({ ...prev, reference_number: e.target.value }))}
-              placeholder="Nomor bukti pembayaran"
-            />
-          </div>
-          <div>
             <Label>Keterangan</Label>
             <Input
               value={massPaymentForm.keterangan}
               onChange={e => setMassPaymentForm((prev: any) => ({ ...prev, keterangan: e.target.value }))}
-              placeholder="Keterangan pembayaran"
+              placeholder="Keterangan pembayaran massal"
             />
           </div>
-          <Button
+          <Button 
             onClick={onSave}
             disabled={isProcessing || selectedCustomers.length === 0}
             className="w-full"
           >
-            {isProcessing ? 'Menyimpan...' : `Simpan Pembayaran (${selectedCustomers.length})`}
+            {isProcessing ? 'Memproses...' : 'Proses Pembayaran Massal'}
           </Button>
         </div>
       </DialogContent>

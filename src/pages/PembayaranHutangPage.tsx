@@ -1,10 +1,8 @@
+
 import { useState } from 'react';
 import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
 import { AppSidebar } from '@/components/AppSidebar';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Download, RefreshCw } from 'lucide-react';
 import { useSupplierPayablesSummary, useRecordSupplierPayment, useSupplierPayablesLedger } from '@/hooks/useLedgers';
 import { useSupplier } from '@/hooks/useSupplier';
@@ -20,10 +18,8 @@ import { SupplierPaymentsHistoryTable } from './pembayaran-hutang/SupplierPaymen
 const PembayaranHutangPage = () => {
   const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
   const [selectedSupplier, setSelectedSupplier] = useState('');
-  const [selectedSupplierId, setSelectedSupplierId] = useState('');
   const [paymentForm, setPaymentForm] = useState({
     amount: 0,
-    reference_number: '',
     keterangan: '',
     payment_date: new Date().toISOString().split('T')[0]
   });
@@ -42,13 +38,20 @@ const PembayaranHutangPage = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  // Fungsi untuk manual refresh data summary dan ledgers
+  // Generate nomor referensi otomatis
+  function generateReferenceNumber(supplierName: string) {
+    const now = new Date();
+    const ymd = now.toISOString().split('T')[0].replace(/-/g, '');
+    const hms = now.toTimeString().slice(0, 8).replace(/:/g, '');
+    const nama = (supplierName || '').replace(/\s+/g, '-').slice(0, 8);
+    return `SUP-${ymd}-${hms}-${nama}`;
+  }
+
   const handleRefresh = () => {
     queryClient.invalidateQueries({ queryKey: ['supplier-payables-summary'] });
     queryClient.invalidateQueries({ queryKey: ['supplier-payables-ledger'] });
   };
 
-  // Perbaiki handleSelectSupplier untuk handling "supplier not found"
   const handleSelectSupplier = (supplierName: string, currentBalance: number) => {
     const supplier = suppliers?.find(s => s.nama === supplierName);
     if (!supplier) {
@@ -60,17 +63,16 @@ const PembayaranHutangPage = () => {
       return;
     }
     setSelectedSupplier(supplierName);
-    setSelectedSupplierId(supplier.id);
-    setPaymentForm(prev => ({
-      ...prev,
-      amount: currentBalance
-    }));
+    setPaymentForm({
+      amount: currentBalance,
+      keterangan: '',
+      payment_date: new Date().toISOString().split('T')[0]
+    });
     setIsPaymentDialogOpen(true);
   };
 
-  // Perbaiki logic pembayaran hutang supplier
   const handleRecordPayment = async () => {
-    if (!selectedSupplier || !paymentForm.amount || !paymentForm.reference_number) {
+    if (!selectedSupplier || !paymentForm.amount) {
       toast({
         title: "Error",
         description: "Lengkapi semua field yang diperlukan",
@@ -78,6 +80,16 @@ const PembayaranHutangPage = () => {
       });
       return;
     }
+
+    if (paymentForm.amount <= 0) {
+      toast({
+        title: "Error",
+        description: "Jumlah pembayaran harus lebih dari 0",
+        variant: "destructive"
+      });
+      return;
+    }
+
     try {
       const supplier = suppliers?.find(s => s.nama === selectedSupplier);
       if (!supplier) {
@@ -88,24 +100,28 @@ const PembayaranHutangPage = () => {
         });
         return;
       }
+
+      // Generate reference number automatically
+      const referenceNumber = generateReferenceNumber(selectedSupplier);
+
       await recordPayment.mutateAsync({
-        supplier_id: selectedSupplier, // logic sudah benar
+        supplier_id: selectedSupplier,
         amount: paymentForm.amount,
         payment_date: paymentForm.payment_date,
-        reference_number: paymentForm.reference_number,
+        reference_number: referenceNumber,
         kasir_name: user?.full_name || 'Unknown',
         keterangan: paymentForm.keterangan
       });
+
       toast({
         title: "Berhasil",
         description: "Pembayaran hutang berhasil dicatat"
       });
+
       setIsPaymentDialogOpen(false);
       setSelectedSupplier('');
-      setSelectedSupplierId('');
       setPaymentForm({
         amount: 0,
-        reference_number: '',
         keterangan: '',
         payment_date: new Date().toISOString().split('T')[0]
       });

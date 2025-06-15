@@ -42,11 +42,47 @@ export function usePembayaranPiutangLogic() {
     undefined
   );
 
+  // Fungsi untuk generate nomor referensi otomatis jika tidak ditemukan di ledger
+  function generateReferenceNumber(customerName: string) {
+    const now = new Date();
+    const ymd = now.toISOString().split('T')[0].replace(/-/g, '');
+    const hms = now.toTimeString().slice(0, 8).replace(/:/g, '');
+    // Format: REF-YYYYMMDD-HHmmss-nama
+    const nama = (customerName || '').replace(/\s+/g, '-').slice(0, 8);
+    return `REF-${ymd}-${hms}-${nama}`;
+  }
+
+  // Mengambil transaksi kredit terbaru pelanggan (dari ledger, ref_type 'pos_transaction')
+  function getLatestCreditReference(customerName: string) {
+    // Cari latest ledger entry dengan ref_type 'pos_transaction' untuk customer
+    // ledger diurutkan desc created_at, jadi ambil yang pertama saja
+    const allLedgers = recentPayments || [];
+    const forCust = allLedgers.filter(
+      l => 
+        l.pelanggan_name === customerName &&
+        l.reference_type === 'pos_transaction' &&
+        l.reference_number // harus ada
+    );
+    if (forCust.length > 0) {
+      // Return the latest one
+      return forCust[0]?.reference_number;
+    }
+    return null;
+  }
+
+  // Ubah logic handleSelectCustomer agar reference_number otomatis (prefer data, fallback generator)
   const handleSelectCustomer = (customerName: string, currentBalance: number) => {
     setSelectedCustomer(customerName);
+
+    // Cari nomor referensi transaksi kredit pelanggan, fallback otomatis
+    const refNumber =
+      getLatestCreditReference(customerName) ||
+      generateReferenceNumber(customerName);
+
     setPaymentForm(prev => ({
       ...prev,
-      amount: currentBalance
+      amount: currentBalance,
+      reference_number: refNumber
     }));
     setIsPaymentDialogOpen(true);
   };
@@ -112,65 +148,35 @@ export function usePembayaranPiutangLogic() {
     }
   };
 
-  // Mass payment form
+  // Mass payment juga isi otomatis reference number
   const [massPaymentForm, setMassPaymentForm] = useState({
     payment_date: new Date().toISOString().split('T')[0],
     reference_number: '',
     keterangan: '',
   });
-  const [isProcessingMassPayment, setIsProcessingMassPayment] = useState(false);
-  const [isMassPaymentDialogOpen, setIsMassPaymentDialogOpen] = useState(false);
 
-  const handleMassPayment = async () => {
-    if (!massPaymentForm.reference_number || selectedCustomers.length === 0) {
-      toast({
-        title: "Error",
-        description: "Pilih pelanggan dan isi nomor referensi",
-        variant: "destructive",
-      });
-      return;
-    }
-    setIsProcessingMassPayment(true);
-    let successCount = 0;
-    let failCount = 0;
-    for (const pelanggan_name of selectedCustomers) {
-      const customerObj = outstandingCustomers.find(c => c.pelanggan_name === pelanggan_name);
-      const amount = customerObj?.total_receivables || 0;
-      try {
-        await recordPayment.mutateAsync({
-          pelanggan_name,
-          amount,
-          payment_date: massPaymentForm.payment_date,
-          reference_number: massPaymentForm.reference_number,
-          kasir_name: user?.full_name || 'Unknown',
-          keterangan: massPaymentForm.keterangan,
-        });
-        successCount++;
-      } catch (error: any) {
-        failCount++;
-        toast({
-          title: "Gagal mencatat pembayaran",
-          description: `${pelanggan_name}: ${error?.message || "Error"}`,
-          variant: "destructive"
-        });
+  const [prevMassPaymentDialogOpen, setPrevMassPaymentDialogOpen] = useState(false);
+
+  // Otomatis isi pada open mass payment dialog
+  const handleOpenMassPaymentDialog = (open: boolean) => {
+    setIsMassPaymentDialogOpen(open);
+    // Only set on open (prevent overwrite when typing)
+    if (open && !prevMassPaymentDialogOpen) {
+      // Ambil semua unique ref number dari selected, fallback generator
+      let nomorRef: string | null = null;
+      if (selectedCustomers.length === 1) {
+        nomorRef = getLatestCreditReference(selectedCustomers[0]) || generateReferenceNumber(selectedCustomers[0]);
+      } else if (selectedCustomers.length > 1) {
+        nomorRef = 'BATCH-' + generateReferenceNumber(selectedCustomers[0]);
+      } else {
+        nomorRef = '';
       }
+      setMassPaymentForm(prev => ({
+        ...prev,
+        reference_number: nomorRef
+      }));
     }
-    toast({
-      title: "Proses pembayaran massal selesai",
-      description: `${successCount} pembayaran berhasil, ${failCount} gagal.`,
-      variant: failCount > 0 ? "destructive" : "default"
-    });
-
-    refetchSummary();
-
-    setIsProcessingMassPayment(false);
-    setIsMassPaymentDialogOpen(false);
-    setSelectedCustomers([]);
-    setMassPaymentForm({
-      payment_date: new Date().toISOString().split('T')[0],
-      reference_number: '',
-      keterangan: '',
-    });
+    setPrevMassPaymentDialogOpen(open);
   };
 
   // Manual refresh
@@ -196,6 +202,7 @@ export function usePembayaranPiutangLogic() {
       handleSelectRow,
       handleMassPayment,
       handleRefresh,
+      onOpenMassPayment: handleOpenMassPaymentDialog, // pakai di halaman
     },
     recordPayment,
   };

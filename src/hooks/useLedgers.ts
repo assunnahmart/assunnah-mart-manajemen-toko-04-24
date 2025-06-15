@@ -331,10 +331,12 @@ export const useRecordCustomerPaymentIntegrated = () => {
       if (error) {
         throw new Error(error.message || 'Gagal mencatat pembayaran piutang');
       }
-      if (!result?.success) {
-        throw new Error(result?.message || 'Gagal mencatat pembayaran piutang');
+      // tipe result bisa string/JSON, tipe any supaya typescript tidak error
+      let res: any = result;
+      if (!res?.success) {
+        throw new Error(res?.message || 'Gagal mencatat pembayaran piutang');
       }
-      return result;
+      return res;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['customer-receivables-ledger'] });

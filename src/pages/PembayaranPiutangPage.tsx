@@ -27,7 +27,7 @@ const PembayaranPiutangPage = () => {
   const [filterDate, setFilterDate] = useState('');
 
   const { user } = useSimpleAuth();
-  const { data: summary, isLoading: summaryLoading } = useCustomerReceivablesSummary();
+  const { data: summary, isLoading: summaryLoading, refetch: refetchSummary } = useCustomerReceivablesSummary();
   const { data: recentPayments, isLoading: paymentsLoading } = useCustomerReceivablesLedger(
     filterCustomer || undefined,
     filterDate || undefined,
@@ -79,6 +79,9 @@ const PembayaranPiutangPage = () => {
         title: "Berhasil",
         description: "Pembayaran piutang berhasil dicatat"
       });
+
+      // Paksa refetch summary supaya kartu/daftar langsung segar
+      refetchSummary();
 
       setIsPaymentDialogOpen(false);
       setSelectedCustomer('');
@@ -161,6 +164,10 @@ const PembayaranPiutangPage = () => {
       description: `${successCount} pembayaran berhasil, ${failCount} gagal.`,
       variant: failCount > 0 ? "destructive" : "default"
     });
+
+    // Paksa refetch summary setelah mass payment
+    refetchSummary();
+
     setIsProcessingMassPayment(false);
     setIsMassPaymentDialogOpen(false);
     setSelectedCustomers([]);

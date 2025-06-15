@@ -1,5 +1,6 @@
+
 import { useState } from 'react';
-import { useCustomerReceivablesSummary, useRecordCustomerPayment, useCustomerReceivablesLedger, useRecordCustomerPaymentIntegrated } from '@/hooks/useLedgers';
+import { useCustomerReceivablesSummary, useRecordCustomerPaymentIntegrated, useCustomerReceivablesLedger } from '@/hooks/useLedgers';
 import { useSimpleAuth } from '@/hooks/useSimpleAuth';
 import { useToast } from '@/hooks/use-toast';
 import { useQueryClient } from '@tanstack/react-query';
@@ -17,21 +18,15 @@ export function usePembayaranPiutangLogic() {
   const [filterDate, setFilterDate] = useState('');
 
   const { user } = useSimpleAuth();
-  const recordPayment = useRecordCustomerPaymentIntegrated(); // GANTI pemakaian hook
+  const recordPayment = useRecordCustomerPaymentIntegrated();
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  // Gantilogic summary dan recalculasi totalReceivables/totalCustomers sesuai summary bersih
+  // Summary dan total
   const { data: summary, isLoading: summaryLoading, refetch: refetchSummary } = useCustomerReceivablesSummary();
-
-  // Total piutang = sum all total_receivables
   const totalReceivables = summary?.reduce((sum, item) => sum + (Number(item.total_receivables) || 0), 0) || 0;
   const totalCustomers = summary?.length || 0;
-
-  // Outstanding Customers = semua dengan saldo > 0 dari summary
   const outstandingCustomers = summary || [];
-
-  // Multi select logic
   const allCustomerNames = outstandingCustomers.map(c => c.pelanggan_name);
   const [selectedCustomers, setSelectedCustomers] = useState<string[]>([]);
   const allSelected = selectedCustomers.length === allCustomerNames.length && allCustomerNames.length > 0;
@@ -42,7 +37,7 @@ export function usePembayaranPiutangLogic() {
     undefined
   );
 
-  // Fungsi untuk generate nomor referensi otomatis jika tidak ditemukan di ledger
+  // Generate nomor referensi otomatis
   function generateReferenceNumber(customerName: string) {
     const now = new Date();
     const ymd = now.toISOString().split('T')[0].replace(/-/g, '');
@@ -52,46 +47,51 @@ export function usePembayaranPiutangLogic() {
     return `REF-${ymd}-${hms}-${nama}`;
   }
 
-  // Mengambil transaksi kredit terbaru pelanggan (dari ledger, ref_type 'pos_transaction')
   function getLatestCreditReference(customerName: string) {
-    // Cari latest ledger entry dengan ref_type 'pos_transaction' untuk customer
-    // ledger diurutkan desc created_at, jadi ambil yang pertama saja
     const allLedgers = recentPayments || [];
     const forCust = allLedgers.filter(
       l => 
         l.pelanggan_name === customerName &&
         l.reference_type === 'pos_transaction' &&
-        l.reference_number // harus ada
+        l.reference_number
     );
     if (forCust.length > 0) {
-      // Return the latest one
       return forCust[0]?.reference_number;
     }
     return null;
   }
 
-  // Ubah logic handleSelectCustomer agar reference_number otomatis (prefer data, fallback generator)
+  // Fix: always fill payment_date, amount, reference_number secara default saat pilih customer
   const handleSelectCustomer = (customerName: string, currentBalance: number) => {
     setSelectedCustomer(customerName);
-
-    // Cari nomor referensi transaksi kredit pelanggan, fallback otomatis
     const refNumber =
       getLatestCreditReference(customerName) ||
       generateReferenceNumber(customerName);
 
-    setPaymentForm(prev => ({
-      ...prev,
+    setPaymentForm({
       amount: currentBalance,
-      reference_number: refNumber
-    }));
+      reference_number: refNumber,
+      keterangan: '',
+      payment_date: new Date().toISOString().split('T')[0]
+    });
     setIsPaymentDialogOpen(true);
   };
 
+  // Memperbaiki logika validasi dan error message
   const handleRecordPayment = async () => {
     if (!selectedCustomer || !paymentForm.amount || !paymentForm.reference_number) {
       toast({
         title: "Error",
-        description: "Lengkapi semua field yang diperlukan",
+        description: "Lengkapi semua field yang diperlukan!",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (paymentForm.amount <= 0) {
+      toast({
+        title: "Error",
+        description: "Jumlah pembayaran harus lebih dari 0",
         variant: "destructive"
       });
       return;
@@ -113,7 +113,6 @@ export function usePembayaranPiutangLogic() {
       });
 
       refetchSummary();
-
       setIsPaymentDialogOpen(false);
       setSelectedCustomer('');
       setPaymentForm({
@@ -125,13 +124,13 @@ export function usePembayaranPiutangLogic() {
     } catch (error: any) {
       toast({
         title: "Error",
-        description: error.message,
+        description: error.message || "Gagal menyimpan pembayaran!",
         variant: "destructive"
       });
     }
   };
 
-  // Mass payment logic
+  // Select all/mass payment logic (tidak diubah)
   const handleSelectAll = () => {
     if (allSelected) {
       setSelectedCustomers([]);
@@ -148,27 +147,19 @@ export function usePembayaranPiutangLogic() {
     }
   };
 
-  // Mass payment juga isi otomatis reference number
   const [massPaymentForm, setMassPaymentForm] = useState({
     payment_date: new Date().toISOString().split('T')[0],
     reference_number: '',
-    keterangan: '',
+    keterangan: ''
   });
 
   const [prevMassPaymentDialogOpen, setPrevMassPaymentDialogOpen] = useState(false);
-
-  // Add missing mass payment dialog state
   const [isMassPaymentDialogOpen, setIsMassPaymentDialogOpen] = useState(false);
-
-  // Add missing processing mass payment state
   const [isProcessingMassPayment, setIsProcessingMassPayment] = useState(false);
 
-  // Otomatis isi pada open mass payment dialog
   const handleOpenMassPaymentDialog = (open: boolean) => {
     setIsMassPaymentDialogOpen(open);
-    // Only set on open (prevent overwrite when typing)
     if (open && !prevMassPaymentDialogOpen) {
-      // Ambil semua unique ref number dari selected, fallback generator
       let nomorRef: string | null = null;
       if (selectedCustomers.length === 1) {
         nomorRef = getLatestCreditReference(selectedCustomers[0]) || generateReferenceNumber(selectedCustomers[0]);
@@ -185,16 +176,13 @@ export function usePembayaranPiutangLogic() {
     setPrevMassPaymentDialogOpen(open);
   };
 
-  // Manual refresh
   const handleRefresh = () => {
     queryClient.invalidateQueries({ queryKey: ['customer-receivables-summary'] });
     queryClient.invalidateQueries({ queryKey: ['customer-receivables-ledger'] });
   };
   
-  // Mass payment logic (add handler to fix error)
   const handleMassPayment = async () => {
     setIsProcessingMassPayment(true);
-    // Placeholder: implement logic as needed
     setTimeout(() => {
       setIsProcessingMassPayment(false);
     }, 500);
@@ -217,7 +205,7 @@ export function usePembayaranPiutangLogic() {
       handleSelectRow,
       handleMassPayment,
       handleRefresh,
-      onOpenMassPayment: handleOpenMassPaymentDialog, // pakai di halaman
+      onOpenMassPayment: handleOpenMassPaymentDialog,
     },
     recordPayment,
   };

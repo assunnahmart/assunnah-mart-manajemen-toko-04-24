@@ -1,4 +1,5 @@
-import { useState } from 'react';
+
+import { useState, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import NewProtectedRoute from '@/components/NewProtectedRoute';
 import { SidebarProvider, SidebarInset, SidebarTrigger } from '@/components/ui/sidebar';
@@ -17,8 +18,39 @@ import DataBackupManager from '@/components/admin/DataBackupManager';
 import KartuHutangSupplier from '@/components/admin/KartuHutangSupplier';
 import KartuPiutangPelanggan from '@/components/admin/KartuPiutangPelanggan';
 
+import { useLocation } from 'react-router-dom';
+
+// Helper: mapping pathname ke tab
+const routeToTabMap: { [key: string]: string } = {
+  '/admin': 'dashboard',
+  '/admin/pelanggan': 'pelanggan',
+  '/admin/supplier': 'supplier',
+  '/admin/buku-besar-piutang': 'buku-besar-piutang',
+  '/admin/buku-besar-hutang': 'buku-besar-hutang',
+  '/admin/kas-umum': 'kas-umum',
+  '/admin/laba-rugi': 'laba-rugi',
+  '/admin/financial-reports': 'financial-reports',
+  '/admin/data-management': 'data-management',
+  '/admin/backup-manager': 'backup-manager',
+  '/admin/product-management': 'product-management',
+  '/admin/kartu-hutang': 'kartu-hutang',
+  '/admin/kartu-piutang': 'kartu-piutang',
+};
+
 const AdminPanel = () => {
-  const [activeTab, setActiveTab] = useState('dashboard');
+  const location = useLocation();
+
+  // Tentukan tab awal berdasarkan URL
+  const initialTab = routeToTabMap[location.pathname] || 'dashboard';
+  const [activeTab, setActiveTab] = useState(initialTab);
+
+  // Sync tab dengan route saat location berubah
+  useEffect(() => {
+    const targetTab = routeToTabMap[location.pathname];
+    if (targetTab && targetTab !== activeTab) {
+      setActiveTab(targetTab);
+    }
+  }, [location.pathname]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <NewProtectedRoute>
@@ -26,13 +58,6 @@ const AdminPanel = () => {
         <div className="min-h-screen flex w-full">
           <AppSidebar />
           <SidebarInset>
-            {/* Header (dihilangkan) */}
-            {/* <div className="flex h-16 shrink-0 items-center gap-2 border-b px-4">
-              <SidebarTrigger className="-ml-1" />
-              <h1 className="text-lg font-semibold">Admin Panel</h1>
-            </div> */}
-            
-            {/* Langsung render konten admin */}
             <div className="flex-1 p-6">
               <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
                 <TabsList className="grid w-full grid-cols-5 lg:grid-cols-12">

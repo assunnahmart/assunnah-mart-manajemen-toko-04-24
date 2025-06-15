@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
 import { AppSidebar } from '@/components/AppSidebar';
@@ -14,6 +13,7 @@ import { DollarSign, Users, TrendingUp, Plus, Search, Download } from 'lucide-re
 import { useCustomerReceivablesSummary, useRecordCustomerPayment, useCustomerReceivablesLedger } from '@/hooks/useLedgers';
 import { useSimpleAuth } from '@/hooks/useSimpleAuth';
 import { useToast } from '@/hooks/use-toast';
+import { Checkbox } from '@/components/ui/checkbox';
 
 const PembayaranPiutangPage = () => {
   const [isPaymentDialogOpen, setIsPaymentDialogOpen] = useState(false);
@@ -39,6 +39,14 @@ const PembayaranPiutangPage = () => {
 
   const totalReceivables = summary?.reduce((sum, item) => sum + item.total_receivables, 0) || 0;
   const totalCustomers = summary?.length || 0;
+  const [selectedCustomers, setSelectedCustomers] = useState<string[]>([]);
+  const [isMassPaymentDialogOpen, setIsMassPaymentDialogOpen] = useState(false);
+
+  // Ambil nama pelanggan outstanding (total_receivables > 0)
+  const outstandingCustomers = summary?.filter(c => c.total_receivables > 0) || [];
+  const allCustomerNames = outstandingCustomers.map(c => c.pelanggan_name);
+  const allSelected = selectedCustomers.length === allCustomerNames.length && allCustomerNames.length > 0;
+  const isIndeterminate = selectedCustomers.length > 0 && !allSelected;
 
   const handleSelectCustomer = (customerName: string, currentBalance: number) => {
     setSelectedCustomer(customerName);
@@ -89,6 +97,79 @@ const PembayaranPiutangPage = () => {
         variant: "destructive"
       });
     }
+  };
+
+  // Checkbox logic
+  const handleSelectAll = () => {
+    if (allSelected) {
+      setSelectedCustomers([]);
+    } else {
+      setSelectedCustomers([...allCustomerNames]);
+    }
+  };
+  const handleSelectRow = (name: string) => {
+    if (selectedCustomers.includes(name)) {
+      setSelectedCustomers(selectedCustomers.filter(c => c !== name));
+    } else {
+      setSelectedCustomers([...selectedCustomers, name]);
+    }
+  };
+
+  // Handle pembayaran massal
+  const [massPaymentForm, setMassPaymentForm] = useState({
+    payment_date: new Date().toISOString().split('T')[0],
+    reference_number: '',
+    keterangan: '',
+  });
+  const [isProcessingMassPayment, setIsProcessingMassPayment] = useState(false);
+
+  const handleMassPayment = async () => {
+    if (!massPaymentForm.reference_number || selectedCustomers.length === 0) {
+      toast({
+        title: "Error",
+        description: "Pilih pelanggan dan isi nomor referensi",
+        variant: "destructive",
+      });
+      return;
+    }
+    setIsProcessingMassPayment(true);
+    let successCount = 0;
+    let failCount = 0;
+    for (const pelanggan_name of selectedCustomers) {
+      const customerObj = outstandingCustomers.find(c => c.pelanggan_name === pelanggan_name);
+      const amount = customerObj?.total_receivables || 0;
+      try {
+        await recordPayment.mutateAsync({
+          pelanggan_name,
+          amount,
+          payment_date: massPaymentForm.payment_date,
+          reference_number: massPaymentForm.reference_number,
+          kasir_name: user?.full_name || 'Unknown',
+          keterangan: massPaymentForm.keterangan,
+        });
+        successCount++;
+      } catch (error: any) {
+        failCount++;
+        toast({
+          title: "Gagal mencatat pembayaran",
+          description: `${pelanggan_name}: ${error?.message || "Error"}`,
+          variant: "destructive"
+        });
+      }
+    }
+    toast({
+      title: "Proses pembayaran massal selesai",
+      description: `${successCount} pembayaran berhasil, ${failCount} gagal.`,
+      variant: failCount > 0 ? "destructive" : "default"
+    });
+    setIsProcessingMassPayment(false);
+    setIsMassPaymentDialogOpen(false);
+    setSelectedCustomers([]);
+    setMassPaymentForm({
+      payment_date: new Date().toISOString().split('T')[0],
+      reference_number: '',
+      keterangan: '',
+    });
   };
 
   return (
@@ -157,8 +238,25 @@ const PembayaranPiutangPage = () => {
 
             {/* Outstanding Receivables */}
             <Card>
-              <CardHeader>
+              <CardHeader className="flex flex-row items-center justify-between">
                 <CardTitle>Daftar Piutang Outstanding</CardTitle>
+                <div className='flex gap-2'>
+                  <Button
+                    variant={allSelected ? "secondary" : "outline"}
+                    onClick={handleSelectAll}
+                    size="sm"
+                  >
+                    {allSelected ? "Batalkan Semua" : "Pilih Semua"}
+                  </Button>
+                  <Button
+                    variant="default"
+                    disabled={selectedCustomers.length === 0}
+                    onClick={() => setIsMassPaymentDialogOpen(true)}
+                    size="sm"
+                  >
+                    Bayar Semua
+                  </Button>
+                </div>
               </CardHeader>
               <CardContent>
                 {summaryLoading ? (
@@ -168,6 +266,13 @@ const PembayaranPiutangPage = () => {
                     <Table>
                       <TableHeader>
                         <TableRow>
+                          <TableHead className="w-12 text-center">
+                            <Checkbox
+                              checked={allSelected}
+                              indeterminate={isIndeterminate}
+                              onCheckedChange={handleSelectAll}
+                            />
+                          </TableHead>
                           <TableHead>Nama Pelanggan</TableHead>
                           <TableHead className="text-right">Total Piutang</TableHead>
                           <TableHead className="text-center">Total Transaksi</TableHead>
@@ -178,6 +283,13 @@ const PembayaranPiutangPage = () => {
                       <TableBody>
                         {summary?.map((customer) => (
                           <TableRow key={customer.pelanggan_name}>
+                            <TableCell className="text-center">
+                              <Checkbox
+                                checked={selectedCustomers.includes(customer.pelanggan_name)}
+                                disabled={customer.total_receivables <= 0}
+                                onCheckedChange={() => handleSelectRow(customer.pelanggan_name)}
+                              />
+                            </TableCell>
                             <TableCell className="font-medium">{customer.pelanggan_name}</TableCell>
                             <TableCell className="text-right font-bold text-red-600">
                               Rp {customer.total_receivables.toLocaleString('id-ID')}
@@ -328,6 +440,57 @@ const PembayaranPiutangPage = () => {
                 </div>
               </DialogContent>
             </Dialog>
+
+            {/* MASS PAYMENT DIALOG */}
+            <Dialog open={isMassPaymentDialogOpen} onOpenChange={setIsMassPaymentDialogOpen}>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Catat Pembayaran Massal ({selectedCustomers.length} pelanggan)</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4">
+                  <div>
+                    <Label>Pelanggan Terpilih</Label>
+                    <div className="flex flex-wrap gap-2">
+                      {selectedCustomers.map(name => (
+                        <Badge variant="outline" key={name}>{name}</Badge>
+                      ))}
+                    </div>
+                  </div>
+                  <div>
+                    <Label>Tanggal Pembayaran</Label>
+                    <Input
+                      type="date"
+                      value={massPaymentForm.payment_date}
+                      onChange={e => setMassPaymentForm(prev => ({ ...prev, payment_date: e.target.value }))}
+                    />
+                  </div>
+                  <div>
+                    <Label>Nomor Referensi</Label>
+                    <Input
+                      value={massPaymentForm.reference_number}
+                      onChange={e => setMassPaymentForm(prev => ({ ...prev, reference_number: e.target.value }))}
+                      placeholder="Nomor bukti pembayaran"
+                    />
+                  </div>
+                  <div>
+                    <Label>Keterangan</Label>
+                    <Input
+                      value={massPaymentForm.keterangan}
+                      onChange={e => setMassPaymentForm(prev => ({ ...prev, keterangan: e.target.value }))}
+                      placeholder="Keterangan pembayaran"
+                    />
+                  </div>
+                  <Button
+                    onClick={handleMassPayment}
+                    disabled={isProcessingMassPayment || selectedCustomers.length === 0}
+                    className="w-full"
+                  >
+                    {isProcessingMassPayment ? 'Menyimpan...' : `Simpan Pembayaran (${selectedCustomers.length})`}
+                  </Button>
+                </div>
+              </DialogContent>
+            </Dialog>
+
           </div>
         </SidebarInset>
       </div>

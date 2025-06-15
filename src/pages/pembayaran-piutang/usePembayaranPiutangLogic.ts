@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useCustomerReceivablesSummary, useRecordCustomerPayment, useCustomerReceivablesLedger } from '@/hooks/useLedgers';
 import { useSimpleAuth } from '@/hooks/useSimpleAuth';
@@ -18,24 +17,30 @@ export function usePembayaranPiutangLogic() {
   const [filterDate, setFilterDate] = useState('');
 
   const { user } = useSimpleAuth();
+  const recordPayment = useRecordCustomerPayment();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  // Gantilogic summary dan recalculasi totalReceivables/totalCustomers sesuai summary bersih
   const { data: summary, isLoading: summaryLoading, refetch: refetchSummary } = useCustomerReceivablesSummary();
+
+  // Total piutang = sum all total_receivables
+  const totalReceivables = summary?.reduce((sum, item) => sum + (Number(item.total_receivables) || 0), 0) || 0;
+  const totalCustomers = summary?.length || 0;
+
+  // Outstanding Customers = semua dengan saldo > 0 dari summary
+  const outstandingCustomers = summary || [];
+
+  // Multi select logic
+  const allCustomerNames = outstandingCustomers.map(c => c.pelanggan_name);
+  const [selectedCustomers, setSelectedCustomers] = useState<string[]>([]);
+  const allSelected = selectedCustomers.length === allCustomerNames.length && allCustomerNames.length > 0;
+
   const { data: recentPayments, isLoading: paymentsLoading } = useCustomerReceivablesLedger(
     filterCustomer || undefined,
     filterDate || undefined,
     undefined
   );
-  const recordPayment = useRecordCustomerPayment();
-  const { toast } = useToast();
-  const queryClient = useQueryClient();
-
-  const totalReceivables = summary?.reduce((sum, item) => sum + item.total_receivables, 0) || 0;
-  const totalCustomers = summary?.length || 0;
-
-  // Multi select logic
-  const outstandingCustomers = summary?.filter(c => c.total_receivables > 0) || [];
-  const allCustomerNames = outstandingCustomers.map(c => c.pelanggan_name);
-  const [selectedCustomers, setSelectedCustomers] = useState<string[]>([]);
-  const allSelected = selectedCustomers.length === allCustomerNames.length && allCustomerNames.length > 0;
 
   const handleSelectCustomer = (customerName: string, currentBalance: number) => {
     setSelectedCustomer(customerName);

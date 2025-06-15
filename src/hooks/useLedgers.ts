@@ -73,11 +73,31 @@ export const useCustomerReceivablesSummary = () => {
   return useQuery({
     queryKey: ['customer-receivables-summary'],
     queryFn: async () => {
+      // Ambil summary asli dari Supabase
       const { data, error } = await supabase
         .rpc('get_customer_receivables_summary');
-      
+
       if (error) throw error;
-      return data;
+
+      // Bersihkan: pastikan unik berdasarkan pelanggan_name, pakai saldo terakhir
+      const summaryMap = new Map();
+      for (const item of data) {
+        // Pastikan hanya 1 record per pelanggan_name
+        if (!summaryMap.has(item.pelanggan_name)) {
+          summaryMap.set(item.pelanggan_name, item);
+        } else {
+          // Simpan record dengan total_receivables terbaru (jika ada duplikat)
+          if (item.total_receivables > summaryMap.get(item.pelanggan_name).total_receivables) {
+            summaryMap.set(item.pelanggan_name, item);
+          }
+        }
+      }
+
+      // Konversikan ke array & hanya ambil saldo > 0
+      const uniqueData = Array.from(summaryMap.values()).filter(
+        (x) => Number(x.total_receivables) > 0
+      );
+      return uniqueData;
     },
   });
 };

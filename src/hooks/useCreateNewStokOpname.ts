@@ -31,9 +31,9 @@ export const useCreateNewStokOpname = () => {
       const stok_sistem = productData.stok_saat_ini || 0;
       const selisih = stok_sistem - stok_fisik;
       
-      // Insert stock opname record
+      // Insert stock opname record - using correct table name 'stok_opname'
       const { data: stockOpnameData, error: stockOpnameError } = await supabase
-        .from('stock_opname')
+        .from('stok_opname')
         .insert({
           barang_id,
           stok_sistem,
@@ -41,7 +41,7 @@ export const useCreateNewStokOpname = () => {
           selisih,
           kasir_id,
           keterangan: keterangan || 'Input stok tambahan',
-          tanggal: new Date().toISOString()
+          tanggal_opname: new Date().toISOString().split('T')[0] // Use correct field name and date format
         })
         .select()
         .single();

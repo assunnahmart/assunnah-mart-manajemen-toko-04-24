@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -27,9 +26,9 @@ const BukuBesarHutang = () => {
     keterangan: ''
   });
 
-  const { data: ledgerData, isLoading } = useSupplierPayablesLedger(selectedSupplier, startDate, endDate);
-  const { data: summaryData } = useSupplierPayablesSummary();
-  const { data: suppliers, isLoading: suppliersLoading } = useSupplier();
+  const { data: ledgerData, isLoading: ledgerLoading, error: ledgerError } = useSupplierPayablesLedger(selectedSupplier, startDate, endDate);
+  const { data: summaryData, isLoading: summaryLoading, error: summaryError } = useSupplierPayablesSummary();
+  const { data: suppliers, isLoading: suppliersLoading, error: suppliersError } = useSupplier();
   const recordPayment = useRecordSupplierPayment();
   const { toast } = useToast();
 
@@ -93,16 +92,19 @@ const BukuBesarHutang = () => {
     }
   };
 
-  // Don't render Select components if suppliers are still loading or no valid suppliers
-  if (suppliersLoading) {
+  // Tambah pengecekan loading/error
+  if (suppliersLoading || summaryLoading || ledgerLoading) {
     return (
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h2 className="text-2xl font-bold">Buku Besar Hutang</h2>
-            <p className="text-gray-600">Memuat data supplier...</p>
-          </div>
-        </div>
+      <div className="flex items-center justify-center min-h-[200px]">
+        <span>Memuat data supplier/hutang...</span>
+      </div>
+    );
+  }
+  if (suppliersError || summaryError || ledgerError) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[200px] text-red-700">
+        <div>Gagal memuat data supplier atau hutang.</div>
+        <div className="text-xs">{suppliersError?.message || summaryError?.message || ledgerError?.message}</div>
       </div>
     );
   }

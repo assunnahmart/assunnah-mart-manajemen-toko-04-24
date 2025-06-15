@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -28,8 +27,8 @@ const BukuBesarPiutang = () => {
     keterangan: ''
   });
 
-  const { data: ledgerData, isLoading } = useCustomerReceivablesLedger(selectedCustomer, startDate, endDate);
-  const { data: summaryData } = useCustomerReceivablesSummary();
+  const { data: ledgerData, isLoading: ledgerLoading, error: ledgerError } = useCustomerReceivablesLedger(selectedCustomer, startDate, endDate);
+  const { data: summaryData, isLoading: summaryLoading, error: summaryError } = useCustomerReceivablesSummary();
   const recordPayment = useRecordCustomerPayment();
   const { toast } = useToast();
 
@@ -198,6 +197,23 @@ const BukuBesarPiutang = () => {
 
   // Get customers with outstanding receivables
   const customersWithReceivables = summaryData?.filter(customer => customer.total_receivables > 0) || [];
+
+  // Tambah: error & loading handler
+  if (summaryLoading || ledgerLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[200px]">
+        <span>Memuat data pelanggan/piutang...</span>
+      </div>
+    );
+  }
+  if (summaryError || ledgerError) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[200px] text-red-700">
+        <div>Gagal memuat data piutang atau pelanggan.</div>
+        <div className="text-xs">{summaryError?.message || ledgerError?.message}</div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

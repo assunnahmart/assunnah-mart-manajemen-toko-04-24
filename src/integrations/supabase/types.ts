@@ -828,6 +828,7 @@ export type Database = {
           kasir_name: string | null
           kasir_username: string | null
           keterangan: string | null
+          referensi: string | null
           referensi_id: string | null
           referensi_tipe: string | null
           tanggal_transaksi: string
@@ -843,6 +844,7 @@ export type Database = {
           kasir_name?: string | null
           kasir_username?: string | null
           keterangan?: string | null
+          referensi?: string | null
           referensi_id?: string | null
           referensi_tipe?: string | null
           tanggal_transaksi?: string
@@ -858,6 +860,7 @@ export type Database = {
           kasir_name?: string | null
           kasir_username?: string | null
           keterangan?: string | null
+          referensi?: string | null
           referensi_id?: string | null
           referensi_tipe?: string | null
           tanggal_transaksi?: string

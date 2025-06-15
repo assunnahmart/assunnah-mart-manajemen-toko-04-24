@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -17,6 +16,7 @@ const KasUmumForm = () => {
   const [akunId, setAkunId] = useState('');
   const [jumlah, setJumlah] = useState(0);
   const [keterangan, setKeterangan] = useState('');
+  const [referensi, setReferensi] = useState('');
 
   const { data: accounts } = useChartOfAccounts();
   const { user } = useSimpleAuth();
@@ -69,7 +69,8 @@ const KasUmumForm = () => {
         jumlah,
         keterangan,
         kasir_username: user?.username || '',
-        kasir_name: user?.full_name || ''
+        kasir_name: user?.full_name || '',
+        referensi: referensi || undefined,
       });
 
       toast({
@@ -81,6 +82,7 @@ const KasUmumForm = () => {
       setAkunId('');
       setJumlah(0);
       setKeterangan('');
+      setReferensi('');
     } catch (error) {
       toast({
         title: "Gagal menyimpan transaksi",
@@ -157,8 +159,17 @@ const KasUmumForm = () => {
               onChange={(e) => setKeterangan(e.target.value)}
             />
           </div>
+          {/* Kolom input Referensi baru */}
+          <div>
+            <Label htmlFor="referensi">Referensi</Label>
+            <Input
+              id="referensi"
+              placeholder="No nota/Referensi pembayaran (opsional)"
+              value={referensi}
+              onChange={(e) => setReferensi(e.target.value)}
+            />
+          </div>
         </div>
-
         <Button
           onClick={handleSubmit}
           disabled={createTransaction.isPending}

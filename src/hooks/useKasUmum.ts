@@ -1,4 +1,3 @@
-
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Tables, TablesInsert } from '@/integrations/supabase/types';
@@ -28,7 +27,7 @@ export const useCreateKasTransaction = () => {
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: async (transaction: Omit<KasTransactionInsert, 'transaction_number'>) => {
+    mutationFn: async (transaction: Omit<KasTransactionInsert, 'transaction_number'> & { referensi?: string }) => {
       console.log('Creating kas umum transaction with data:', transaction);
       
       // Validate required fields
@@ -68,7 +67,8 @@ export const useCreateKasTransaction = () => {
       const transactionData = {
         ...transaction,
         jumlah: parseInt(transaction.jumlah.toString()), // Ensure it's an integer
-        transaction_number: transactionNumber as string
+        transaction_number: transactionNumber as string,
+        referensi: transaction.referensi ?? null,
       };
       
       console.log('Final kas umum transaction data:', transactionData);

@@ -1,4 +1,3 @@
-
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -82,6 +81,7 @@ const KasUmumHistory = () => {
                     <TableHead>Jenis</TableHead>
                     <TableHead>Akun</TableHead>
                     <TableHead>Jumlah</TableHead>
+                    <TableHead>Referensi</TableHead>
                     <TableHead>Keterangan</TableHead>
                     <TableHead>Kasir</TableHead>
                   </TableRow>
@@ -108,6 +108,9 @@ const KasUmumHistory = () => {
                       </TableCell>
                       <TableCell className={transaction.jenis_transaksi === 'masuk' ? 'text-green-600' : 'text-red-600'}>
                         {transaction.jenis_transaksi === 'masuk' ? '+' : '-'}Rp {transaction.jumlah.toLocaleString('id-ID')}
+                      </TableCell>
+                      <TableCell>
+                        {transaction.referensi || transaction.referensi === "" ? transaction.referensi || "-" : "-"}
                       </TableCell>
                       <TableCell>{transaction.keterangan || '-'}</TableCell>
                       <TableCell>{transaction.kasir_name || '-'}</TableCell>

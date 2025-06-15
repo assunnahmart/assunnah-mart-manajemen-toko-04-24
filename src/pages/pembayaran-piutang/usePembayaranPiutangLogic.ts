@@ -140,10 +140,91 @@ export function usePembayaranPiutangLogic() {
   };
   
   const handleMassPayment = async () => {
+    if (selectedCustomers.length === 0) {
+      toast({
+        title: "Error",
+        description: "Pilih minimal satu pelanggan untuk pembayaran massal",
+        variant: "destructive"
+      });
+      return;
+    }
+
     setIsProcessingMassPayment(true);
-    setTimeout(() => {
+
+    try {
+      let successCount = 0;
+      let errorCount = 0;
+      const errors: string[] = [];
+
+      // Process each selected customer
+      for (const customerName of selectedCustomers) {
+        try {
+          // Find customer balance
+          const customer = outstandingCustomers.find(c => c.pelanggan_name === customerName);
+          if (!customer || customer.total_receivables <= 0) {
+            errors.push(`${customerName}: Tidak ada piutang yang perlu dibayar`);
+            errorCount++;
+            continue;
+          }
+
+          // Generate unique reference number for each customer
+          const referenceNumber = generateReferenceNumber(customerName);
+          
+          // Record payment for full balance
+          await recordPayment.mutateAsync({
+            pelanggan_name: customerName,
+            amount: Number(customer.total_receivables),
+            payment_date: massPaymentForm.payment_date,
+            reference_number: referenceNumber,
+            kasir_name: user?.full_name || 'Unknown',
+            keterangan: `Pembayaran massal - ${massPaymentForm.keterangan || 'Pelunasan piutang'}`
+          });
+
+          successCount++;
+        } catch (error: any) {
+          errorCount++;
+          errors.push(`${customerName}: ${error.message}`);
+        }
+      }
+
+      // Show results
+      if (successCount > 0) {
+        toast({
+          title: "Pembayaran Massal Selesai",
+          description: `Berhasil: ${successCount} pelanggan, Gagal: ${errorCount} pelanggan`,
+          variant: successCount > errorCount ? "default" : "destructive"
+        });
+      }
+
+      if (errors.length > 0 && errors.length <= 3) {
+        // Show first few errors
+        toast({
+          title: "Detail Error",
+          description: errors.slice(0, 3).join('; '),
+          variant: "destructive"
+        });
+      }
+
+      // Refresh data and close dialog
+      if (successCount > 0) {
+        refetchSummary();
+        setSelectedCustomers([]);
+        setIsMassPaymentDialogOpen(false);
+        setMassPaymentForm({
+          payment_date: new Date().toISOString().split('T')[0],
+          keterangan: ''
+        });
+      }
+
+    } catch (error: any) {
+      toast({
+        title: "Error Pembayaran Massal",
+        description: error.message || "Terjadi kesalahan dalam proses pembayaran massal",
+        variant: "destructive"
+      });
+    } finally {
       setIsProcessingMassPayment(false);
-    }, 500);
+    }
   };
 
   return {

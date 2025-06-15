@@ -211,6 +211,7 @@ export const useRecordSupplierPayment = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['supplier-payables-ledger'] });
       queryClient.invalidateQueries({ queryKey: ['supplier-payables-summary'] });
+      queryClient.invalidateQueries({ queryKey: ['kas_umum_transactions'] });
     },
   });
 };

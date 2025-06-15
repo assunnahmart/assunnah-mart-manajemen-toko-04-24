@@ -1944,6 +1944,7 @@ export type Database = {
           kasir_id: string | null
           nomor_transaksi: string
           pajak: number | null
+          sisa_hutang: number | null
           status: string | null
           subtotal: number
           supplier_id: string | null
@@ -1961,6 +1962,7 @@ export type Database = {
           kasir_id?: string | null
           nomor_transaksi: string
           pajak?: number | null
+          sisa_hutang?: number | null
           status?: string | null
           subtotal?: number
           supplier_id?: string | null
@@ -1978,6 +1980,7 @@ export type Database = {
           kasir_id?: string | null
           nomor_transaksi?: string
           pajak?: number | null
+          sisa_hutang?: number | null
           status?: string | null
           subtotal?: number
           supplier_id?: string | null

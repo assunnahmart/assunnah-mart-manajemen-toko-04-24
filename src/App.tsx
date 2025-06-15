@@ -7,43 +7,44 @@ import {
 } from "react-router-dom";
 import { useSimpleAuth } from "@/hooks/useSimpleAuth";
 
-import LoginPage from "@/pages/LoginPage";
-import DashboardPage from "@/pages/DashboardPage";
-import PosPage from "@/pages/PosPage";
-import DataProdukPage from "@/pages/DataProdukPage";
+// Update imports to match the file names in your project!
+import Login from "@/pages/Login";
+import Dashboard from "@/pages/Dashboard";
+import POSSystem from "@/pages/POSSystem";
+import DataProduk from "@/pages/DataProduk";
 import StockManagementPage from "@/pages/StockManagementPage";
-import KonsinyasiPage from "@/pages/KonsinyasiPage";
+import Konsinyasi from "@/pages/Konsinyasi";
 import KonsinyasiHarianPage from "@/pages/KonsinyasiHarianPage";
 import PurchasePage from "@/pages/PurchasePage";
-import PenjualanKreditPage from "@/pages/PenjualanKreditPage";
+import PenjualanKredit from "@/pages/PenjualanKredit";
 import KasirKasPage from "@/pages/KasirKasPage";
 import KasUmumPage from "@/pages/KasUmumPage";
 import AdminPanel from "@/pages/AdminPanel";
-import KasirManagementPage from "@/pages/KasirManagementPage";
+import KasirManagement from "@/pages/KasirManagement";
 import RekapPiutangPage from "@/pages/RekapPiutangPage";
 import RekapHutangPage from "@/pages/RekapHutangPage";
 
 function App() {
-  const { isLoggedIn } = useSimpleAuth();
+  const { isAuthenticated } = useSimpleAuth();
 
   return (
     <Router>
       <Routes>
-        <Route path="/login" element={isLoggedIn ? <Navigate to="/dashboard" /> : <LoginPage />} />
-        <Route path="/dashboard" element={isLoggedIn ? <DashboardPage /> : <Navigate to="/login" />} />
-        <Route path="/pos" element={isLoggedIn ? <PosPage /> : <Navigate to="/login" />} />
-        <Route path="/data-produk" element={isLoggedIn ? <DataProdukPage /> : <Navigate to="/login" />} />
-        <Route path="/stock-management" element={isLoggedIn ? <StockManagementPage /> : <Navigate to="/login" />} />
-        <Route path="/konsinyasi" element={isLoggedIn ? <KonsinyasiPage /> : <Navigate to="/login" />} />
-        <Route path="/konsinyasi-harian" element={isLoggedIn ? <KonsinyasiHarianPage /> : <Navigate to="/login" />} />
-        <Route path="/purchase" element={isLoggedIn ? <PurchasePage /> : <Navigate to="/login" />} />
-        <Route path="/penjualan-kredit" element={isLoggedIn ? <PenjualanKreditPage /> : <Navigate to="/login" />} />
-        <Route path="/kasir-kas" element={isLoggedIn ? <KasirKasPage /> : <Navigate to="/login" />} />
-        <Route path="/kas-umum" element={isLoggedIn ? <KasUmumPage /> : <Navigate to="/login" />} />
-        <Route path="/admin/*" element={isLoggedIn ? <AdminPanel /> : <Navigate to="/login" />} />
-        <Route path="/kasir-management" element={isLoggedIn ? <KasirManagementPage /> : <Navigate to="/login" />} />
-        <Route path="/laporan/rekap-piutang" element={isLoggedIn ? <RekapPiutangPage /> : <Navigate to="/login" />} />
-        <Route path="/laporan/rekap-hutang" element={isLoggedIn ? <RekapHutangPage /> : <Navigate to="/login" />} />
+        <Route path="/login" element={isAuthenticated ? <Navigate to="/dashboard" /> : <Login />} />
+        <Route path="/dashboard" element={isAuthenticated ? <Dashboard /> : <Navigate to="/login" />} />
+        <Route path="/pos" element={isAuthenticated ? <POSSystem /> : <Navigate to="/login" />} />
+        <Route path="/data-produk" element={isAuthenticated ? <DataProduk /> : <Navigate to="/login" />} />
+        <Route path="/stock-management" element={isAuthenticated ? <StockManagementPage /> : <Navigate to="/login" />} />
+        <Route path="/konsinyasi" element={isAuthenticated ? <Konsinyasi /> : <Navigate to="/login" />} />
+        <Route path="/konsinyasi-harian" element={isAuthenticated ? <KonsinyasiHarianPage /> : <Navigate to="/login" />} />
+        <Route path="/purchase" element={isAuthenticated ? <PurchasePage /> : <Navigate to="/login" />} />
+        <Route path="/penjualan-kredit" element={isAuthenticated ? <PenjualanKredit /> : <Navigate to="/login" />} />
+        <Route path="/kasir-kas" element={isAuthenticated ? <KasirKasPage /> : <Navigate to="/login" />} />
+        <Route path="/kas-umum" element={isAuthenticated ? <KasUmumPage /> : <Navigate to="/login" />} />
+        <Route path="/admin/*" element={isAuthenticated ? <AdminPanel /> : <Navigate to="/login" />} />
+        <Route path="/kasir-management" element={isAuthenticated ? <KasirManagement /> : <Navigate to="/login" />} />
+        <Route path="/laporan/rekap-piutang" element={isAuthenticated ? <RekapPiutangPage /> : <Navigate to="/login" />} />
+        <Route path="/laporan/rekap-hutang" element={isAuthenticated ? <RekapHutangPage /> : <Navigate to="/login" />} />
       </Routes>
     </Router>
   )

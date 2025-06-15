@@ -14,6 +14,24 @@ type Props = {
   setFilterDate: (s: string) => void;
 };
 
+// Fungsi untuk memastikan nama pelanggan konsisten di semua tampilan
+function formatPelangganName(name: string): string {
+  if (!name) return '';
+  // Hilangkan prefix "Pelanggan:" dan trim spasi
+  if (name.startsWith('Pelanggan:')) {
+    return name.replace(/^Pelanggan:/, '').trim();
+  }
+  // Hilangkan prefix "Pelanggan " (tanpa titik dua)
+  if (name.startsWith('Pelanggan ')) {
+    return name.replace(/^Pelanggan /, '').trim();
+  }
+  // Jika ada ":", ambil bagian setelah titik dua
+  if (name.includes(':')) {
+    return name.split(':').slice(1).join(':').trim();
+  }
+  return name.trim();
+}
+
 export function RecentPaymentsTable({
   payments,
   loading,
@@ -71,7 +89,7 @@ export function RecentPaymentsTable({
                     <TableCell>
                       {new Date(payment.transaction_date).toLocaleDateString('id-ID')}
                     </TableCell>
-                    <TableCell className="font-medium">{payment.pelanggan_name}</TableCell>
+                    <TableCell className="font-medium">{formatPelangganName(payment.pelanggan_name)}</TableCell>
                     <TableCell>{payment.reference_number || '-'}</TableCell>
                     <TableCell>{payment.description}</TableCell>
                     <TableCell className="text-right text-red-600">
@@ -91,3 +109,4 @@ export function RecentPaymentsTable({
     </Card>
   );
 }
+

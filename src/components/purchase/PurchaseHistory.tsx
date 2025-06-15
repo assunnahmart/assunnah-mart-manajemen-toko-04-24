@@ -59,8 +59,13 @@ const PurchaseHistory = () => {
                 </TableHeader>
                 <TableBody>
                   {transactions?.map((transaction) => {
-                    const sisaHutang = transaction.sisa_hutang || (transaction.jenis_pembayaran === 'kredit' ? transaction.total : 0);
-                    const isHutangLunas = sisaHutang <= 0;
+                    // Calculate remaining debt properly
+                    const sisaHutang = transaction.sisa_hutang !== undefined 
+                      ? transaction.sisa_hutang 
+                      : (transaction.jenis_pembayaran === 'kredit' ? transaction.total : 0);
+                    
+                    // Determine if debt is paid off
+                    const isHutangLunas = transaction.jenis_pembayaran === 'cash' || sisaHutang <= 0;
                     
                     return (
                       <TableRow key={transaction.id}>
@@ -98,7 +103,7 @@ const PurchaseHistory = () => {
                           {transaction.kasir?.nama || '-'}
                         </TableCell>
                         <TableCell>
-                          {transaction.jenis_pembayaran === 'kredit' && sisaHutang > 0 && (
+                          {transaction.jenis_pembayaran === 'kredit' && !isHutangLunas && (
                             <Button
                               size="sm"
                               variant="outline"

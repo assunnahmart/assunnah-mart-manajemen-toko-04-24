@@ -1,4 +1,3 @@
-
 import {
   BrowserRouter as Router,
   Routes,
@@ -26,6 +25,7 @@ import RekapPiutangPage from "@/pages/RekapPiutangPage";
 import RekapHutangPage from "@/pages/RekapHutangPage";
 import PembayaranPiutangPage from "@/pages/PembayaranPiutangPage";
 import PembayaranHutangPage from "@/pages/PembayaranHutangPage";
+import PiutangPage from "@/pages/PiutangPage";
 
 function App() {
   const { isAuthenticated, loading } = useSimpleAuth();
@@ -65,6 +65,8 @@ function App() {
           <Route path="/laporan/rekap-hutang" element={isAuthenticated ? <RekapHutangPage /> : <Navigate to="/login" />} />
           <Route path="/pembayaran-piutang" element={isAuthenticated ? <PembayaranPiutangPage /> : <Navigate to="/login" />} />
           <Route path="/pembayaran-hutang" element={isAuthenticated ? <PembayaranHutangPage /> : <Navigate to="/login" />} />
+          {/* Tambahkan route Piutang di sini */}
+          <Route path="/Piutang" element={isAuthenticated ? <PiutangPage /> : <Navigate to="/login" />} />
         </Routes>
       </Router>
     </ErrorBoundary>

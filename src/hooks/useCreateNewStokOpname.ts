@@ -29,19 +29,38 @@ export const useCreateNewStokOpname = () => {
       }
       
       const stok_sistem = productData.stok_saat_ini || 0;
-      const selisih = stok_sistem - stok_fisik;
       
-      // Insert stock opname record - using correct table name 'stok_opname'
+      // Check if there are existing stock opname entries for this product today
+      const today = new Date().toISOString().split('T')[0];
+      const { data: existingEntries, error: existingError } = await supabase
+        .from('stok_opname')
+        .select('*')
+        .eq('barang_id', barang_id)
+        .eq('tanggal_opname', today)
+        .eq('status', 'approved');
+      
+      if (existingError) {
+        console.error('Error checking existing entries:', existingError);
+        throw new Error('Gagal memeriksa data stock opname: ' + existingError.message);
+      }
+      
+      // Calculate total physical stock from all existing entries plus the new one
+      const existingTotalStokFisik = existingEntries?.reduce((sum, entry) => sum + entry.stok_fisik, 0) || 0;
+      const newTotalStokFisik = existingTotalStokFisik + stok_fisik;
+      const selisih = stok_sistem - newTotalStokFisik;
+      
+      // Insert the new stock opname record
       const { data: stockOpnameData, error: stockOpnameError } = await supabase
         .from('stok_opname')
         .insert({
           barang_id,
           stok_sistem,
           stok_fisik,
-          selisih,
+          selisih: stok_sistem - stok_fisik, // Individual selisih for this entry
           kasir_id,
           keterangan: keterangan || 'Input stok tambahan',
-          tanggal_opname: new Date().toISOString().split('T')[0] // Use correct field name and date format
+          tanggal_opname: today,
+          status: 'approved'
         })
         .select()
         .single();
@@ -51,7 +70,18 @@ export const useCreateNewStokOpname = () => {
         throw new Error('Gagal menyimpan data stock opname: ' + stockOpnameError.message);
       }
       
-      return stockOpnameData;
+      console.log('Stock opname created successfully:', {
+        individual_entry: stockOpnameData,
+        total_physical_stock: newTotalStokFisik,
+        system_stock: stok_sistem,
+        combined_selisih: selisih
+      });
+      
+      return {
+        ...stockOpnameData,
+        combined_physical_stock: newTotalStokFisik,
+        combined_selisih: selisih
+      };
     },
     onSuccess: () => {
       // Invalidate related queries to refresh the data

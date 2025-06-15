@@ -7,11 +7,9 @@ import {
 import { useLocation, useNavigate } from "react-router-dom";
 import { useSimpleAuth } from "@/hooks/useSimpleAuth";
 import { useToast } from "@/hooks/use-toast";
-import {
-  Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupContent, SidebarGroupLabel,
-  SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem
-} from "@/components/ui/sidebar";
+import { Sidebar, SidebarFooter, SidebarHeader } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 
 // Menu system utama (utama/toko)
 const mainMenuItems = [
@@ -50,17 +48,44 @@ const adminMenuItems = [
   { title: "Product Management", url: "/admin/product-management", icon: Package }
 ];
 
+// Helper render menu as card grid by category
+function MenuGrid({ label, menuItems, user, location, onNavigate, adminOnly = false }) {
+  return (
+    <div className="mb-5">
+      <p className="text-xs text-gray-500 font-semibold uppercase px-4 mb-2">{label}</p>
+      <div className="grid grid-cols-2 gap-3 px-2 sm:grid-cols-3 md:grid-cols-2 xl:grid-cols-3">
+        {menuItems.map(item => {
+          const isActive = location.pathname === item.url;
+          const isDisabled = adminOnly && user?.role !== "admin";
+          return (
+            <Card
+              key={item.title}
+              className={`transition-all shadow-sm cursor-pointer px-0 ${isActive
+                ? "ring-2 ring-accent bg-accent/10"
+                : "hover:shadow-lg"} ${isDisabled ? "opacity-50 pointer-events-none" : ""}`}
+              onClick={() => !isDisabled && onNavigate(item.url)}
+            >
+              <CardContent className="flex flex-col items-center justify-center py-4 gap-2">
+                <item.icon className="h-6 w-6 mb-1 text-primary" />
+                <span className="text-[0.95rem] text-center font-semibold break-words">{item.title}</span>
+                {isDisabled && (
+                  <span className="text-xs text-gray-500 mt-1">Admin Only</span>
+                )}
+              </CardContent>
+            </Card>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, signOut } = useSimpleAuth();
   const { toast } = useToast();
 
-  const isAdminRoute = location.pathname.startsWith('/admin');
-
-  const handleNavigation = (url: string) => {
-    navigate(url);
-  };
   const handleLogout = async () => {
     await signOut();
     toast({
@@ -91,81 +116,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           )}
         </div>
       </SidebarHeader>
-      <SidebarContent>
-        {/* Sistem Utama */}
-        <SidebarGroup>
-          <SidebarGroupLabel>Sistem Utama</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {mainMenuItems.map(item => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild isActive={location.pathname === item.url}>
-                    <button onClick={() => handleNavigation(item.url)} className="w-full text-left">
-                      <item.icon />
-                      <span>{item.title}</span>
-                    </button>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-        {/* Penjualan & Pembelian */}
-        <SidebarGroup>
-          <SidebarGroupLabel>Penjualan & Pembelian</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {jualBeliMenuItems.map(item => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild isActive={location.pathname === item.url}>
-                    <button onClick={() => handleNavigation(item.url)} className="w-full text-left">
-                      <item.icon />
-                      <span>{item.title}</span>
-                    </button>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-        {/* Kas & Piutang */}
-        <SidebarGroup>
-          <SidebarGroupLabel>Kas & Piutang</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {kasPiutangMenuItems.map(item => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild isActive={location.pathname === item.url}>
-                    <button onClick={() => handleNavigation(item.url)} className="w-full text-left">
-                      <item.icon />
-                      <span>{item.title}</span>
-                    </button>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-        {/* Panel Admin */}
-        <SidebarGroup>
-          <SidebarGroupLabel>Panel Administrator</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {adminMenuItems.map(item => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild isActive={location.pathname === item.url} disabled={user?.role !== 'admin'}>
-                    <button onClick={() => handleNavigation(item.url)} className="w-full text-left" disabled={user?.role !== 'admin'}>
-                      <item.icon />
-                      <span>{item.title}</span>
-                      {user?.role !== 'admin' && <span className="ml-auto text-xs text-gray-400">Admin</span>}
-                    </button>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-      </SidebarContent>
+      <div className="flex-1 overflow-y-auto py-2">
+        <MenuGrid label="Sistem Utama" menuItems={mainMenuItems} user={user} location={location} onNavigate={navigate} />
+        <MenuGrid label="Penjualan & Pembelian" menuItems={jualBeliMenuItems} user={user} location={location} onNavigate={navigate} />
+        <MenuGrid label="Kas & Piutang" menuItems={kasPiutangMenuItems} user={user} location={location} onNavigate={navigate} />
+        <MenuGrid label="Panel Administrator" menuItems={adminMenuItems} user={user} location={location} onNavigate={navigate} adminOnly />
+      </div>
       <SidebarFooter>
         <div className="p-4 border-t">
           <Button onClick={handleLogout} variant="outline" className="w-full">

@@ -26,14 +26,14 @@ export const useCreateNewStokOpname = () => {
       
       // Get current system stock
       const { data: currentStock, error: stockError } = await supabase
-        .from('produk_pembelian')
-        .select('stok_saat_ini')
+        .from('barang_konsinyasi')
+        .select('stok_saat_ini, nama')
         .eq('id', barang_id)
         .single();
       
       if (stockError) {
         console.error('Error getting current stock:', stockError);
-        throw stockError;
+        throw new Error(`Gagal mendapatkan data stok: ${stockError.message}`);
       }
       
       // Insert new stock opname record
@@ -44,7 +44,7 @@ export const useCreateNewStokOpname = () => {
           stok_sistem: currentStock.stok_saat_ini,
           stok_fisik,
           kasir_id,
-          keterangan,
+          keterangan: keterangan || `Stock opname untuk ${currentStock.nama}`,
           tanggal_opname: new Date().toISOString().split('T')[0],
           status: 'approved'
         })
@@ -53,7 +53,7 @@ export const useCreateNewStokOpname = () => {
       
       if (error) {
         console.error('Error creating stock opname:', error);
-        throw error;
+        throw new Error(`Gagal menyimpan stock opname: ${error.message}`);
       }
       
       console.log('Stock opname created successfully:', data);
@@ -64,6 +64,11 @@ export const useCreateNewStokOpname = () => {
       queryClient.invalidateQueries({ queryKey: ['stock-opname-recap'] });
       queryClient.invalidateQueries({ queryKey: ['stock_data'] });
       queryClient.invalidateQueries({ queryKey: ['stock_opname'] });
+      queryClient.invalidateQueries({ queryKey: ['barang_konsinyasi'] });
+      queryClient.invalidateQueries({ queryKey: ['barang-konsinyasi'] });
     },
+    onError: (error) => {
+      console.error('Mutation error:', error);
+    }
   });
 };

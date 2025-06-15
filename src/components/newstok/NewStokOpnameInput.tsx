@@ -10,7 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Search, Scan, Plus, Package, Info } from 'lucide-react';
 import { useStockData } from '@/hooks/useStockManagement';
-import { useCreateNewStokOpname } from '@/hooks/useCreateNewStokOpname';
+import { useCreateStockOpname } from '@/hooks/useStockManagement';
 import { useKasir } from '@/hooks/useKasir';
 import { useSimpleAuth } from '@/hooks/useSimpleAuth';
 import { useToast } from '@/hooks/use-toast';
@@ -24,7 +24,7 @@ const NewStokOpnameInput = () => {
   const { data: stockData, isLoading: isLoadingStock } = useStockData();
   const { data: kasirData } = useKasir();
   const { user } = useSimpleAuth();
-  const createStockOpname = useCreateNewStokOpname();
+  const createStockOpname = useCreateStockOpname();
   const { toast } = useToast();
 
   const filteredProducts = stockData?.filter(item =>
@@ -40,7 +40,12 @@ const NewStokOpnameInput = () => {
       return user.kasir_id;
     }
     // For admin users, try to find their kasir record
-    const adminKasir = kasirData?.find(k => k.nama === user?.full_name || k.email === user?.username);
+    const adminKasir = kasirData?.find(k => 
+      k.nama === user?.full_name || 
+      k.email === user?.username ||
+      k.nama?.toLowerCase() === user?.full_name?.toLowerCase() ||
+      k.nama?.toLowerCase() === user?.username?.toLowerCase()
+    );
     return adminKasir?.id;
   };
 
@@ -64,10 +69,19 @@ const NewStokOpnameInput = () => {
       return;
     }
 
-    if (!stokFisik || stokFisik === '') {
+    if (!stokFisik || stokFisik === '' || isNaN(Number(stokFisik))) {
       toast({
         title: "Error", 
-        description: "Mohon masukkan stok fisik",
+        description: "Mohon masukkan stok fisik yang valid (angka)",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (Number(stokFisik) < 0) {
+      toast({
+        title: "Error",
+        description: "Stok fisik tidak boleh negatif",
         variant: "destructive"
       });
       return;
@@ -83,16 +97,23 @@ const NewStokOpnameInput = () => {
     }
 
     try {
-      await createStockOpname.mutateAsync({
+      console.log('Submitting stock opname:', {
         barang_id: selectedProduct,
         stok_fisik: parseInt(stokFisik),
         kasir_id: kasirId,
         keterangan
       });
 
+      await createStockOpname.mutateAsync({
+        barang_id: selectedProduct,
+        stok_fisik: parseInt(stokFisik),
+        kasir_id: kasirId,
+        keterangan: keterangan || `Input stok opname oleh ${user?.full_name}`
+      });
+
       toast({
         title: "Berhasil",
-        description: "Data stok opname berhasil disimpan"
+        description: `Data stok opname untuk ${selectedProductData?.nama} berhasil disimpan`
       });
 
       // Reset form
@@ -257,16 +278,16 @@ const NewStokOpnameInput = () => {
               {createStockOpname.isPending ? 'Menyimpan...' : 'Simpan Stok Opname'}
             </Button>
             
-            {/* Debug info untuk development */}
-            {process.env.NODE_ENV === 'development' && (
-              <div className="text-xs text-gray-500 mt-4 p-2 bg-gray-100 rounded">
-                <p>Debug Info:</p>
-                <p>User: {user?.full_name} ({user?.role})</p>
-                <p>Kasir ID: {getKasirId() || 'Not found'}</p>
-                <p>Selected Product: {selectedProduct || 'None'}</p>
-                <p>Stok Fisik: {stokFisik || 'Empty'}</p>
-              </div>
-            )}
+            {/* User Info */}
+            <Card className="bg-gray-50 border-gray-200">
+              <CardContent className="p-3">
+                <div className="text-xs text-gray-600 space-y-1">
+                  <p><strong>User:</strong> {user?.full_name || 'Unknown'} ({user?.role || 'Unknown'})</p>
+                  <p><strong>Kasir ID:</strong> {getKasirId() || 'Not found'}</p>
+                  {selectedProduct && <p><strong>Selected Product:</strong> {selectedProduct}</p>}
+                </div>
+              </CardContent>
+            </Card>
           </CardContent>
         </Card>
 

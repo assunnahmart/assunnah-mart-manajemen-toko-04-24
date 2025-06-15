@@ -2324,6 +2324,7 @@ export type Database = {
           pelanggan_name: string
           total_receivables: number
           total_transactions: number
+          last_transaction_date: string
         }[]
       }
       get_stock_opname_recap: {
@@ -2378,6 +2379,17 @@ export type Database = {
           p_keterangan?: string
         }
         Returns: undefined
+      }
+      record_customer_payment_integrated: {
+        Args: {
+          p_pelanggan_name: string
+          p_amount: number
+          p_payment_date: string
+          p_reference_number: string
+          p_kasir_name: string
+          p_keterangan?: string
+        }
+        Returns: Json
       }
       record_supplier_payment: {
         Args: {

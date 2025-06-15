@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useCustomerReceivablesSummary, useRecordCustomerPayment, useCustomerReceivablesLedger } from '@/hooks/useLedgers';
+import { useCustomerReceivablesSummary, useRecordCustomerPayment, useCustomerReceivablesLedger, useRecordCustomerPaymentIntegrated } from '@/hooks/useLedgers';
 import { useSimpleAuth } from '@/hooks/useSimpleAuth';
 import { useToast } from '@/hooks/use-toast';
 import { useQueryClient } from '@tanstack/react-query';
@@ -17,7 +17,7 @@ export function usePembayaranPiutangLogic() {
   const [filterDate, setFilterDate] = useState('');
 
   const { user } = useSimpleAuth();
-  const recordPayment = useRecordCustomerPayment();
+  const recordPayment = useRecordCustomerPaymentIntegrated(); // GANTI pemakaian hook
   const { toast } = useToast();
   const queryClient = useQueryClient();
 

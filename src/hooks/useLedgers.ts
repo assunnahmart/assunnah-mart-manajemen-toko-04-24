@@ -303,3 +303,44 @@ export const useFixCustomerBalance = () => {
     },
   });
 };
+
+// === HOOK (BARU) Record Pembayaran Piutang Terintegrasi ===
+export const useRecordCustomerPaymentIntegrated = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (data: {
+      pelanggan_name: string;
+      amount: number;
+      payment_date: string;
+      reference_number: string;
+      kasir_name: string;
+      keterangan?: string;
+    }) => {
+      // Panggil Supabase Function!
+      const { data: result, error } = await supabase
+        .rpc('record_customer_payment_integrated', {
+          p_pelanggan_name: data.pelanggan_name,
+          p_amount: data.amount,
+          p_payment_date: data.payment_date,
+          p_reference_number: data.reference_number,
+          p_kasir_name: data.kasir_name,
+          p_keterangan: data.keterangan || ''
+        });
+
+      if (error) {
+        throw new Error(error.message || 'Gagal mencatat pembayaran piutang');
+      }
+      if (!result?.success) {
+        throw new Error(result?.message || 'Gagal mencatat pembayaran piutang');
+      }
+      return result;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['customer-receivables-ledger'] });
+      queryClient.invalidateQueries({ queryKey: ['customer-receivables-summary'] });
+      queryClient.invalidateQueries({ queryKey: ['kas_umum_transactions'] });
+      queryClient.invalidateQueries({ queryKey: ['general_ledger'] });
+    },
+  });
+};

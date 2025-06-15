@@ -157,6 +157,12 @@ export function usePembayaranPiutangLogic() {
 
   const [prevMassPaymentDialogOpen, setPrevMassPaymentDialogOpen] = useState(false);
 
+  // Add missing mass payment dialog state
+  const [isMassPaymentDialogOpen, setIsMassPaymentDialogOpen] = useState(false);
+
+  // Add missing processing mass payment state
+  const [isProcessingMassPayment, setIsProcessingMassPayment] = useState(false);
+
   // Otomatis isi pada open mass payment dialog
   const handleOpenMassPaymentDialog = (open: boolean) => {
     setIsMassPaymentDialogOpen(open);
@@ -183,6 +189,15 @@ export function usePembayaranPiutangLogic() {
   const handleRefresh = () => {
     queryClient.invalidateQueries({ queryKey: ['customer-receivables-summary'] });
     queryClient.invalidateQueries({ queryKey: ['customer-receivables-ledger'] });
+  };
+  
+  // Mass payment logic (add handler to fix error)
+  const handleMassPayment = async () => {
+    setIsProcessingMassPayment(true);
+    // Placeholder: implement logic as needed
+    setTimeout(() => {
+      setIsProcessingMassPayment(false);
+    }, 500);
   };
 
   return {

@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -6,12 +7,13 @@ import { Label } from '@/components/ui/label';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { AlertTriangle, RefreshCw, WhatsappLogo } from 'lucide-react';
-import { usePiutangTransactionRecap } from '@/hooks/usePiutangTransactionRecap';
+import { AlertTriangle, RefreshCw, MessageCircle } from 'lucide-react';
+import { useCustomerReceivablesLedger } from '@/hooks/useLedgers';
 import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 
 interface PiutangTransaction {
+  id: string;
   pelanggan_name: string;
   transaction_date: string;
   reference_number: string;
@@ -22,10 +24,6 @@ interface PiutangTransaction {
   kasir_name: string;
   transaction_type: string;
   reference_type: string;
-  jenis_transaksi: string;
-  piutang_bertambah: number;
-  piutang_berkurang: number;
-  kas_transaction_number?: string;
 }
 
 const PiutangTransactionRecap = () => {
@@ -37,18 +35,14 @@ const PiutangTransactionRecap = () => {
   const [referenceNumber, setReferenceNumber] = useState('');
   const { toast } = useToast();
 
-  const { data: transactionData, isLoading, error, refetch } = usePiutangTransactionRecap(
-    selectedCustomer,
-    startDate,
-    endDate,
-    referenceNumber
+  const { data: transactionData, isLoading, error, refetch } = useCustomerReceivablesLedger(
+    selectedCustomer || undefined,
+    startDate || undefined,
+    endDate || undefined
   );
 
-  // Cast data to proper type
-  const typedData = transactionData as PiutangTransaction[] | undefined;
-
   const exportToWhatsApp = () => {
-    if (!typedData || typedData.length === 0) {
+    if (!transactionData || transactionData.length === 0) {
       toast({
         title: "Tidak ada data",
         description: "Tidak ada data untuk diekspor",
@@ -57,9 +51,9 @@ const PiutangTransactionRecap = () => {
       return;
     }
 
-    const summary = typedData.reduce((acc, item) => ({
-      totalDebit: acc.totalDebit + (item.piutang_bertambah || 0),
-      totalCredit: acc.totalCredit + (item.piutang_berkurang || 0),
+    const summary = transactionData.reduce((acc, item) => ({
+      totalDebit: acc.totalDebit + (item.debit_amount || 0),
+      totalCredit: acc.totalCredit + (item.credit_amount || 0),
       finalBalance: item.running_balance
     }), { totalDebit: 0, totalCredit: 0, finalBalance: 0 });
 
@@ -71,14 +65,14 @@ const PiutangTransactionRecap = () => {
       `Total Pembayaran: Rp ${summary.totalCredit.toLocaleString('id-ID')}\n` +
       `Saldo Akhir: Rp ${summary.finalBalance.toLocaleString('id-ID')}\n\n` +
       `*DETAIL TRANSAKSI:*\n` +
-      typedData.map((item, index) => 
+      transactionData.map((item, index) => 
         `${index + 1}. ${format(new Date(item.transaction_date), 'dd/MM/yyyy')}\n` +
         `   Pelanggan: ${item.pelanggan_name}\n` +
         `   Ref: ${item.reference_number}\n` +
-        `   Jenis: ${item.jenis_transaksi}\n` +
+        `   Jenis: ${item.transaction_type}\n` +
         `   Keterangan: ${item.description}\n` +
-        `   Debit: Rp ${(item.piutang_bertambah || 0).toLocaleString('id-ID')}\n` +
-        `   Kredit: Rp ${(item.piutang_berkurang || 0).toLocaleString('id-ID')}\n`
+        `   Debit: Rp ${(item.debit_amount || 0).toLocaleString('id-ID')}\n` +
+        `   Kredit: Rp ${(item.credit_amount || 0).toLocaleString('id-ID')}\n`
       ).join('\n');
 
     const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
@@ -140,7 +134,7 @@ const PiutangTransactionRecap = () => {
             onClick={exportToWhatsApp}
             className="flex items-center gap-2"
           >
-            <WhatsappLogo className="h-4 w-4" />
+            <MessageCircle className="h-4 w-4" />
             Export ke WhatsApp
           </Button>
           <Button 
@@ -204,7 +198,7 @@ const PiutangTransactionRecap = () => {
         </CardContent>
       </Card>
 
-      {typedData && typedData.length > 0 ? (
+      {transactionData && transactionData.length > 0 ? (
         <div className="overflow-x-auto">
           <Table>
             <TableHeader>
@@ -221,8 +215,8 @@ const PiutangTransactionRecap = () => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {typedData.map((item) => (
-                <TableRow key={item.reference_number + item.transaction_date}>
+              {transactionData.map((item) => (
+                <TableRow key={item.id}>
                   <TableCell>{format(new Date(item.transaction_date), 'dd/MM/yyyy')}</TableCell>
                   <TableCell className="font-medium">{item.pelanggan_name}</TableCell>
                   <TableCell>{item.reference_number}</TableCell>
@@ -230,18 +224,18 @@ const PiutangTransactionRecap = () => {
                     <Badge variant={
                       item.transaction_type === 'penjualan_kredit' ? 'destructive' : 'default'
                     }>
-                      {item.jenis_transaksi}
+                      {item.transaction_type}
                     </Badge>
                   </TableCell>
                   <TableCell>{item.description}</TableCell>
                   <TableCell>
                     <span className="text-red-600 font-medium">
-                      Rp {(item.piutang_bertambah || 0).toLocaleString('id-ID')}
+                      Rp {(item.debit_amount || 0).toLocaleString('id-ID')}
                     </span>
                   </TableCell>
                   <TableCell>
                     <span className="text-green-600 font-medium">
-                      Rp {(item.piutang_berkurang || 0).toLocaleString('id-ID')}
+                      Rp {(item.credit_amount || 0).toLocaleString('id-ID')}
                     </span>
                   </TableCell>
                   <TableCell>

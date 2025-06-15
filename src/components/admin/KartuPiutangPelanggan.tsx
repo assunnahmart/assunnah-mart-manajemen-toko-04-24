@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -38,8 +37,8 @@ const KartuPiutangPelanggan = () => {
 
   // Combine both unit and perorangan customers
   const allCustomers = [
-    ...(pelangganKredit?.unit || []),
-    ...(pelangganKredit?.perorangan || [])
+    ...(pelangganKredit?.unit || []).map(c => ({ ...c, type: 'unit' })),
+    ...(pelangganKredit?.perorangan || []).map(c => ({ ...c, type: 'perorangan' }))
   ];
 
   const filteredCustomers = allCustomers.filter(customer =>
@@ -150,7 +149,8 @@ const KartuPiutangPelanggan = () => {
 
       toast({
         title: "Pembayaran Berhasil!",
-        description: `Pembayaran piutang sebesar ${formatRupiah(amount)} untuk ${selectedCustomer.nama} berhasil dicatat dan terintegrasi dengan Kas Umum & Jurnal`
+        description: `Pembayaran piutang sebesar ${formatRupiah(amount)} untuk ${selectedCustomer.nama} berhasil dicatat dan terintegrasi dengan Kas Umum & Jurnal`,
+        className: "bg-green-50 border-green-200"
       });
 
       // Reset form and close dialog
@@ -516,7 +516,6 @@ const KartuPiutangPelanggan = () => {
               <div className="text-center text-gray-500 py-8">
                 <User className="mx-auto h-12 w-12 text-gray-400 mb-4" />
                 <p>Pilih pelanggan dari daftar untuk melihat kartu piutang</p>
-                <p className="text-sm mt-2">Klik nama pelanggan untuk memulai</p>
               </div>
             )}
           </CardContent>

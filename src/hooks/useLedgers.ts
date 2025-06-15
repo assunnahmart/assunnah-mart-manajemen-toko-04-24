@@ -155,7 +155,15 @@ export const useRecordCustomerPayment = () => {
         throw ledgerError;
       }
       
-      // Insert into kas_umum_transactions with correct field names
+      // Generate kas transaction number
+      const generateKasNumber = () => {
+        const now = new Date();
+        const dateStr = now.toISOString().slice(0, 10).replace(/-/g, '');
+        const timeStr = now.toTimeString().slice(0, 8).replace(/:/g, '');
+        return `KAS-${dateStr}-${timeStr}`;
+      };
+      
+      // Insert into kas_umum_transactions (penerimaan)
       const { error: kasError } = await supabase
         .from('kas_umum_transactions')
         .insert({
@@ -164,8 +172,9 @@ export const useRecordCustomerPayment = () => {
           jumlah: data.amount,
           referensi_id: data.reference_number,
           kasir_name: data.kasir_name,
-          keterangan: data.keterangan,
-          transaction_number: `PAY-${Date.now()}`
+          keterangan: `Penerimaan pembayaran piutang dari ${data.pelanggan_name} - ${data.keterangan || ''}`,
+          transaction_number: generateKasNumber(),
+          referensi_tipe: 'customer_payment'
         });
       
       if (kasError) {

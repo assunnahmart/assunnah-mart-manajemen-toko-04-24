@@ -11,18 +11,14 @@ export const usePiutangTransactionRecap = (
   return useQuery({
     queryKey: ['piutang-transaction-recap', customerName, startDate, endDate, referenceNumber],
     queryFn: async () => {
-      console.log('Fetching piutang transaction recap with filters:', { 
-        customerName, startDate, endDate, referenceNumber 
-      });
-      
       let query = supabase
-        .from('piutang_transaction_recap')
+        .from('customer_receivables_ledger')
         .select('*')
         .order('transaction_date', { ascending: false })
         .order('created_at', { ascending: false });
       
       if (customerName) {
-        query = query.eq('pelanggan_name', customerName);
+        query = query.ilike('pelanggan_name', `%${customerName}%`);
       }
       
       if (startDate) {
@@ -39,12 +35,7 @@ export const usePiutangTransactionRecap = (
       
       const { data, error } = await query;
       
-      if (error) {
-        console.error('Error fetching piutang transaction recap:', error);
-        throw error;
-      }
-      
-      console.log('Piutang transaction recap data:', data);
+      if (error) throw error;
       return data;
     },
   });

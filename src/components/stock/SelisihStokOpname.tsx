@@ -6,68 +6,65 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { AlertTriangle, RefreshCw, TrendingUp, TrendingDown, Minus, DollarSign } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Search, AlertTriangle, TrendingUp, TrendingDown } from 'lucide-react';
 import { useStockOpnameRecap } from '@/hooks/useStockOpnameRecap';
-import { format } from 'date-fns';
+import { useToast } from '@/hooks/use-toast';
 
 const SelisihStokOpname = () => {
   const [dateFrom, setDateFrom] = useState(
     new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
   );
   const [dateTo, setDateTo] = useState(new Date().toISOString().split('T')[0]);
+  const [selectedItem, setSelectedItem] = useState<any>(null);
+  const [showDetailDialog, setShowDetailDialog] = useState(false);
 
-  const { data: recapData, isLoading, error, refetch } = useStockOpnameRecap(dateFrom, dateTo);
+  const { data: stockData, isLoading, error } = useStockOpnameRecap(dateFrom, dateTo);
+  const { toast } = useToast();
 
-  const getVarianceIcon = (selisih: number) => {
-    if (selisih > 0) return <TrendingUp className="h-4 w-4 text-yellow-500" />;
-    if (selisih < 0) return <TrendingDown className="h-4 w-4 text-red-500" />;
-    return <Minus className="h-4 w-4 text-green-500" />;
+  const formatRupiah = (amount: number) => {
+    return new Intl.NumberFormat('id-ID', {
+      style: 'currency',
+      currency: 'IDR',
+      minimumFractionDigits: 0,
+    }).format(amount);
   };
 
-  const getVarianceBadge = (selisih: number) => {
-    if (selisih > 0) return <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">Lebih Sistem</Badge>;
-    if (selisih < 0) return <Badge variant="secondary" className="bg-red-100 text-red-800">Lebih Real</Badge>;
-    return <Badge variant="secondary" className="bg-green-100 text-green-800">Seimbang</Badge>;
+  const getSelisihInfo = (selisih: number) => {
+    if (selisih > 0) {
+      return {
+        icon: <TrendingUp className="h-4 w-4 text-orange-500" />,
+        text: 'Lebih Sistem',
+        color: 'text-orange-600',
+        bgColor: 'bg-orange-50'
+      };
+    } else if (selisih < 0) {
+      return {
+        icon: <TrendingDown className="h-4 w-4 text-red-500" />,
+        text: 'Lebih Real',
+        color: 'text-red-600',
+        bgColor: 'bg-red-50'
+      };
+    } else {
+      return {
+        icon: <TrendingUp className="h-4 w-4 text-green-500" />,
+        text: 'Seimbang',
+        color: 'text-green-600',
+        bgColor: 'bg-green-50'
+      };
+    }
   };
 
-  const getVarianceStats = () => {
-    if (!recapData) return { positive: 0, negative: 0, zero: 0, totalItems: 0, totalVariance: 0, totalVarianceValue: 0 };
-    
-    return recapData.reduce(
-      (acc, item) => {
-        acc.totalItems++;
-        acc.totalVariance += Math.abs(item.selisih_stok);
-        
-        // Calculate variance value based on purchase price
-        const hargaBeli = item.harga_beli || 0;
-        const varianceValue = Math.abs(item.selisih_stok) * hargaBeli;
-        acc.totalVarianceValue += varianceValue;
-        
-        if (item.selisih_stok > 0) acc.positive++;
-        else if (item.selisih_stok < 0) acc.negative++;
-        else acc.zero++;
-        
-        return acc;
-      },
-      { positive: 0, negative: 0, zero: 0, totalItems: 0, totalVariance: 0, totalVarianceValue: 0 }
-    );
+  const showItemDetail = (item: any) => {
+    setSelectedItem(item);
+    setShowDetailDialog(true);
   };
-
-  const calculateVarianceValue = (selisih: number, hargaBeli: number) => {
-    return Math.abs(selisih) * (hargaBeli || 0);
-  };
-
-  const stats = getVarianceStats();
 
   if (isLoading) {
     return (
       <Card>
         <CardContent className="py-8">
-          <div className="text-center flex items-center justify-center gap-2">
-            <RefreshCw className="h-4 w-4 animate-spin" />
-            Memuat data selisih stok opname...
-          </div>
+          <div className="text-center">Memuat data selisih stok...</div>
         </CardContent>
       </Card>
     );
@@ -77,23 +74,9 @@ const SelisihStokOpname = () => {
     return (
       <Card>
         <CardContent className="py-8">
-          <Alert variant="destructive">
-            <AlertTriangle className="h-4 w-4" />
-            <AlertDescription>
-              <div className="space-y-2">
-                <p className="font-medium">Error: {error.message}</p>
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={() => refetch()}
-                  className="flex items-center gap-2"
-                >
-                  <RefreshCw className="h-4 w-4" />
-                  Coba Lagi
-                </Button>
-              </div>
-            </AlertDescription>
-          </Alert>
+          <div className="text-center text-red-600">
+            Error: {error.message}
+          </div>
         </CardContent>
       </Card>
     );
@@ -101,214 +84,146 @@ const SelisihStokOpname = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex justify-between items-center">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">Selisih Stok Opname</h2>
-          <p className="text-gray-600">
-            Rekap selisih antara stok sistem dan stok real berdasarkan stock opname
-          </p>
+          <h2 className="text-2xl font-bold">Analisis Selisih Stok Opname</h2>
+          <p className="text-gray-600">Analisis perbedaan antara stok sistem dan stok fisik</p>
         </div>
-        <Button 
-          variant="outline" 
-          size="sm" 
-          onClick={() => refetch()}
-          className="flex items-center gap-2"
-        >
-          <RefreshCw className="h-4 w-4" />
-          Refresh
-        </Button>
       </div>
 
-      {/* Filter Periode */}
+      {/* Filter */}
       <Card>
         <CardHeader>
-          <CardTitle>Filter Periode</CardTitle>
+          <CardTitle className="flex items-center gap-2">
+            <Search className="h-5 w-5" />
+            Filter Periode
+          </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
-              <Label htmlFor="dateFrom">Tanggal Mulai</Label>
+              <Label>Tanggal Mulai</Label>
               <Input
-                id="dateFrom"
                 type="date"
                 value={dateFrom}
                 onChange={(e) => setDateFrom(e.target.value)}
               />
             </div>
             <div>
-              <Label htmlFor="dateTo">Tanggal Selesai</Label>
+              <Label>Tanggal Selesai</Label>
               <Input
-                id="dateTo"
                 type="date"
                 value={dateTo}
                 onChange={(e) => setDateTo(e.target.value)}
               />
             </div>
-            <div className="text-sm text-gray-600">
-              <p>Periode: {format(new Date(dateFrom), 'dd/MM/yyyy')} - {format(new Date(dateTo), 'dd/MM/yyyy')}</p>
+            <div className="flex items-end">
+              <Button onClick={() => {
+                setDateFrom(new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]);
+                setDateTo(new Date().toISOString().split('T')[0]);
+              }}>
+                Reset Filter
+              </Button>
             </div>
           </div>
         </CardContent>
       </Card>
 
-      {/* Summary Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
+      {/* Summary Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">Total Produk</CardTitle>
+            <CardTitle className="text-sm font-medium">Total Produk</CardTitle>
           </CardHeader>
-          <CardContent className="pt-0">
-            <div className="flex items-center gap-2">
-              <span className="text-2xl font-bold text-blue-600">{stats.totalItems}</span>
+          <CardContent>
+            <div className="text-2xl font-bold">{stockData?.length || 0}</div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium">Lebih Sistem</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-orange-600">
+              {stockData?.filter(item => item.selisih_stok > 0).length || 0}
             </div>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">Lebih Sistem</CardTitle>
+            <CardTitle className="text-sm font-medium">Lebih Real</CardTitle>
           </CardHeader>
-          <CardContent className="pt-0">
-            <div className="flex items-center gap-2">
-              <TrendingUp className="h-5 w-5 text-yellow-500" />
-              <span className="text-2xl font-bold text-yellow-600">{stats.positive}</span>
+          <CardContent>
+            <div className="text-2xl font-bold text-red-600">
+              {stockData?.filter(item => item.selisih_stok < 0).length || 0}
             </div>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">Lebih Real</CardTitle>
+            <CardTitle className="text-sm font-medium">Seimbang</CardTitle>
           </CardHeader>
-          <CardContent className="pt-0">
-            <div className="flex items-center gap-2">
-              <TrendingDown className="h-5 w-5 text-red-500" />
-              <span className="text-2xl font-bold text-red-600">{stats.negative}</span>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">Seimbang</CardTitle>
-          </CardHeader>
-          <CardContent className="pt-0">
-            <div className="flex items-center gap-2">
-              <Minus className="h-5 w-5 text-green-500" />
-              <span className="text-2xl font-bold text-green-600">{stats.zero}</span>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">Total Selisih</CardTitle>
-          </CardHeader>
-          <CardContent className="pt-0">
-            <div className="flex items-center gap-2">
-              <AlertTriangle className="h-5 w-5 text-orange-500" />
-              <span className="text-2xl font-bold text-orange-600">{stats.totalVariance}</span>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">Nilai Selisih</CardTitle>
-          </CardHeader>
-          <CardContent className="pt-0">
-            <div className="flex items-center gap-2">
-              <DollarSign className="h-5 w-5 text-red-500" />
-              <span className="text-xl font-bold text-red-600">
-                Rp {stats.totalVarianceValue.toLocaleString('id-ID')}
-              </span>
+          <CardContent>
+            <div className="text-2xl font-bold text-green-600">
+              {stockData?.filter(item => item.selisih_stok === 0).length || 0}
             </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Tabel Selisih */}
+      {/* Data Table */}
       <Card>
         <CardHeader>
-          <CardTitle>Daftar Selisih Stok</CardTitle>
+          <CardTitle>Detail Selisih Stok</CardTitle>
         </CardHeader>
         <CardContent>
-          {recapData?.length === 0 ? (
-            <div className="text-center py-8">
-              <AlertTriangle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <p className="text-gray-500 mb-2">
-                Belum ada data selisih stok untuk periode yang dipilih
-              </p>
-              <p className="text-sm text-gray-400">
-                Silakan ubah periode atau pastikan ada data stok opname yang sudah diapprove
-              </p>
-            </div>
-          ) : (
+          {stockData && stockData.length > 0 ? (
             <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Produk</TableHead>
+                    <TableHead>Nama Barang</TableHead>
                     <TableHead>Satuan</TableHead>
-                    <TableHead>Harga Beli</TableHead>
                     <TableHead>Stok Sistem</TableHead>
                     <TableHead>Stok Real</TableHead>
                     <TableHead>Selisih</TableHead>
-                    <TableHead>Nilai Selisih</TableHead>
                     <TableHead>Status</TableHead>
-                    <TableHead>Pengguna Input</TableHead>
+                    <TableHead>Input Pengguna</TableHead>
+                    <TableHead>Aksi</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {recapData?.map((item) => {
-                    const varianceValue = calculateVarianceValue(item.selisih_stok, item.harga_beli || 0);
+                  {stockData.map((item) => {
+                    const selisihInfo = getSelisihInfo(item.selisih_stok);
                     return (
                       <TableRow key={item.barang_id}>
-                        <TableCell className="font-medium">
-                          {item.nama_barang}
-                        </TableCell>
+                        <TableCell className="font-medium">{item.nama_barang}</TableCell>
                         <TableCell>{item.satuan}</TableCell>
-                        <TableCell>
-                          <span className="text-sm text-gray-600">
-                            Rp {(item.harga_beli || 0).toLocaleString('id-ID')}
-                          </span>
+                        <TableCell>{item.stok_sistem.toLocaleString('id-ID')}</TableCell>
+                        <TableCell>{item.real_stok_total.toLocaleString('id-ID')}</TableCell>
+                        <TableCell className={selisihInfo.color}>
+                          {Math.abs(item.selisih_stok).toLocaleString('id-ID')}
                         </TableCell>
                         <TableCell>
-                          <span className="font-medium text-blue-600">
-                            {item.stok_sistem}
-                          </span>
+                          <Badge variant="outline" className={selisihInfo.bgColor}>
+                            <div className="flex items-center gap-1">
+                              {selisihInfo.icon}
+                              {selisihInfo.text}
+                            </div>
+                          </Badge>
                         </TableCell>
+                        <TableCell>{item.jumlah_pengguna_input} pengguna</TableCell>
                         <TableCell>
-                          <span className="font-medium text-green-600">
-                            {item.real_stok_total}
-                          </span>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-2">
-                            {getVarianceIcon(item.selisih_stok)}
-                            <span className={`font-medium ${
-                              item.selisih_stok > 0 ? 'text-yellow-600' : 
-                              item.selisih_stok < 0 ? 'text-red-600' : 'text-green-600'
-                            }`}>
-                              {item.selisih_stok > 0 ? '+' : ''}{item.selisih_stok}
-                            </span>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <span className={`font-medium ${
-                            varianceValue > 0 ? 'text-red-600' : 'text-green-600'
-                          }`}>
-                            Rp {varianceValue.toLocaleString('id-ID')}
-                          </span>
-                        </TableCell>
-                        <TableCell>
-                          {getVarianceBadge(item.selisih_stok)}
-                        </TableCell>
-                        <TableCell>
-                          <div className="text-center">
-                            <span className="font-medium">{item.jumlah_pengguna_input}</span>
-                            <span className="text-sm text-gray-500 ml-1">user</span>
-                          </div>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => showItemDetail(item)}
+                          >
+                            Detail
+                          </Button>
                         </TableCell>
                       </TableRow>
                     );
@@ -316,9 +231,65 @@ const SelisihStokOpname = () => {
                 </TableBody>
               </Table>
             </div>
+          ) : (
+            <div className="text-center py-8">
+              <AlertTriangle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+              <p className="text-gray-500">Tidak ada data selisih stok untuk periode ini</p>
+            </div>
           )}
         </CardContent>
       </Card>
+
+      {/* Detail Dialog */}
+      <Dialog open={showDetailDialog} onOpenChange={setShowDetailDialog}>
+        <DialogContent className="max-w-4xl">
+          <DialogHeader>
+            <DialogTitle>Detail Input Pengguna - {selectedItem?.nama_barang}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            {selectedItem && (
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label>Stok Sistem</Label>
+                  <div className="text-lg font-semibold">{selectedItem.stok_sistem}</div>
+                </div>
+                <div>
+                  <Label>Total Stok Real</Label>
+                  <div className="text-lg font-semibold">{selectedItem.real_stok_total}</div>
+                </div>
+              </div>
+            )}
+            
+            {selectedItem?.detail_input_pengguna && Array.isArray(selectedItem.detail_input_pengguna) && (
+              <div>
+                <Label>Detail Input dari Setiap Pengguna</Label>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Nama Kasir</TableHead>
+                      <TableHead>Stok Fisik</TableHead>
+                      <TableHead>Tanggal Input</TableHead>
+                      <TableHead>Keterangan</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {selectedItem.detail_input_pengguna.map((input: any, index: number) => (
+                      <TableRow key={index}>
+                        <TableCell>{input.nama_kasir || input.kasir_name}</TableCell>
+                        <TableCell>{input.stok_fisik}</TableCell>
+                        <TableCell>
+                          {new Date(input.tanggal_opname || input.tanggal_input).toLocaleDateString('id-ID')}
+                        </TableCell>
+                        <TableCell>{input.keterangan || '-'}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

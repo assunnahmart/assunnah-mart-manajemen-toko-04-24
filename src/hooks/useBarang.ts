@@ -38,9 +38,16 @@ export const useBarangKonsinyasi = () => {
   return useQuery({
     queryKey: ['barang-konsinyasi'],
     queryFn: async () => {
+      // Fix: Use specific relationship name to avoid ambiguity
       const query = supabase
         .from('barang_konsinyasi')
-        .select('*');
+        .select(`
+          *,
+          supplier!barang_konsinyasi_supplier_id_fkey (
+            id,
+            nama
+          )
+        `);
       
       const { data, error } = await query.order('nama');
       
@@ -74,6 +81,7 @@ export const useCreateBarang = () => {
       // Invalidate all related queries for immediate sync across all components
       queryClient.invalidateQueries({ queryKey: ['barang_konsinyasi'] });
       queryClient.invalidateQueries({ queryKey: ['barang-konsinyasi'] });
+      queryClient.invalidateQueries({ queryKey: ['barang-with-supplier'] });
       queryClient.invalidateQueries({ queryKey: ['stock_data'] });
       queryClient.invalidateQueries({ queryKey: ['low_stock_products'] });
       queryClient.invalidateQueries({ queryKey: ['barang'] });
@@ -100,6 +108,7 @@ export const useUpdateBarang = () => {
       // Invalidate all related queries for immediate sync across all components
       queryClient.invalidateQueries({ queryKey: ['barang_konsinyasi'] });
       queryClient.invalidateQueries({ queryKey: ['barang-konsinyasi'] });
+      queryClient.invalidateQueries({ queryKey: ['barang-with-supplier'] });
       queryClient.invalidateQueries({ queryKey: ['stock_data'] });
       queryClient.invalidateQueries({ queryKey: ['low_stock_products'] });
       queryClient.invalidateQueries({ queryKey: ['barang'] });

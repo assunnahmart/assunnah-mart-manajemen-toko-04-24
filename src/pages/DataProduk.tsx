@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Search, Edit, Package, Plus, RefreshCw } from 'lucide-react';
-import { useBarangWithSupplier } from '@/hooks/useSupplier';
+import { useBarangKonsinyasi } from '@/hooks/useBarang';
 import { useToast } from '@/hooks/use-toast';
 import { SidebarProvider, SidebarInset, SidebarTrigger } from '@/components/ui/sidebar';
 import { AppSidebar } from '@/components/AppSidebar';
@@ -22,11 +22,13 @@ import ProductForm from '@/components/products/ProductForm';
 import ProductExportImport from '@/components/products/ProductExportImport';
 
 const DataProduk = () => {
-  const { data: products, isLoading, refetch } = useBarangWithSupplier();
+  const { data: products, isLoading, refetch, error } = useBarangKonsinyasi();
   const { toast } = useToast();
   const [searchQuery, setSearchQuery] = useState('');
   const [showForm, setShowForm] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
+
+  console.log('DataProduk state:', { products, isLoading, error });
 
   const filteredProducts = products?.filter(product =>
     product.nama.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -44,12 +46,21 @@ const DataProduk = () => {
     setShowForm(true);
   };
 
-  const handleRefresh = () => {
-    refetch();
-    toast({
-      title: "Data berhasil diperbarui",
-      description: "Data produk telah disinkronkan dengan POS system"
-    });
+  const handleRefresh = async () => {
+    try {
+      await refetch();
+      toast({
+        title: "Data berhasil diperbarui",
+        description: "Data produk telah disinkronkan dengan database"
+      });
+    } catch (error) {
+      console.error('Refresh error:', error);
+      toast({
+        title: "Gagal memperbarui data",
+        description: error.message || "Terjadi kesalahan saat mengambil data produk",
+        variant: "destructive"
+      });
+    }
   };
 
   const formatCurrency = (amount) => {
@@ -80,6 +91,11 @@ const DataProduk = () => {
         return jenis;
     }
   };
+
+  // Show error message if there's an error
+  if (error) {
+    console.error('DataProduk error:', error);
+  }
 
   return (
     <NewProtectedRoute>
@@ -134,6 +150,31 @@ const DataProduk = () => {
                     </CardContent>
                   </Card>
 
+                  {/* Show error message if there's an error */}
+                  {error && (
+                    <Card className="bg-red-50 border-red-200 mb-4">
+                      <CardContent className="pt-4">
+                        <div className="flex items-center gap-2">
+                          <Package className="h-5 w-5 text-red-600" />
+                          <div>
+                            <h3 className="font-medium text-red-900">Error Loading Data</h3>
+                            <p className="text-sm text-red-600">
+                              {error.message || 'Terjadi kesalahan saat mengambil data produk'}
+                            </p>
+                            <Button 
+                              variant="outline" 
+                              size="sm" 
+                              onClick={handleRefresh}
+                              className="mt-2"
+                            >
+                              Coba Lagi
+                            </Button>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )}
+
                   {/* Export/Import Controls */}
                   <div className="mb-4">
                     <ProductExportImport 
@@ -167,7 +208,7 @@ const DataProduk = () => {
                       <div className="flex items-center gap-2">
                         <Badge variant="outline" className="bg-green-50 text-green-700">
                           <Package className="h-3 w-3 mr-1" />
-                          Tersinkronisasi dengan POS
+                          Database Connected
                         </Badge>
                         <div className="text-sm text-gray-500">
                           Total: {products?.length || 0} produk
@@ -179,7 +220,7 @@ const DataProduk = () => {
                     {isLoading ? (
                       <div className="text-center py-8">
                         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-                        <p className="mt-2 text-gray-600">Memuat data produk dari POS system...</p>
+                        <p className="mt-2 text-gray-600">Memuat data produk dari database...</p>
                       </div>
                     ) : filteredProducts.length === 0 ? (
                       <div className="text-center py-8">

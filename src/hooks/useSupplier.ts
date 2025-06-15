@@ -9,36 +9,47 @@ type SupplierUpdate = TablesUpdate<'supplier'>;
 
 export const useSupplier = () => {
   return useQuery({
-    queryKey: ['suppliers'],
+    queryKey: ['supplier'],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('supplier')
         .select('*')
         .order('nama');
       
-      if (error) throw error;
-      return data as Supplier[];
+      if (error) {
+        console.error('Error fetching suppliers:', error);
+        throw error;
+      }
+      
+      console.log('Fetched suppliers:', data);
+      return data || [];
     },
   });
 };
 
 export const useBarangWithSupplier = () => {
   return useQuery({
-    queryKey: ['barang_with_supplier'],
+    queryKey: ['barang-with-supplier'],
     queryFn: async () => {
+      // Fix: Use specific relationship name to avoid ambiguity
       const { data, error } = await supabase
         .from('barang_konsinyasi')
         .select(`
           *,
-          supplier!supplier_id(
+          supplier!barang_konsinyasi_supplier_id_fkey (
             id,
             nama
           )
         `)
         .order('nama');
       
-      if (error) throw error;
-      return data;
+      if (error) {
+        console.error('Error fetching barang with supplier:', error);
+        throw error;
+      }
+      
+      console.log('Fetched barang with supplier:', data);
+      return data || [];
     },
   });
 };
@@ -58,8 +69,8 @@ export const useCreateSupplier = () => {
       return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['suppliers'] });
-      queryClient.invalidateQueries({ queryKey: ['barang_with_supplier'] });
+      queryClient.invalidateQueries({ queryKey: ['supplier'] });
+      queryClient.invalidateQueries({ queryKey: ['barang-with-supplier'] });
     },
   });
 };
@@ -80,8 +91,8 @@ export const useUpdateSupplier = () => {
       return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['suppliers'] });
-      queryClient.invalidateQueries({ queryKey: ['barang_with_supplier'] });
+      queryClient.invalidateQueries({ queryKey: ['supplier'] });
+      queryClient.invalidateQueries({ queryKey: ['barang-with-supplier'] });
     },
   });
 };
@@ -99,8 +110,8 @@ export const useDeleteSupplier = () => {
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['suppliers'] });
-      queryClient.invalidateQueries({ queryKey: ['barang_with_supplier'] });
+      queryClient.invalidateQueries({ queryKey: ['supplier'] });
+      queryClient.invalidateQueries({ queryKey: ['barang-with-supplier'] });
     },
   });
 };

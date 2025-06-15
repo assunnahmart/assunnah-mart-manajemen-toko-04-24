@@ -46,7 +46,8 @@ const PembayaranPiutangPage = () => {
   const outstandingCustomers = summary?.filter(c => c.total_receivables > 0) || [];
   const allCustomerNames = outstandingCustomers.map(c => c.pelanggan_name);
   const allSelected = selectedCustomers.length === allCustomerNames.length && allCustomerNames.length > 0;
-  const isIndeterminate = selectedCustomers.length > 0 && !allSelected;
+  // HAPUS isIndeterminate karena Checkbox TIDAK SUPPORT indeterminate prop
+  // const isIndeterminate = selectedCustomers.length > 0 && !allSelected;
 
   const handleSelectCustomer = (customerName: string, currentBalance: number) => {
     setSelectedCustomer(customerName);
@@ -267,9 +268,9 @@ const PembayaranPiutangPage = () => {
                       <TableHeader>
                         <TableRow>
                           <TableHead className="w-12 text-center">
+                            {/* Hapus prop indeterminate */}
                             <Checkbox
                               checked={allSelected}
-                              indeterminate={isIndeterminate}
                               onCheckedChange={handleSelectAll}
                             />
                           </TableHead>

@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
 import { AppSidebar } from '@/components/AppSidebar';
@@ -44,17 +43,23 @@ const PembayaranHutangPage = () => {
   const totalSuppliers = summary?.length || 0;
 
   const handleSelectSupplier = (supplierName: string, currentBalance: number) => {
-    // Find supplier by name
+    // Perbaiki agar tidak crash jika data supplier belum ready
     const supplier = suppliers?.find(s => s.nama === supplierName);
-    if (supplier) {
-      setSelectedSupplier(supplierName);
-      setSelectedSupplierId(supplier.id);
-      setPaymentForm(prev => ({
-        ...prev,
-        amount: currentBalance
-      }));
-      setIsPaymentDialogOpen(true);
+    if (!supplier) {
+      toast({
+        title: "Error",
+        description: "Data supplier tidak ditemukan.",
+        variant: "destructive"
+      });
+      return;
     }
+    setSelectedSupplier(supplierName);
+    setSelectedSupplierId(supplier.id);
+    setPaymentForm(prev => ({
+      ...prev,
+      amount: currentBalance
+    }));
+    setIsPaymentDialogOpen(true);
   };
 
   const handleRecordPayment = async () => {
@@ -68,8 +73,18 @@ const PembayaranHutangPage = () => {
     }
 
     try {
+      const supplier = suppliers?.find(s => s.nama === selectedSupplier);
+      if (!supplier) {
+        toast({
+          title: "Error",
+          description: "Supplier tidak valid",
+          variant: "destructive"
+        });
+        return;
+      }
+
       await recordPayment.mutateAsync({
-        supplier_id: selectedSupplier, // Hook expects supplier name
+        supplier_id: selectedSupplier, // Masih sesuai logic lama, sesuaikan dengan useRecordSupplierPayment jika perlu ID
         amount: paymentForm.amount,
         payment_date: paymentForm.payment_date,
         reference_number: paymentForm.reference_number,
@@ -94,7 +109,7 @@ const PembayaranHutangPage = () => {
     } catch (error: any) {
       toast({
         title: "Error",
-        description: error.message,
+        description: error && error.message ? error.message : "Terjadi kesalahan saat menyimpan pembayaran.",
         variant: "destructive"
       });
     }

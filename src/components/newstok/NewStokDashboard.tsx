@@ -118,7 +118,7 @@ const NewStokDashboard = () => {
             <div className="text-2xl font-bold text-orange-600">
               {stockOpnameStats.lebihSistem}
             </div>
-            <p className="text-xs text-orange-600 mt-1">Stok sistem > real</p>
+            <p className="text-xs text-orange-600 mt-1">Stok sistem &gt; real</p>
           </CardContent>
         </Card>
 
@@ -133,7 +133,7 @@ const NewStokDashboard = () => {
             <div className="text-2xl font-bold text-red-600">
               {stockOpnameStats.lebihReal}
             </div>
-            <p className="text-xs text-red-600 mt-1">Stok real > sistem</p>
+            <p className="text-xs text-red-600 mt-1">Stok real &gt; sistem</p>
           </CardContent>
         </Card>
 

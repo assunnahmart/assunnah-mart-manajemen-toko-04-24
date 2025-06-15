@@ -137,7 +137,7 @@ export const useRecordCustomerPayment = () => {
       console.log('Recording customer payment:', data);
       
       // Insert payment directly into customer_receivables_ledger
-      const { error: ledgerError } = await supabase
+      const { data: ledgerData, error: ledgerError } = await supabase
         .from('customer_receivables_ledger')
         .insert({
           pelanggan_name: data.pelanggan_name,
@@ -148,7 +148,9 @@ export const useRecordCustomerPayment = () => {
           reference_number: data.reference_number,
           kasir_name: data.kasir_name,
           reference_type: 'payment'
-        });
+        })
+        .select()
+        .single();
       
       if (ledgerError) {
         console.error('Ledger payment error:', ledgerError);
@@ -163,14 +165,14 @@ export const useRecordCustomerPayment = () => {
         return `KAS-${dateStr}-${timeStr}`;
       };
       
-      // Insert into kas_umum_transactions (penerimaan)
+      // Insert into kas_umum_transactions (penerimaan) - use ledger record ID as reference
       const { error: kasError } = await supabase
         .from('kas_umum_transactions')
         .insert({
           tanggal_transaksi: data.payment_date,
           jenis_transaksi: 'masuk',
           jumlah: data.amount,
-          referensi_id: data.reference_number,
+          referensi_id: ledgerData.id, // Use the ledger record ID instead of reference_number
           kasir_name: data.kasir_name,
           keterangan: `Penerimaan pembayaran piutang dari ${data.pelanggan_name} - ${data.keterangan || ''}`,
           transaction_number: generateKasNumber(),

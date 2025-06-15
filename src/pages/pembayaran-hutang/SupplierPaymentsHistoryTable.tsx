@@ -57,7 +57,7 @@ export function SupplierPaymentsHistoryTable({
                 <SelectValue placeholder="Semua supplier" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Semua Supplier</SelectItem>
+                <SelectItem value="all">Semua Supplier</SelectItem>
                 {suppliers.map((supplier) => (
                   <SelectItem key={supplier.id} value={supplier.nama}>
                     {supplier.nama}

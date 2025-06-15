@@ -1,4 +1,3 @@
-
 import * as React from "react";
 import {
   Users, CreditCard, Truck, TrendingUp, Database, Package, Calculator, BookOpen,
@@ -15,6 +14,9 @@ import { Card, CardContent } from "@/components/ui/card";
 const mainMenuItems = [
   { title: "Dashboard", url: "/dashboard", icon: TrendingUp },
   { title: "POS System", url: "/pos", icon: Calculator },
+  // Tambahkan dua menu berikut:
+  { title: "Buku Besar Piutang", url: "/admin/buku-besar-piutang", icon: BookOpen },
+  { title: "Buku Besar Hutang", url: "/admin/buku-besar-hutang", icon: FileText },
 ];
 
 // Penjualan & Pembelian
@@ -39,8 +41,9 @@ const adminMenuItems = [
   { title: "Dashboard", url: "/admin", icon: Home },
   { title: "Pelanggan", url: "/admin/pelanggan", icon: Users },
   { title: "Supplier", url: "/admin/supplier", icon: Truck },
-  { title: "Buku Besar Piutang", url: "/admin/buku-besar-piutang", icon: BookOpen },
-  { title: "Buku Besar Hutang", url: "/admin/buku-besar-hutang", icon: FileText },
+  // Hapus Buku Besar Piutang & Hutang dari sini
+  // { title: "Buku Besar Piutang", url: "/admin/buku-besar-piutang", icon: BookOpen },
+  // { title: "Buku Besar Hutang", url: "/admin/buku-besar-hutang", icon: FileText },
   { title: "Kas Umum", url: "/admin/kas-umum", icon: CreditCard },
   { title: "Laba Rugi", url: "/admin/laba-rugi", icon: TrendingUp },
   { title: "Laporan Keuangan", url: "/admin/financial-reports", icon: Calculator },

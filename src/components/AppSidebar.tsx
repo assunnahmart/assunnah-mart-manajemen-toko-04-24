@@ -48,7 +48,10 @@ const adminMenuItems = [
   { title: "Laba Rugi", url: "/admin/laba-rugi", icon: TrendingUp },
   { title: "Laporan Keuangan", url: "/admin/financial-reports", icon: Calculator },
   { title: "Data Management", url: "/admin/data-management", icon: Database },
-  { title: "Product Management", url: "/admin/product-management", icon: Package }
+  { title: "Product Management", url: "/admin/product-management", icon: Package },
+  // Menu baru
+  { title: "Kartu Hutang", url: "/admin/kartu-hutang", icon: FileText },
+  { title: "Kartu Piutang", url: "/admin/kartu-piutang", icon: FileText }
 ];
 
 // Helper render menu as card grid by category

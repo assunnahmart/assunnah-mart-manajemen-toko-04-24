@@ -14,6 +14,8 @@ import FinancialReports from '@/components/admin/FinancialReports';
 import DataManagement from '@/components/admin/DataManagement';
 import ProductDataManagement from '@/components/admin/ProductDataManagement';
 import DataBackupManager from '@/components/admin/DataBackupManager';
+import KartuHutangSupplier from '@/components/admin/KartuHutangSupplier';
+import KartuPiutangPelanggan from '@/components/admin/KartuPiutangPelanggan';
 
 const AdminPanel = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -33,7 +35,7 @@ const AdminPanel = () => {
             {/* Langsung render konten admin */}
             <div className="flex-1 p-6">
               <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                <TabsList className="grid w-full grid-cols-5 lg:grid-cols-10">
+                <TabsList className="grid w-full grid-cols-5 lg:grid-cols-12">
                   <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
                   <TabsTrigger value="pelanggan">Pelanggan</TabsTrigger>
                   <TabsTrigger value="supplier">Supplier</TabsTrigger>
@@ -44,8 +46,10 @@ const AdminPanel = () => {
                   <TabsTrigger value="financial-reports">Laporan</TabsTrigger>
                   <TabsTrigger value="data-management">Data</TabsTrigger>
                   <TabsTrigger value="backup-manager">Backup</TabsTrigger>
+                  <TabsTrigger value="kartu-hutang">Kartu Hutang</TabsTrigger>
+                  <TabsTrigger value="kartu-piutang">Kartu Piutang</TabsTrigger>
                 </TabsList>
-                
+
                 <TabsContent value="dashboard">
                   <AdminDashboard />
                 </TabsContent>
@@ -84,6 +88,13 @@ const AdminPanel = () => {
 
                 <TabsContent value="backup-manager">
                   <DataBackupManager />
+                </TabsContent>
+                
+                <TabsContent value="kartu-hutang">
+                  <KartuHutangSupplier />
+                </TabsContent>
+                <TabsContent value="kartu-piutang">
+                  <KartuPiutangPelanggan />
                 </TabsContent>
               </Tabs>
             </div>

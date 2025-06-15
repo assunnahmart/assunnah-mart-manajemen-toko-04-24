@@ -18,7 +18,7 @@ export const useStockData = () => {
       
       return barang;
     },
-    refetchInterval: 10000, // Refresh every 10 seconds for better sync with POS
+    refetchInterval: 5000, // Refresh every 5 seconds for real-time sync with opname
   });
 };
 
@@ -39,6 +39,7 @@ export const useStockOpname = () => {
       
       return data;
     },
+    refetchInterval: 3000, // Frequent refresh for opname data
   });
 };
 
@@ -59,7 +60,7 @@ export const useStockMutations = () => {
       
       return data;
     },
-    refetchInterval: 5000, // Refresh frequently to show POS transactions immediately
+    refetchInterval: 3000, // Refresh frequently for real-time sync
   });
 };
 
@@ -91,7 +92,7 @@ export const useCreateStockOpname = () => {
       return { success: true };
     },
     onSuccess: () => {
-      // Invalidate all related queries for immediate sync
+      // Invalidate all related queries for immediate sync across all tabs
       queryClient.invalidateQueries({ queryKey: ['stock_data'] });
       queryClient.invalidateQueries({ queryKey: ['stock_opname'] });
       queryClient.invalidateQueries({ queryKey: ['stock_mutations'] });
@@ -99,6 +100,8 @@ export const useCreateStockOpname = () => {
       queryClient.invalidateQueries({ queryKey: ['barang-konsinyasi'] });
       queryClient.invalidateQueries({ queryKey: ['barang'] });
       queryClient.invalidateQueries({ queryKey: ['low_stock_products'] });
+      queryClient.invalidateQueries({ queryKey: ['stock_opname_recap'] });
+      queryClient.invalidateQueries({ queryKey: ['pos_transactions_today'] });
     },
   });
 };
@@ -157,13 +160,14 @@ export const useUpdateStock = () => {
       return { success: true };
     },
     onSuccess: () => {
-      // Invalidate all related queries for immediate sync
+      // Invalidate all related queries for immediate sync across all tabs
       queryClient.invalidateQueries({ queryKey: ['stock_data'] });
       queryClient.invalidateQueries({ queryKey: ['stock_mutations'] });
       queryClient.invalidateQueries({ queryKey: ['barang_konsinyasi'] });
       queryClient.invalidateQueries({ queryKey: ['barang-konsinyasi'] });
       queryClient.invalidateQueries({ queryKey: ['barang'] });
       queryClient.invalidateQueries({ queryKey: ['low_stock_products'] });
+      queryClient.invalidateQueries({ queryKey: ['stock_opname_recap'] });
     },
   });
 };
@@ -185,11 +189,11 @@ export const useLowStockProducts = () => {
       
       return data;
     },
-    refetchInterval: 10000, // Refresh to catch low stock from POS sales
+    refetchInterval: 5000, // Refresh to catch low stock from stock opname
   });
 };
 
-// Enhanced hook for real-time stock synchronization with POS
+// Enhanced hook for real-time stock synchronization with POS and Stock Opname
 export const usePOSStockSync = () => {
   const queryClient = useQueryClient();
 
@@ -211,16 +215,17 @@ export const usePOSStockSync = () => {
       queryClient.invalidateQueries({ queryKey: ['barang_konsinyasi'] });
       queryClient.invalidateQueries({ queryKey: ['barang-konsinyasi'] });
       queryClient.invalidateQueries({ queryKey: ['barang'] });
+      queryClient.invalidateQueries({ queryKey: ['stock_opname_recap'] });
     },
   });
 };
 
-// New hook for real-time sync monitoring
+// New hook for comprehensive sync status including stock opname
 export const useStockSyncStatus = () => {
   return useQuery({
     queryKey: ['stock_sync_status'],
     queryFn: async () => {
-      // Get today's POS transactions count
+      // Get today's data
       const today = new Date().toISOString().split('T')[0];
       
       const { data: posTransactions, error: posError } = await supabase
@@ -232,7 +237,6 @@ export const useStockSyncStatus = () => {
       
       if (posError) throw posError;
       
-      // Get today's stock mutations from POS
       const { data: stockMutations, error: mutationError } = await supabase
         .from('mutasi_stok')
         .select('id')
@@ -241,15 +245,24 @@ export const useStockSyncStatus = () => {
         .lt('created_at', `${today}T23:59:59`);
       
       if (mutationError) throw mutationError;
+
+      const { data: stockOpname, error: opnameError } = await supabase
+        .from('stok_opname')
+        .select('id')
+        .eq('tanggal_opname', today)
+        .eq('status', 'approved');
+      
+      if (opnameError) throw opnameError;
       
       return {
         posTransactionsCount: posTransactions?.length || 0,
         stockMutationsCount: stockMutations?.length || 0,
+        stockOpnameCount: stockOpname?.length || 0,
         isSynced: (posTransactions?.length || 0) === (stockMutations?.length || 0),
         lastSyncTime: new Date()
       };
     },
-    refetchInterval: 5000, // Check sync status every 5 seconds
+    refetchInterval: 3000, // Check sync status frequently
   });
 };
 
@@ -268,6 +281,7 @@ export const useDeleteStockMutation = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['stock_mutations'] });
+      queryClient.invalidateQueries({ queryKey: ['stock_data'] });
     },
   });
 };
@@ -307,6 +321,7 @@ export const useDeleteStockOpname = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['stock_opname'] });
       queryClient.invalidateQueries({ queryKey: ['stock_data'] });
+      queryClient.invalidateQueries({ queryKey: ['stock_opname_recap'] });
     },
   });
 };
@@ -327,6 +342,7 @@ export const useEditStockOpname = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['stock_opname'] });
       queryClient.invalidateQueries({ queryKey: ['stock_data'] });
+      queryClient.invalidateQueries({ queryKey: ['stock_opname_recap'] });
     },
   });
 };

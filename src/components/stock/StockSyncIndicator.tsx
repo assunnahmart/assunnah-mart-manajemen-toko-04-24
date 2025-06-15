@@ -11,22 +11,29 @@ import {
   RefreshCw, 
   Clock,
   Database,
-  Zap
+  Zap,
+  ClipboardList
 } from 'lucide-react';
 import { useStockSyncMonitor } from '@/hooks/useStockSyncMonitor';
 import { usePOSTransactionsToday } from '@/hooks/usePOSTransactions';
-import { useStockMutations } from '@/hooks/useStockManagement';
+import { useStockMutations, useStockSyncStatus } from '@/hooks/useStockManagement';
+import { useStockOpnameRecap } from '@/hooks/useStockOpnameRecap';
 
 const StockSyncIndicator = () => {
   const { syncStatus, forceSyncAll } = useStockSyncMonitor();
   const { data: todayTransactions } = usePOSTransactionsToday();
   const { data: recentMutations } = useStockMutations();
+  const { data: syncStatusData } = useStockSyncStatus();
+  const { data: stockOpnameRecap } = useStockOpnameRecap();
 
   const todayPOSCount = todayTransactions?.totalTransactions || 0;
   const todayStockMutations = recentMutations?.filter(mutation => 
     mutation.referensi_tipe === 'penjualan' && 
     new Date(mutation.created_at).toDateString() === new Date().toDateString()
   )?.length || 0;
+
+  const todayStockOpnameCount = syncStatusData?.stockOpnameCount || 0;
+  const totalProductsWithOpname = stockOpnameRecap?.length || 0;
 
   const isSynced = todayPOSCount === todayStockMutations && syncStatus.syncErrors.length === 0;
 
@@ -59,12 +66,12 @@ const StockSyncIndicator = () => {
             <div>
               <h3 className="font-semibold text-gray-900 flex items-center gap-2">
                 <Zap className="h-4 w-4" />
-                Sinkronisasi Stok POS - Manajemen
+                Sinkronisasi Stok Terintegrasi (POS • Pembelian • Opname)
               </h3>
               <p className="text-sm text-gray-600">
                 {!syncStatus.isOnline ? 'Tidak ada koneksi internet' :
                  syncStatus.pendingSync ? 'Sedang sinkronisasi data...' :
-                 isSynced ? 'Semua data tersinkronisasi sempurna' :
+                 isSynced ? 'Semua data tersinkronisasi sempurna dengan stok opname' :
                  'Monitoring sinkronisasi data stok real-time'
                 }
               </p>
@@ -98,6 +105,14 @@ const StockSyncIndicator = () => {
               <p className="font-bold text-green-600">{todayStockMutations}</p>
             </div>
 
+            <div className="text-center">
+              <Badge variant="secondary" className="mb-1">
+                <ClipboardList className="h-3 w-3 mr-1" />
+                Stok Opname
+              </Badge>
+              <p className="font-bold text-purple-600">{todayStockOpnameCount}</p>
+            </div>
+
             <Button
               variant="outline"
               size="sm"
@@ -125,11 +140,20 @@ const StockSyncIndicator = () => {
           </Alert>
         )}
 
-        {!isSynced && syncStatus.isOnline && !syncStatus.pendingSync && (
+        {totalProductsWithOpname > 0 && (
           <div className="mt-3 p-3 bg-blue-50 rounded-lg">
             <p className="text-sm text-blue-800">
+              <strong>Info Stok Opname:</strong> {totalProductsWithOpname} produk telah dilakukan stok opname hari ini. 
+              Data stok sistem telah disesuaikan dengan hasil opname untuk akurasi inventory yang optimal.
+            </p>
+          </div>
+        )}
+
+        {!isSynced && syncStatus.isOnline && !syncStatus.pendingSync && (
+          <div className="mt-3 p-3 bg-yellow-50 rounded-lg">
+            <p className="text-sm text-yellow-800">
               <strong>Info:</strong> Sistem memantau sinkronisasi secara real-time. 
-              Data akan tersinkronisasi otomatis setelah setiap transaksi POS atau perubahan stok.
+              Data akan tersinkronisasi otomatis setelah setiap transaksi POS, pembelian, atau stok opname.
             </p>
           </div>
         )}

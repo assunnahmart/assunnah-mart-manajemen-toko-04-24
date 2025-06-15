@@ -5,11 +5,12 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Download } from 'lucide-react';
+import { Download, RefreshCw } from 'lucide-react';
 import { useSupplierPayablesSummary, useRecordSupplierPayment, useSupplierPayablesLedger } from '@/hooks/useLedgers';
 import { useSupplier } from '@/hooks/useSupplier';
 import { useSimpleAuth } from '@/hooks/useSimpleAuth';
 import { useToast } from '@/hooks/use-toast';
+import { useQueryClient } from '@tanstack/react-query';
 
 import { SupplierPayablesSummary } from './pembayaran-hutang/SupplierPayablesSummary';
 import { OutstandingPayablesTable } from './pembayaran-hutang/OutstandingPayablesTable';
@@ -39,6 +40,13 @@ const PembayaranHutangPage = () => {
   );
   const recordPayment = useRecordSupplierPayment();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  // Fungsi untuk manual refresh data summary dan ledgers
+  const handleRefresh = () => {
+    queryClient.invalidateQueries({ queryKey: ['supplier-payables-summary'] });
+    queryClient.invalidateQueries({ queryKey: ['supplier-payables-ledger'] });
+  };
 
   // Perbaiki handleSelectSupplier untuk handling "supplier not found"
   const handleSelectSupplier = (supplierName: string, currentBalance: number) => {
@@ -125,10 +133,16 @@ const PembayaranHutangPage = () => {
                 <h1 className="text-3xl font-bold">Pembayaran Hutang</h1>
                 <p className="text-gray-600">Kelola pembayaran hutang supplier</p>
               </div>
-              <Button variant="outline">
-                <Download className="h-4 w-4 mr-2" />
-                Export
-              </Button>
+              <div className="flex gap-2">
+                <Button variant="outline" onClick={handleRefresh}>
+                  <RefreshCw className="h-4 w-4 mr-1" />
+                  Refresh
+                </Button>
+                <Button variant="outline">
+                  <Download className="h-4 w-4 mr-2" />
+                  Export
+                </Button>
+              </div>
             </div>
 
             {/* Summary Cards */}

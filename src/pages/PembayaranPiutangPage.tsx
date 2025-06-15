@@ -1,13 +1,12 @@
-
-// Refaktor: Memecah halaman jadi komponen kecil
 import { useState } from 'react';
 import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
 import { AppSidebar } from '@/components/AppSidebar';
 import { Button } from '@/components/ui/button';
-import { Download } from 'lucide-react';
+import { Download, RefreshCw } from 'lucide-react';
 import { useCustomerReceivablesSummary, useRecordCustomerPayment, useCustomerReceivablesLedger } from '@/hooks/useLedgers';
 import { useSimpleAuth } from '@/hooks/useSimpleAuth';
 import { useToast } from '@/hooks/use-toast';
+import { useQueryClient } from '@tanstack/react-query';
 
 import { CustomerReceivablesSummary } from './pembayaran-piutang/CustomerReceivablesSummary';
 import { OutstandingReceivablesTable } from './pembayaran-piutang/OutstandingReceivablesTable';
@@ -36,6 +35,7 @@ const PembayaranPiutangPage = () => {
   );
   const recordPayment = useRecordCustomerPayment();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   const totalReceivables = summary?.reduce((sum, item) => sum + item.total_receivables, 0) || 0;
   const totalCustomers = summary?.length || 0;
@@ -171,6 +171,12 @@ const PembayaranPiutangPage = () => {
     });
   };
 
+  // Fungsi untuk manual refresh data summary dan ledgers
+  const handleRefresh = () => {
+    queryClient.invalidateQueries({ queryKey: ['customer-receivables-summary'] });
+    queryClient.invalidateQueries({ queryKey: ['customer-receivables-ledger'] });
+  };
+
   return (
     <SidebarProvider>
       <div className="flex min-h-screen w-full">
@@ -183,10 +189,16 @@ const PembayaranPiutangPage = () => {
                 <h1 className="text-3xl font-bold">Pembayaran Piutang</h1>
                 <p className="text-gray-600">Kelola pembayaran piutang pelanggan</p>
               </div>
-              <Button variant="outline">
-                <Download className="h-4 w-4 mr-2" />
-                Export
-              </Button>
+              <div className="flex gap-2">
+                <Button variant="outline" onClick={handleRefresh}>
+                  <RefreshCw className="h-4 w-4 mr-1" />
+                  Refresh
+                </Button>
+                <Button variant="outline">
+                  <Download className="h-4 w-4 mr-2" />
+                  Export
+                </Button>
+              </div>
             </div>
 
             {/* Summary Cards */}

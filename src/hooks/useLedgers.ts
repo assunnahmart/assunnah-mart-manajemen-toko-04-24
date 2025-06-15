@@ -1,4 +1,3 @@
-
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -235,6 +234,32 @@ export const useRecordSupplierPayment = () => {
       queryClient.invalidateQueries({ queryKey: ['supplier-payables-ledger'] });
       queryClient.invalidateQueries({ queryKey: ['supplier-payables-summary'] });
       queryClient.invalidateQueries({ queryKey: ['kas_umum_transactions'] });
+    },
+  });
+};
+
+// === HOOK Rekap Piutang Bulanan (perbulan) ===
+export const useMonthlyReceivablesSummary = (year?: number) => {
+  return useQuery({
+    queryKey: ['monthly-receivables-summary', year],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .rpc('calculate_monthly_receivables_summary', { p_year: year || new Date().getFullYear() });
+      if (error) throw error;
+      return data;
+    },
+  });
+};
+
+// === HOOK Rekap Hutang Bulanan (perbulan) ===
+export const useMonthlyDebtSummary = (year?: number) => {
+  return useQuery({
+    queryKey: ['monthly-debt-summary', year],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .rpc('calculate_monthly_debt_summary', { p_year: year || new Date().getFullYear() });
+      if (error) throw error;
+      return data;
     },
   });
 };

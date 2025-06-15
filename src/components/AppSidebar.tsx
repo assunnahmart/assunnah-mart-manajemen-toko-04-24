@@ -14,6 +14,9 @@ import { Card, CardContent } from "@/components/ui/card";
 const mainMenuItems = [
   { title: "Dashboard", url: "/dashboard", icon: TrendingUp },
   { title: "POS System", url: "/pos", icon: Calculator },
+  // Menu rekap laporan piutang & hutang
+  { title: "Rekap Piutang", url: "/laporan/rekap-piutang", icon: BookOpen },
+  { title: "Rekap Hutang", url: "/laporan/rekap-hutang", icon: FileText },
   // Tambahkan dua menu berikut:
   { title: "Buku Besar Piutang", url: "/admin/buku-besar-piutang", icon: BookOpen },
   { title: "Buku Besar Hutang", url: "/admin/buku-besar-hutang", icon: FileText },

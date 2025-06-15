@@ -475,7 +475,7 @@ const BukuBesarPiutang = () => {
           <CardTitle>Riwayat Transaksi Piutang</CardTitle>
         </CardHeader>
         <CardContent>
-          {isLoading ? (
+          {ledgerLoading ? (
             <div className="text-center py-8">Loading...</div>
           ) : (
             <div className="overflow-x-auto">

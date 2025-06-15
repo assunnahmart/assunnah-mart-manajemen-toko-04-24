@@ -207,9 +207,21 @@ export const useRecordSupplierPayment = () => {
       kasir_name: string;
       keterangan?: string;
     }) => {
+      // Find the actual supplier ID from supplier name
+      const { data: supplierData, error: supplierError } = await supabase
+        .from('supplier')
+        .select('id, nama')
+        .eq('nama', data.supplier_id)
+        .single();
+      
+      if (supplierError) {
+        console.error('Supplier lookup error:', supplierError);
+        throw supplierError;
+      }
+      
       const { error } = await supabase
         .rpc('record_supplier_payment', {
-          p_supplier_id: data.supplier_id,
+          p_supplier_id: supplierData.id,
           p_amount: data.amount,
           p_payment_date: data.payment_date,
           p_reference_number: data.reference_number,

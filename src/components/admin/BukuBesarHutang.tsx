@@ -45,6 +45,9 @@ const BukuBesarHutang = () => {
     return true;
   });
 
+  // Get suppliers with outstanding payables for the payment dialog
+  const suppliersWithPayables = summaryData?.filter(supplier => supplier.total_payables > 0) || [];
+
   console.log('BukuBesarHutang suppliers data:', suppliers);
   console.log('Valid suppliers count:', validSuppliers.length);
   console.log('Valid suppliers:', validSuppliers);
@@ -56,6 +59,13 @@ const BukuBesarHutang = () => {
       currency: 'IDR',
       minimumFractionDigits: 0,
     }).format(amount);
+  };
+
+  const handleSupplierSelect = (supplierId: string) => {
+    setPaymentData(prev => ({
+      ...prev,
+      supplier_id: supplierId
+    }));
   };
 
   const handlePayment = async () => {
@@ -118,22 +128,34 @@ const BukuBesarHutang = () => {
             <div className="space-y-4">
               <div>
                 <Label htmlFor="supplier">Supplier</Label>
-                {validSuppliers.length > 0 ? (
-                  <Select value={paymentData.supplier_id || ""} onValueChange={(value) => setPaymentData(prev => ({ ...prev, supplier_id: value }))}>
+                {suppliersWithPayables.length > 0 ? (
+                  <Select value={paymentData.supplier_id || ""} onValueChange={handleSupplierSelect}>
                     <SelectTrigger>
-                      <SelectValue placeholder="Pilih supplier" />
+                      <SelectValue placeholder="Pilih supplier dengan hutang" />
                     </SelectTrigger>
                     <SelectContent>
-                      {validSuppliers.map((supplier) => (
-                        <SelectItem key={supplier.id} value={supplier.id}>
-                          {supplier.nama}
+                      {suppliersWithPayables.map((supplier) => (
+                        <SelectItem key={supplier.supplier_name} value={supplier.supplier_name}>
+                          <div className="flex flex-col">
+                            <span className="font-medium">{supplier.supplier_name}</span>
+                            <span className="text-sm text-red-600">
+                              Hutang: {formatRupiah(supplier.total_payables)}
+                            </span>
+                          </div>
                         </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                 ) : (
                   <div className="p-3 text-sm text-gray-500 border rounded-md bg-gray-50">
-                    Tidak ada supplier tersedia
+                    Tidak ada supplier dengan hutang
+                  </div>
+                )}
+                {paymentData.supplier_id && (
+                  <div className="mt-2 p-2 bg-blue-50 rounded-md">
+                    <span className="text-sm text-blue-800">
+                      Saldo Hutang: {formatRupiah(suppliersWithPayables.find(s => s.supplier_name === paymentData.supplier_id)?.total_payables || 0)}
+                    </span>
                   </div>
                 )}
               </div>
@@ -144,6 +166,7 @@ const BukuBesarHutang = () => {
                   type="number"
                   value={paymentData.amount}
                   onChange={(e) => setPaymentData(prev => ({ ...prev, amount: parseFloat(e.target.value) || 0 }))}
+                  max={suppliersWithPayables.find(s => s.supplier_name === paymentData.supplier_id)?.total_payables || 0}
                 />
               </div>
               <div>
@@ -177,8 +200,12 @@ const BukuBesarHutang = () => {
                 <Button onClick={() => setShowPaymentDialog(false)} variant="outline" className="flex-1">
                   Batal
                 </Button>
-                <Button onClick={handlePayment} className="flex-1" disabled={!paymentData.supplier_id || !paymentData.amount}>
-                  Simpan
+                <Button 
+                  onClick={handlePayment} 
+                  className="flex-1" 
+                  disabled={!paymentData.supplier_id || !paymentData.amount || recordPayment.isPending}
+                >
+                  {recordPayment.isPending ? 'Memproses...' : 'Simpan'}
                 </Button>
               </div>
             </div>

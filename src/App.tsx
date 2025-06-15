@@ -1,3 +1,4 @@
+
 import {
   BrowserRouter as Router,
   Routes,
@@ -41,8 +42,8 @@ function App() {
         <Route path="/kas-umum" element={isLoggedIn ? <KasUmumPage /> : <Navigate to="/login" />} />
         <Route path="/admin/*" element={isLoggedIn ? <AdminPanel /> : <Navigate to="/login" />} />
         <Route path="/kasir-management" element={isLoggedIn ? <KasirManagementPage /> : <Navigate to="/login" />} />
-        <Route path="/laporan/rekap-piutang" element={isLoggedIn ? <RekapPiutangPage />} />
-        <Route path="/laporan/rekap-hutang" element={isLoggedIn ? <RekapHutangPage />} />
+        <Route path="/laporan/rekap-piutang" element={isLoggedIn ? <RekapPiutangPage /> : <Navigate to="/login" />} />
+        <Route path="/laporan/rekap-hutang" element={isLoggedIn ? <RekapHutangPage /> : <Navigate to="/login" />} />
       </Routes>
     </Router>
   )

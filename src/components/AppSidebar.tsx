@@ -1,7 +1,8 @@
+
 import * as React from "react";
 import {
   Users, CreditCard, Truck, TrendingUp, Database, Package, Calculator, BookOpen,
-  FileText, Home, Store, ShoppingCart, LogOut, User
+  FileText, Home, Store, ShoppingCart, LogOut, User, DollarSign
 } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useSimpleAuth } from "@/hooks/useSimpleAuth";
@@ -10,7 +11,7 @@ import { Sidebar, SidebarFooter, SidebarHeader } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 
-// Menu system utama (utama/toko)
+// Menu sistem utama (utama/toko)
 const mainMenuItems = [
   { title: "Dashboard", url: "/dashboard", icon: TrendingUp },
   { title: "POS System", url: "/pos", icon: Calculator },
@@ -32,10 +33,12 @@ const jualBeliMenuItems = [
   { title: "Penjualan Kredit", url: "/penjualan-kredit", icon: CreditCard },
 ];
 
-// Kas & Piutang
+// Kas & Piutang - Tambahkan menu pembayaran
 const kasPiutangMenuItems = [
   { title: "Kasir Kas", url: "/kasir-kas", icon: CreditCard },
   { title: "Kas Umum", url: "/kas-umum", icon: CreditCard },
+  { title: "Pembayaran Piutang", url: "/pembayaran-piutang", icon: DollarSign },
+  { title: "Pembayaran Hutang", url: "/pembayaran-hutang", icon: DollarSign },
   { title: "Kasir Management", url: "/kasir-management", icon: Users },
 ];
 
@@ -44,9 +47,6 @@ const adminMenuItems = [
   { title: "Dashboard", url: "/admin", icon: Home },
   { title: "Pelanggan", url: "/admin/pelanggan", icon: Users },
   { title: "Supplier", url: "/admin/supplier", icon: Truck },
-  // Hapus Buku Besar Piutang & Hutang dari sini
-  // { title: "Buku Besar Piutang", url: "/admin/buku-besar-piutang", icon: BookOpen },
-  // { title: "Buku Besar Hutang", url: "/admin/buku-besar-hutang", icon: FileText },
   { title: "Kas Umum", url: "/admin/kas-umum", icon: CreditCard },
   { title: "Laba Rugi", url: "/admin/laba-rugi", icon: TrendingUp },
   { title: "Laporan Keuangan", url: "/admin/financial-reports", icon: Calculator },

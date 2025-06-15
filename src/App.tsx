@@ -24,6 +24,8 @@ import AdminPanel from "@/pages/AdminPanel";
 import KasirManagement from "@/pages/KasirManagement";
 import RekapPiutangPage from "@/pages/RekapPiutangPage";
 import RekapHutangPage from "@/pages/RekapHutangPage";
+import PembayaranPiutangPage from "@/pages/PembayaranPiutangPage";
+import PembayaranHutangPage from "@/pages/PembayaranHutangPage";
 
 function App() {
   const { isAuthenticated, loading } = useSimpleAuth();
@@ -61,6 +63,8 @@ function App() {
           <Route path="/kasir-management" element={isAuthenticated ? <KasirManagement /> : <Navigate to="/login" />} />
           <Route path="/laporan/rekap-piutang" element={isAuthenticated ? <RekapPiutangPage /> : <Navigate to="/login" />} />
           <Route path="/laporan/rekap-hutang" element={isAuthenticated ? <RekapHutangPage /> : <Navigate to="/login" />} />
+          <Route path="/pembayaran-piutang" element={isAuthenticated ? <PembayaranPiutangPage /> : <Navigate to="/login" />} />
+          <Route path="/pembayaran-hutang" element={isAuthenticated ? <PembayaranHutangPage /> : <Navigate to="/login" />} />
         </Routes>
       </Router>
     </ErrorBoundary>

@@ -87,7 +87,7 @@ const ProductExportImport = ({ products, onImportSuccess }: ProductExportImportP
     // Create template sheet with updated fields
     const templateData = [{
       'Nama Produk': 'Contoh Produk',
-      'Barcode': '1234567890',
+      'Barcode': '1234567890123',
       'Jenis Barang': 'Harian',
       'Kategori Pembelian': 'retail',
       'Satuan': 'pcs',
@@ -115,42 +115,61 @@ const ProductExportImport = ({ products, onImportSuccess }: ProductExportImportP
     });
   };
 
-  // Process import in batches for better performance
+  // Improved batch processing with better error handling
   const processBatch = async (batch: any[], batchIndex: number, totalBatches: number) => {
     const results = { success: 0, errors: [] as string[] };
     
     for (let i = 0; i < batch.length; i++) {
       const row = batch[i];
-      const rowNumber = batchIndex * 100 + i + 2; // +2 because of header row and 1-based indexing
+      const rowNumber = batchIndex * 50 + i + 2; // Reduced batch size to 50 for better performance
       
       try {
+        // Validate required fields first
+        if (!row['Nama Produk'] || row['Nama Produk'].toString().trim() === '') {
+          results.errors.push(`Baris ${rowNumber}: Nama produk tidak boleh kosong`);
+          continue;
+        }
+
+        // Check for existing barcode to prevent duplicates
+        const barcode = row['Barcode']?.toString().trim();
+        if (barcode && products?.some(p => p.barcode === barcode)) {
+          results.errors.push(`Baris ${rowNumber}: Barcode ${barcode} sudah ada`);
+          continue;
+        }
+
         // Find supplier by name
         let supplierId = null;
         if (row['Supplier'] && suppliers) {
           const supplier = suppliers.find(s => 
             s.nama.toLowerCase() === row['Supplier'].toString().toLowerCase()
           );
+          if (row['Supplier'].toString().trim() && !supplier) {
+            results.errors.push(`Baris ${rowNumber}: Supplier "${row['Supplier']}" tidak ditemukan`);
+            continue;
+          }
           supplierId = supplier?.id || null;
         }
 
-        // Prepare product data with kategori_pembelian
+        // Prepare product data with better validation
         const productData = {
-          nama: row['Nama Produk']?.toString() || '',
-          barcode: row['Barcode']?.toString() || '',
+          nama: row['Nama Produk'].toString().trim(),
+          barcode: barcode || null,
           jenis_konsinyasi: row['Jenis Barang']?.toString().toLowerCase() === 'mingguan' ? 'mingguan' : 'harian',
-          kategori_pembelian: row['Kategori Pembelian']?.toString().toLowerCase() || 'retail',
+          kategori_pembelian: ['retail', 'pembelian', 'grosir'].includes(row['Kategori Pembelian']?.toString().toLowerCase()) 
+            ? row['Kategori Pembelian'].toString().toLowerCase() 
+            : 'retail',
           satuan: row['Satuan']?.toString() || 'pcs',
-          harga_beli: parseFloat(row['Harga Beli']) || 0,
-          harga_jual: parseFloat(row['Harga Jual']) || 0,
-          stok_saat_ini: parseInt(row['Stok Saat Ini']) || 0,
-          stok_minimal: parseInt(row['Stok Minimal']) || 0,
+          harga_beli: Math.max(0, parseFloat(row['Harga Beli']) || 0),
+          harga_jual: Math.max(0, parseFloat(row['Harga Jual']) || 0),
+          stok_saat_ini: Math.max(0, parseInt(row['Stok Saat Ini']) || 0),
+          stok_minimal: Math.max(0, parseInt(row['Stok Minimal']) || 0),
           status: row['Status']?.toString().toLowerCase() === 'nonaktif' ? 'nonaktif' : 'aktif',
           supplier_id: supplierId
         };
 
-        // Validate required fields
-        if (!productData.nama) {
-          results.errors.push(`Baris ${rowNumber}: Nama produk tidak boleh kosong`);
+        // Additional validation
+        if (productData.harga_jual < productData.harga_beli && productData.harga_beli > 0) {
+          results.errors.push(`Baris ${rowNumber}: Harga jual tidak boleh lebih kecil dari harga beli`);
           continue;
         }
 
@@ -158,9 +177,19 @@ const ProductExportImport = ({ products, onImportSuccess }: ProductExportImportP
         await createProduct.mutateAsync(productData);
         results.success++;
 
-      } catch (error) {
+      } catch (error: any) {
         console.error(`Error importing row ${rowNumber}:`, error);
-        results.errors.push(`Baris ${rowNumber}: ${error.message || 'Gagal menyimpan produk'}`);
+        let errorMessage = 'Gagal menyimpan produk';
+        
+        if (error.message?.includes('barcode_key')) {
+          errorMessage = 'Barcode sudah ada dalam database';
+        } else if (error.message?.includes('nama_key')) {
+          errorMessage = 'Nama produk sudah ada';
+        } else if (error.message) {
+          errorMessage = error.message;
+        }
+        
+        results.errors.push(`Baris ${rowNumber}: ${errorMessage}`);
       }
     }
     
@@ -184,8 +213,11 @@ const ProductExportImport = ({ products, onImportSuccess }: ProductExportImportP
         const worksheetName = workbook.SheetNames[0];
         const worksheet = workbook.Sheets[worksheetName];
         
-        // Convert to JSON
-        const jsonData = XLSX.utils.sheet_to_json(worksheet) as any[];
+        // Convert to JSON with better handling
+        const jsonData = XLSX.utils.sheet_to_json(worksheet, { 
+          defval: '',
+          blankrows: false 
+        }) as any[];
         
         if (jsonData.length === 0) {
           toast({
@@ -197,16 +229,46 @@ const ProductExportImport = ({ products, onImportSuccess }: ProductExportImportP
           return;
         }
 
-        // Process in batches of 100 items for better performance
-        const batchSize = 100;
-        const totalBatches = Math.ceil(jsonData.length / batchSize);
+        // Validate required columns
+        const requiredColumns = ['Nama Produk'];
+        const firstRow = jsonData[0];
+        const missingColumns = requiredColumns.filter(col => !(col in firstRow));
+        
+        if (missingColumns.length > 0) {
+          toast({
+            title: "Format file salah",
+            description: `Kolom yang diperlukan tidak ditemukan: ${missingColumns.join(', ')}`,
+            variant: "destructive"
+          });
+          setIsImporting(false);
+          return;
+        }
+
+        // Filter out empty rows
+        const validData = jsonData.filter(row => 
+          row['Nama Produk'] && row['Nama Produk'].toString().trim() !== ''
+        );
+
+        if (validData.length === 0) {
+          toast({
+            title: "Data tidak valid",
+            description: "Tidak ada baris dengan nama produk yang valid",
+            variant: "destructive"
+          });
+          setIsImporting(false);
+          return;
+        }
+
+        // Process in smaller batches of 50 items for better performance and error handling
+        const batchSize = 50;
+        const totalBatches = Math.ceil(validData.length / batchSize);
         let totalSuccess = 0;
         let allErrors: string[] = [];
 
         for (let batchIndex = 0; batchIndex < totalBatches; batchIndex++) {
           const start = batchIndex * batchSize;
-          const end = Math.min(start + batchSize, jsonData.length);
-          const batch = jsonData.slice(start, end);
+          const end = Math.min(start + batchSize, validData.length);
+          const batch = validData.slice(start, end);
           
           console.log(`Processing batch ${batchIndex + 1}/${totalBatches} (${batch.length} items)`);
           
@@ -218,39 +280,53 @@ const ProductExportImport = ({ products, onImportSuccess }: ProductExportImportP
           const progress = ((batchIndex + 1) / totalBatches) * 100;
           setImportProgress(progress);
           
-          // Small delay to prevent UI blocking
-          await new Promise(resolve => setTimeout(resolve, 100));
+          // Small delay to prevent UI blocking and database overload
+          await new Promise(resolve => setTimeout(resolve, 200));
         }
 
-        // Show results
+        // Show results with better messaging
         if (totalSuccess > 0) {
           onImportSuccess();
           toast({
             title: "Import berhasil",
-            description: `${totalSuccess} produk berhasil diimpor. ${allErrors.length > 0 ? `${allErrors.length} produk gagal.` : ''}`
+            description: `${totalSuccess} dari ${validData.length} produk berhasil diimpor${allErrors.length > 0 ? `. ${allErrors.length} produk gagal.` : ''}`
           });
         }
 
-        if (allErrors.length > 0 && allErrors.length <= 5) {
-          // Show first few errors
+        if (allErrors.length > 0) {
+          if (allErrors.length <= 3) {
+            // Show specific errors for small number of failures
+            toast({
+              title: "Beberapa produk gagal diimpor",
+              description: allErrors.slice(0, 3).join('; '),
+              variant: "destructive"
+            });
+          } else {
+            // Show summary for many failures
+            toast({
+              title: "Banyak produk gagal diimpor",
+              description: `${allErrors.length} produk gagal. Periksa format file dan pastikan tidak ada duplikat barcode.`,
+              variant: "destructive"
+            });
+          }
+          
+          // Log all errors to console for debugging
+          console.log('Import errors:', allErrors);
+        }
+
+        if (totalSuccess === 0 && allErrors.length > 0) {
           toast({
-            title: "Beberapa produk gagal diimpor",
-            description: allErrors.slice(0, 3).join('; '),
-            variant: "destructive"
-          });
-        } else if (allErrors.length > 5) {
-          toast({
-            title: "Banyak produk gagal diimpor",
-            description: `${allErrors.length} produk gagal diimpor. Periksa format file.`,
+            title: "Import gagal",
+            description: "Tidak ada produk yang berhasil diimpor. Periksa format file dan data yang dimasukkan.",
             variant: "destructive"
           });
         }
 
-      } catch (error) {
+      } catch (error: any) {
         console.error('Import error:', error);
         toast({
-          title: "Gagal import",
-          description: "Format file tidak valid atau terjadi kesalahan",
+          title: "Gagal membaca file",
+          description: "Format file tidak valid atau file rusak. Pastikan menggunakan file Excel (.xlsx)",
           variant: "destructive"
         });
       } finally {
@@ -304,8 +380,21 @@ const ProductExportImport = ({ products, onImportSuccess }: ProductExportImportP
             Mengimpor data... {Math.round(importProgress)}%
           </div>
           <Progress value={importProgress} className="w-full" />
+          <div className="text-xs text-gray-500">
+            Memproses dalam batch kecil untuk performa optimal
+          </div>
         </div>
       )}
+
+      <div className="text-xs text-gray-500 space-y-1">
+        <p><strong>Tips Import:</strong></p>
+        <ul className="list-disc list-inside space-y-1">
+          <li>Pastikan kolom "Nama Produk" terisi</li>
+          <li>Barcode harus unik (tidak boleh sama)</li>
+          <li>Gunakan template yang disediakan</li>
+          <li>Maksimal 5000 produk per file untuk performa optimal</li>
+        </ul>
+      </div>
     </div>
   );
 };

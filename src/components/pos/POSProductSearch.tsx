@@ -1,202 +1,232 @@
 
 import { useState, useEffect } from 'react';
+import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Package, Loader2 } from 'lucide-react';
-import { useBarang } from '@/hooks/useBarang';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
-
-interface Product {
-  id: string;
-  nama: string;
-  harga_jual: number;
-  stok_saat_ini: number;
-  satuan: string;
-  barcode?: string;
-}
+import { Search, Package, Plus, ShoppingCart, AlertTriangle } from 'lucide-react';
+import { usePOSBarangKonsinyasi } from '@/hooks/useBarang';
+import { useToast } from '@/hooks/use-toast';
 
 interface POSProductSearchProps {
   searchQuery: string;
-  onAddToCart: (product: Product) => void;
+  onAddToCart: (product: any) => void;
   onProductAutoAdded?: () => void;
   enableEnterToAdd?: boolean;
 }
 
-const POSProductSearch = ({ searchQuery, onAddToCart, onProductAutoAdded, enableEnterToAdd = false }: POSProductSearchProps) => {
-  const [autoAddProcessed, setAutoAddProcessed] = useState<string>('');
-  const { data: products = [], isLoading, error } = useBarang(searchQuery);
+const POSProductSearch = ({ 
+  searchQuery, 
+  onAddToCart, 
+  onProductAutoAdded,
+  enableEnterToAdd = false 
+}: POSProductSearchProps) => {
+  const { data: products, isLoading } = usePOSBarangKonsinyasi();
+  const { toast } = useToast();
+  const [selectedIndex, setSelectedIndex] = useState(0);
 
-  console.log('POS Product Search - Search Query:', searchQuery);
-  console.log('POS Product Search - Products:', products);
+  const filteredProducts = products?.filter(product =>
+    product.nama.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    product.barcode?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    product.supplier?.nama?.toLowerCase().includes(searchQuery.toLowerCase())
+  ) || [];
 
+  // Auto-add product if exact barcode match and enableEnterToAdd is true
   useEffect(() => {
-    // Auto-add if exact barcode match is found and not already processed
-    if (searchQuery.length > 5 && searchQuery !== autoAddProcessed) {
-      const exactMatch = products.find(product => 
-        product.barcode === searchQuery
+    if (enableEnterToAdd && searchQuery && filteredProducts.length === 1) {
+      const exactMatch = filteredProducts.find(p => 
+        p.barcode?.toLowerCase() === searchQuery.toLowerCase()
       );
       
-      if (exactMatch && products.length === 1) {
-        console.log('Auto-adding product from barcode scan:', exactMatch);
-        onAddToCart({
-          id: exactMatch.id,
-          nama: exactMatch.nama,
-          harga_jual: Number(exactMatch.harga_jual),
-          stok_saat_ini: exactMatch.stok_saat_ini,
-          satuan: exactMatch.satuan || 'pcs',
-          barcode: exactMatch.barcode || undefined
-        });
-        setAutoAddProcessed(searchQuery);
+      if (exactMatch) {
+        const timeoutId = setTimeout(() => {
+          onAddToCart(exactMatch);
+          toast({
+            title: "Produk ditambahkan",
+            description: `${exactMatch.nama} berhasil ditambahkan ke keranjang`,
+            duration: 2000
+          });
+          onProductAutoAdded?.();
+        }, 500);
         
-        // Notify parent component that product was auto-added
-        if (onProductAutoAdded) {
-          onProductAutoAdded();
-        }
+        return () => clearTimeout(timeoutId);
       }
     }
-  }, [searchQuery, products, onAddToCart, autoAddProcessed, onProductAutoAdded]);
+  }, [searchQuery, filteredProducts, enableEnterToAdd, onAddToCart, onProductAutoAdded, toast]);
 
-  // Reset auto-add tracking when search query changes significantly
+  // Handle keyboard navigation
   useEffect(() => {
-    if (searchQuery.length <= 5) {
-      setAutoAddProcessed('');
-    }
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (!enableEnterToAdd) return;
+      
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        setSelectedIndex(prev => Math.min(prev + 1, filteredProducts.length - 1));
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        setSelectedIndex(prev => Math.max(prev - 1, 0));
+      } else if (e.key === 'Enter' && filteredProducts[selectedIndex]) {
+        e.preventDefault();
+        onAddToCart(filteredProducts[selectedIndex]);
+        toast({
+          title: "Produk ditambahkan",
+          description: `${filteredProducts[selectedIndex].nama} berhasil ditambahkan`,
+          duration: 2000
+        });
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [filteredProducts, selectedIndex, enableEnterToAdd, onAddToCart, toast]);
+
+  // Reset selected index when search changes
+  useEffect(() => {
+    setSelectedIndex(0);
   }, [searchQuery]);
 
-  // Add Enter key functionality to add first product to cart
-  useEffect(() => {
-    if (enableEnterToAdd) {
-      const handleKeyDown = (event: KeyboardEvent) => {
-        if (event.key === 'Enter' && products.length > 0 && products[0].stok_saat_ini > 0) {
-          event.preventDefault();
-          const firstProduct = products[0];
-          onAddToCart({
-            id: firstProduct.id,
-            nama: firstProduct.nama,
-            harga_jual: Number(firstProduct.harga_jual),
-            stok_saat_ini: firstProduct.stok_saat_ini,
-            satuan: firstProduct.satuan || 'pcs',
-            barcode: firstProduct.barcode || undefined
-          });
-        }
-      };
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('id-ID', {
+      style: 'currency',
+      currency: 'IDR',
+      minimumFractionDigits: 0
+    }).format(amount);
+  };
 
-      window.addEventListener('keydown', handleKeyDown);
-      return () => {
-        window.removeEventListener('keydown', handleKeyDown);
-      };
+  const getStockBadge = (stok: number, minimal: number) => {
+    if (stok === 0) {
+      return <Badge variant="destructive" className="text-xs">Habis</Badge>;
+    } else if (stok <= minimal) {
+      return <Badge variant="outline" className="text-orange-600 border-orange-300 text-xs">Stok Rendah</Badge>;
+    } else {
+      return <Badge variant="outline" className="text-green-600 border-green-300 text-xs">Tersedia</Badge>;
     }
-  }, [enableEnterToAdd, products, onAddToCart]);
+  };
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center py-8">
-        <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
-        <span className="ml-2 text-gray-600">Memuat produk...</span>
+      <div className="text-center py-8">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-600 mx-auto"></div>
+        <p className="mt-2 text-gray-600">Memuat data produk...</p>
       </div>
     );
   }
 
-  if (error) {
-    console.error('POS Product Search Error:', error);
+  if (!searchQuery) {
     return (
-      <div className="text-center py-8 text-red-500">
-        <Package className="h-12 w-12 mx-auto mb-4 text-red-300" />
-        <p>Gagal memuat data produk</p>
-        <p className="text-sm">Periksa koneksi database: {error.message}</p>
+      <div className="text-center py-8">
+        <Search className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+        <p className="text-gray-600">Mulai mengetik untuk mencari produk...</p>
+        <p className="text-sm text-gray-500 mt-2">
+          Cari berdasarkan nama produk, barcode, atau supplier
+        </p>
       </div>
     );
   }
 
-  if (products.length === 0) {
+  if (filteredProducts.length === 0) {
     return (
-      <div className="text-center py-8 text-gray-500">
-        <Package className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-        <p>Tidak ada produk ditemukan</p>
-        <p className="text-sm">
-          {searchQuery ? `Tidak ada produk dengan kata kunci "${searchQuery}"` : 'Coba kata kunci lain atau scan barcode'}
+      <div className="text-center py-8">
+        <Package className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+        <p className="text-gray-600">Produk tidak ditemukan</p>
+        <p className="text-sm text-gray-500 mt-2">
+          Tidak ada produk dengan kata kunci "{searchQuery}"
         </p>
       </div>
     );
   }
 
   return (
-    <div className="space-y-2">
-      {enableEnterToAdd && products.length > 0 && (
-        <div className="bg-blue-50 border border-blue-200 p-2 rounded text-sm text-blue-700">
-          💡 Tekan Enter untuk menambah produk teratas ke keranjang
-        </div>
-      )}
+    <div className="space-y-2 h-full overflow-y-auto">
+      <div className="sticky top-0 bg-white pb-2 border-b">
+        <p className="text-sm text-gray-600">
+          Ditemukan {filteredProducts.length} produk
+          {enableEnterToAdd && (
+            <span className="ml-2 text-xs bg-blue-100 text-blue-600 px-2 py-1 rounded">
+              Gunakan ↑↓ dan Enter untuk navigasi cepat
+            </span>
+          )}
+        </p>
+      </div>
       
-      <div className="border rounded-lg">
-        <Table>
-          <TableHeader>
-            <TableRow className="bg-gray-50">
-              <TableHead className="font-semibold">Nama Produk</TableHead>
-              <TableHead className="font-semibold">Harga</TableHead>
-              <TableHead className="font-semibold">Stok</TableHead>
-              <TableHead className="font-semibold text-center">Aksi</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {products.map((product, index) => (
-              <TableRow 
-                key={product.id} 
-                className={`hover:bg-gray-50 ${index === 0 && enableEnterToAdd ? 'bg-blue-50 border-l-4 border-blue-400' : ''}`}
-              >
-                <TableCell className="font-medium">
-                  <div className="flex flex-col">
-                    <span className="font-semibold text-gray-900">
-                      {product.nama}
-                      {index === 0 && enableEnterToAdd && (
-                        <Badge variant="secondary" className="ml-2 text-xs bg-blue-100 text-blue-700">
-                          Enter
-                        </Badge>
-                      )}
+      {filteredProducts.map((product, index) => (
+        <div
+          key={product.id}
+          className={`p-3 border rounded-lg transition-all duration-200 ${
+            enableEnterToAdd && index === selectedIndex
+              ? 'border-red-300 bg-red-50 shadow-md'
+              : 'border-gray-200 hover:border-red-200 hover:bg-red-50'
+          }`}
+        >
+          <div className="flex items-center justify-between">
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 mb-1">
+                <h3 className="font-medium text-gray-900 truncate">{product.nama}</h3>
+                {getStockBadge(product.stok_saat_ini, product.stok_minimal)}
+              </div>
+              
+              <div className="space-y-1 text-sm text-gray-600">
+                {product.barcode && (
+                  <p className="flex items-center gap-1">
+                    <span className="text-xs bg-gray-100 px-2 py-1 rounded font-mono">
+                      {product.barcode}
                     </span>
-                    <span className="text-xs text-gray-500">Per {product.satuan}</span>
-                  </div>
-                </TableCell>
-                <TableCell>
-                  <span className="text-lg font-bold text-blue-600">
-                    Rp {Number(product.harga_jual || 0).toLocaleString('id-ID')}
-                  </span>
-                </TableCell>
-                <TableCell>
-                  <Badge variant={product.stok_saat_ini > 10 ? "secondary" : "destructive"}>
-                    {product.stok_saat_ini} {product.satuan}
-                  </Badge>
-                </TableCell>
-                <TableCell className="text-center">
-                  <Button
-                    size="sm"
-                    onClick={() => onAddToCart({
-                      id: product.id,
-                      nama: product.nama,
-                      harga_jual: Number(product.harga_jual || 0),
-                      stok_saat_ini: product.stok_saat_ini,
-                      satuan: product.satuan || 'pcs',
-                      barcode: product.barcode || undefined
-                    })}
-                    disabled={product.stok_saat_ini === 0}
-                    className="bg-green-600 hover:bg-green-700"
-                  >
+                  </p>
+                )}
+                
+                <div className="flex items-center justify-between">
+                  <span>Stok: <span className="font-medium">{product.stok_saat_ini} {product.satuan}</span></span>
+                  <span className="font-bold text-green-600">{formatCurrency(product.harga_jual || 0)}</span>
+                </div>
+                
+                {product.supplier?.nama && (
+                  <p className="text-xs text-blue-600">Supplier: {product.supplier.nama}</p>
+                )}
+              </div>
+            </div>
+            
+            <div className="ml-4 flex flex-col gap-2">
+              <Button
+                size="sm"
+                onClick={() => {
+                  if (product.stok_saat_ini > 0) {
+                    onAddToCart(product);
+                    toast({
+                      title: "Produk ditambahkan",
+                      description: `${product.nama} berhasil ditambahkan ke keranjang`,
+                      duration: 2000
+                    });
+                  } else {
+                    toast({
+                      title: "Stok habis",
+                      description: `${product.nama} tidak tersedia`,
+                      variant: "destructive",
+                      duration: 2000
+                    });
+                  }
+                }}
+                disabled={product.stok_saat_ini === 0}
+                className="bg-red-600 hover:bg-red-700 text-white"
+              >
+                {product.stok_saat_ini === 0 ? (
+                  <AlertTriangle className="h-4 w-4" />
+                ) : (
+                  <>
                     <Plus className="h-4 w-4 mr-1" />
                     Tambah
-                  </Button>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </div>
+                  </>
+                )}
+              </Button>
+              
+              {enableEnterToAdd && index === selectedIndex && (
+                <Badge variant="secondary" className="text-xs justify-center">
+                  <ShoppingCart className="h-3 w-3 mr-1" />
+                  Enter
+                </Badge>
+              )}
+            </div>
+          </div>
+        </div>
+      ))}
     </div>
   );
 };

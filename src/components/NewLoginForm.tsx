@@ -59,7 +59,7 @@ const NewLoginForm = () => {
         <CardHeader className="text-center pb-6">
           <div className="flex justify-center mb-6 bg-transparent">
             <img 
-              src="/lovable-uploads/63181b78-99d7-4d69-be72-332dd429807c.png" 
+              src="/lovable-uploads/d8973707-35cf-4652-8170-03093cb0c2f4.png" 
               alt="Assunnah Mart Logo" 
               className="h-32 w-auto sm:h-36 md:h-40 object-contain" 
             />

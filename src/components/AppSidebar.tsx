@@ -1,11 +1,11 @@
+
 import * as React from "react";
 import { Users, CreditCard, Truck, TrendingUp, Database, Package, Calculator, BookOpen, FileText, Home, Store, ShoppingCart, LogOut, User, DollarSign } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useSimpleAuth } from "@/hooks/useSimpleAuth";
 import { useToast } from "@/hooks/use-toast";
-import { Sidebar, SidebarFooter, SidebarHeader } from "@/components/ui/sidebar";
+import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarGroup, SidebarGroupLabel, SidebarGroupContent, SidebarMenu, SidebarMenuItem, SidebarMenuButton } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 
 // Menu sistem utama (utama/toko)
 const mainMenuItems = [{
@@ -137,44 +137,57 @@ const adminMenuItems = [{
   icon: FileText
 }];
 
-// Helper render menu as card grid by category
-function MenuGrid({
-  label,
-  menuItems,
-  user,
-  location,
-  onNavigate,
-  adminOnly = false
-}) {
-  return <div className="mb-5">
-      <p className="text-xs text-gray-500 font-semibold uppercase px-4 mb-2">{label}</p>
-      <div className="grid grid-cols-2 gap-3 px-2 sm:grid-cols-3 md:grid-cols-2 xl:grid-cols-3 bg-teal-400">
-        {menuItems.map(item => {
-        const isActive = location.pathname === item.url;
-        const isDisabled = adminOnly && user?.role !== "admin";
-        return <Card key={item.title} className={`transition-all shadow-sm cursor-pointer px-0 ${isActive ? "ring-2 ring-accent bg-accent/10" : "hover:shadow-lg"} ${isDisabled ? "opacity-50 pointer-events-none" : ""}`} onClick={() => !isDisabled && onNavigate(item.url)}>
-              <CardContent className="flex flex-col items-center justify-center py-4 gap-2">
-                <item.icon className="h-6 w-6 mb-1 text-primary" />
-                <span className="text-[0.95rem] text-center font-semibold break-words">{item.title}</span>
-                {isDisabled && <span className="text-xs text-gray-500 mt-1">Admin Only</span>}
-              </CardContent>
-            </Card>;
-      })}
-      </div>
-    </div>;
+// Helper render menu as regular rows
+function MenuSection({ label, menuItems, user, location, onNavigate, adminOnly = false }) {
+  return (
+    <SidebarGroup>
+      <SidebarGroupLabel className="text-xs font-semibold uppercase text-slate-500 mb-2">
+        {label}
+      </SidebarGroupLabel>
+      <SidebarGroupContent>
+        <SidebarMenu>
+          {menuItems.map((item) => {
+            const isActive = location.pathname === item.url;
+            const isDisabled = adminOnly && user?.role !== "admin";
+            
+            return (
+              <SidebarMenuItem key={item.title}>
+                <SidebarMenuButton 
+                  asChild 
+                  className={`
+                    transition-all duration-200 hover:bg-blue-50 hover:text-blue-700 rounded-lg
+                    ${isActive ? "bg-blue-100 text-blue-800 border-l-4 border-blue-600 font-medium" : ""}
+                    ${isDisabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}
+                  `}
+                >
+                  <div
+                    onClick={() => !isDisabled && onNavigate(item.url)}
+                    className="flex items-center gap-3 py-2 px-3"
+                  >
+                    <item.icon className={`h-5 w-5 ${isActive ? "text-blue-700" : "text-slate-600"}`} />
+                    <span className={`text-sm ${isActive ? "text-blue-800 font-medium" : "text-slate-700"}`}>
+                      {item.title}
+                    </span>
+                    {isDisabled && (
+                      <span className="text-xs text-slate-400 ml-auto">Admin Only</span>
+                    )}
+                  </div>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            );
+          })}
+        </SidebarMenu>
+      </SidebarGroupContent>
+    </SidebarGroup>
+  );
 }
-export function AppSidebar({
-  ...props
-}: React.ComponentProps<typeof Sidebar>) {
+
+export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const location = useLocation();
   const navigate = useNavigate();
-  const {
-    user,
-    signOut
-  } = useSimpleAuth();
-  const {
-    toast
-  } = useToast();
+  const { user, signOut } = useSimpleAuth();
+  const { toast } = useToast();
+
   const handleLogout = async () => {
     await signOut();
     toast({
@@ -183,37 +196,78 @@ export function AppSidebar({
     });
     navigate('/');
   };
-  return <Sidebar variant="inset" {...props}>
+
+  return (
+    <Sidebar variant="inset" className="border-r border-slate-200 bg-white" {...props}>
       <SidebarHeader>
-        <div className="p-4">
+        <div className="p-4 border-b border-slate-100">
           <div className="flex items-center gap-3 mb-4">
+            <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-800 rounded-lg flex items-center justify-center">
+              <Store className="h-6 w-6 text-white" />
+            </div>
             <div>
-              <h2 className="text-lg font-semibold">Assunnah Mart</h2>
-              <p className="text-sm text-gray-500">Management System</p>
+              <h2 className="text-lg font-bold text-slate-800">Assunnah Mart</h2>
+              <p className="text-sm text-slate-500">Management System</p>
             </div>
           </div>
-          {user && <div className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg">
-              <User className="h-4 w-4" />
-              <div className="flex-1">
-                <p className="text-sm font-medium">{user.full_name}</p>
-                <p className="text-xs text-gray-500 capitalize">{user.role}</p>
+          {user && (
+            <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-lg border border-slate-100">
+              <div className="w-8 h-8 bg-gradient-to-br from-green-500 to-green-600 rounded-full flex items-center justify-center">
+                <User className="h-4 w-4 text-white" />
               </div>
-            </div>}
+              <div className="flex-1">
+                <p className="text-sm font-medium text-slate-800">{user.full_name}</p>
+                <p className="text-xs text-slate-500 capitalize">{user.role}</p>
+              </div>
+            </div>
+          )}
         </div>
       </SidebarHeader>
-      <div className="flex-1 overflow-y-auto py-2">
-        <MenuGrid label="Sistem Utama" menuItems={mainMenuItems} user={user} location={location} onNavigate={navigate} />
-        <MenuGrid label="Penjualan & Pembelian" menuItems={jualBeliMenuItems} user={user} location={location} onNavigate={navigate} />
-        <MenuGrid label="Kas & Piutang" menuItems={kasPiutangMenuItems} user={user} location={location} onNavigate={navigate} />
-        <MenuGrid label="Panel Administrator" menuItems={adminMenuItems} user={user} location={location} onNavigate={navigate} adminOnly />
-      </div>
+      
+      <SidebarContent className="py-4">
+        <MenuSection 
+          label="Sistem Utama" 
+          menuItems={mainMenuItems} 
+          user={user} 
+          location={location} 
+          onNavigate={navigate} 
+        />
+        <MenuSection 
+          label="Penjualan & Pembelian" 
+          menuItems={jualBeliMenuItems} 
+          user={user} 
+          location={location} 
+          onNavigate={navigate} 
+        />
+        <MenuSection 
+          label="Kas & Piutang" 
+          menuItems={kasPiutangMenuItems} 
+          user={user} 
+          location={location} 
+          onNavigate={navigate} 
+        />
+        <MenuSection 
+          label="Panel Administrator" 
+          menuItems={adminMenuItems} 
+          user={user} 
+          location={location} 
+          onNavigate={navigate} 
+          adminOnly 
+        />
+      </SidebarContent>
+      
       <SidebarFooter>
-        <div className="p-4 border-t">
-          <Button onClick={handleLogout} variant="outline" className="w-full">
+        <div className="p-4 border-t border-slate-100">
+          <Button 
+            onClick={handleLogout} 
+            variant="outline" 
+            className="w-full border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300 transition-colors duration-200"
+          >
             <LogOut className="h-4 w-4 mr-2" />
             Keluar
           </Button>
         </div>
       </SidebarFooter>
-    </Sidebar>;
+    </Sidebar>
+  );
 }

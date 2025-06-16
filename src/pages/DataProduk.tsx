@@ -36,6 +36,11 @@ const DataProduk = () => {
     product.supplier?.nama?.toLowerCase().includes(searchQuery.toLowerCase())
   ) || [];
 
+  // Calculate actual counts
+  const totalProducts = products?.length || 0;
+  const activeProducts = products?.filter(p => p.status === 'aktif')?.length || 0;
+  const lowStockProducts = products?.filter(p => p.stok_saat_ini <= p.stok_minimal)?.length || 0;
+
   const handleEdit = (product) => {
     setEditingProduct(product);
     setShowForm(true);
@@ -135,6 +140,60 @@ const DataProduk = () => {
                     </div>
                   </div>
 
+                  {/* Product Statistics Cards */}
+                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                    <Card>
+                      <CardContent className="pt-4">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="text-sm text-gray-600">Total Produk</p>
+                            <p className="text-2xl font-bold text-blue-600">{totalProducts.toLocaleString('id-ID')}</p>
+                          </div>
+                          <Package className="h-8 w-8 text-blue-600" />
+                        </div>
+                      </CardContent>
+                    </Card>
+                    
+                    <Card>
+                      <CardContent className="pt-4">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="text-sm text-gray-600">Produk Aktif</p>
+                            <p className="text-2xl font-bold text-green-600">{activeProducts.toLocaleString('id-ID')}</p>
+                          </div>
+                          <Badge className="bg-green-500 text-white px-2 py-1">Aktif</Badge>
+                        </div>
+                      </CardContent>
+                    </Card>
+                    
+                    <Card>
+                      <CardContent className="pt-4">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="text-sm text-gray-600">Stok Rendah</p>
+                            <p className="text-2xl font-bold text-red-600">{lowStockProducts.toLocaleString('id-ID')}</p>
+                          </div>
+                          <Badge variant="destructive">Alert</Badge>
+                        </div>
+                      </CardContent>
+                    </Card>
+                    
+                    <Card>
+                      <CardContent className="pt-4">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="text-sm text-gray-600">Capacity</p>
+                            <p className="text-sm font-bold text-green-600">Unlimited</p>
+                          </div>
+                          <Badge variant="outline" className="bg-green-50 text-green-700">
+                            <Package className="h-3 w-3 mr-1" />
+                            No Limit
+                          </Badge>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
+
                   {/* Integration Status */}
                   <Card className="bg-blue-50 border-blue-200 mb-4">
                     <CardContent className="pt-4">
@@ -204,15 +263,15 @@ const DataProduk = () => {
                 <Card>
                   <CardHeader>
                     <CardTitle className="flex items-center justify-between">
-                      <span>Data Produk POS System ({filteredProducts.length})</span>
-                      <div className="flex items-center gap-2">
+                      <span>Data Produk POS System</span>
+                      <div className="flex items-center gap-4">
+                        <div className="text-sm text-gray-500">
+                          Menampilkan: {filteredProducts.length.toLocaleString('id-ID')} dari {totalProducts.toLocaleString('id-ID')} produk
+                        </div>
                         <Badge variant="outline" className="bg-green-50 text-green-700">
                           <Package className="h-3 w-3 mr-1" />
                           Unlimited Capacity
                         </Badge>
-                        <div className="text-sm text-gray-500">
-                          Total: {products?.length || 0} produk
-                        </div>
                       </div>
                     </CardTitle>
                   </CardHeader>
@@ -226,7 +285,7 @@ const DataProduk = () => {
                       <div className="text-center py-8">
                         <Package className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                         <p className="text-gray-600">
-                          {searchQuery ? 'Produk tidak ditemukan' : 'Belum ada produk'}
+                          {searchQuery ? `Tidak ditemukan produk dengan pencarian "${searchQuery}"` : 'Belum ada produk'}
                         </p>
                         {!searchQuery && (
                           <Button onClick={handleAddNew} className="mt-4">

@@ -1,9 +1,7 @@
-
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { ShoppingCart } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-
 interface POSHeaderProps {
   totalAmount: number;
   cartItemsCount: number;
@@ -11,21 +9,18 @@ interface POSHeaderProps {
   userFullName?: string;
   showDashboardAccess: boolean;
 }
-
-const POSHeader = ({ 
-  totalAmount, 
-  cartItemsCount, 
-  userName, 
-  userFullName, 
-  showDashboardAccess 
+const POSHeader = ({
+  totalAmount,
+  cartItemsCount,
+  userName,
+  userFullName,
+  showDashboardAccess
 }: POSHeaderProps) => {
   const navigate = useNavigate();
-
-  return (
-    <div className="sticky top-0 z-40 bg-gray-50 pb-4">
+  return <div className="sticky top-0 z-40 bg-gray-50 pb-4">
       <div className="container mx-auto p-4 max-w-7xl">
-        <div className="bg-gradient-to-r from-yellow-600 via-yellow-700 to-yellow-800 rounded-xl p-6 shadow-lg border-2 border-yellow-500">
-          <div className="flex items-center justify-between text-white">
+        <div className="bg-gradient-to-r from-blue-600 via-blue-700 bg-gradient-to-r p-6 shadow-lg border-2 border-yellow-500 bg-sky-700 rounded-full">
+          <div className="flex items-center justify-between via-blue-700 ">
             <div className="flex items-center gap-4">
               <div>
                 <p className="text-yellow-100 text-xl font-bold mb-2">Assunnah Mart</p>
@@ -46,29 +41,20 @@ const POSHeader = ({
                 </Badge>
                 <Badge variant="outline" className="border-yellow-300 text-yellow-200 bg-transparent">
                   {new Date().toLocaleDateString('id-ID', {
-                    weekday: 'long',
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric'
-                  })}
+                  weekday: 'long',
+                  year: 'numeric',
+                  month: 'long',
+                  day: 'numeric'
+                })}
                 </Badge>
-                {showDashboardAccess && (
-                  <Button 
-                    onClick={() => navigate('/dashboard')} 
-                    variant="outline" 
-                    size="sm" 
-                    className="ml-2 border-yellow-300 hover:bg-yellow-200 text-cyan-950"
-                  >
+                {showDashboardAccess && <Button onClick={() => navigate('/dashboard')} variant="outline" size="sm" className="ml-2 border-yellow-300 hover:bg-yellow-200 text-cyan-950">
                     Dashboard
-                  </Button>
-                )}
+                  </Button>}
               </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
-  );
+    </div>;
 };
-
 export default POSHeader;

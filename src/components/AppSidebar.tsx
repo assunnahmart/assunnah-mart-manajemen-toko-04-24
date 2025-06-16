@@ -1,4 +1,3 @@
-
 import * as React from "react";
 import { Users, CreditCard, Truck, TrendingUp, Database, Package, Calculator, BookOpen, FileText, Home, Store, ShoppingCart, LogOut, User, DollarSign } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -138,56 +137,55 @@ const adminMenuItems = [{
 }];
 
 // Helper render menu as regular rows
-function MenuSection({ label, menuItems, user, location, onNavigate, adminOnly = false }) {
-  return (
-    <SidebarGroup>
+function MenuSection({
+  label,
+  menuItems,
+  user,
+  location,
+  onNavigate,
+  adminOnly = false
+}) {
+  return <SidebarGroup>
       <SidebarGroupLabel className="text-xs font-semibold uppercase text-slate-500 mb-2">
         {label}
       </SidebarGroupLabel>
       <SidebarGroupContent>
         <SidebarMenu>
-          {menuItems.map((item) => {
-            const isActive = location.pathname === item.url;
-            const isDisabled = adminOnly && user?.role !== "admin";
-            
-            return (
-              <SidebarMenuItem key={item.title}>
-                <SidebarMenuButton 
-                  asChild 
-                  className={`
+          {menuItems.map(item => {
+          const isActive = location.pathname === item.url;
+          const isDisabled = adminOnly && user?.role !== "admin";
+          return <SidebarMenuItem key={item.title}>
+                <SidebarMenuButton asChild className={`
                     transition-all duration-200 hover:bg-blue-50 hover:text-blue-700 rounded-lg
                     ${isActive ? "bg-blue-100 text-blue-800 border-l-4 border-blue-600 font-medium" : ""}
                     ${isDisabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}
-                  `}
-                >
-                  <div
-                    onClick={() => !isDisabled && onNavigate(item.url)}
-                    className="flex items-center gap-3 py-2 px-3"
-                  >
+                  `}>
+                  <div onClick={() => !isDisabled && onNavigate(item.url)} className="flex items-center gap-3 py-2 px-3">
                     <item.icon className={`h-5 w-5 ${isActive ? "text-blue-700" : "text-slate-600"}`} />
                     <span className={`text-sm ${isActive ? "text-blue-800 font-medium" : "text-slate-700"}`}>
                       {item.title}
                     </span>
-                    {isDisabled && (
-                      <span className="text-xs text-slate-400 ml-auto">Admin Only</span>
-                    )}
+                    {isDisabled && <span className="text-xs text-slate-400 ml-auto">Admin Only</span>}
                   </div>
                 </SidebarMenuButton>
-              </SidebarMenuItem>
-            );
-          })}
+              </SidebarMenuItem>;
+        })}
         </SidebarMenu>
       </SidebarGroupContent>
-    </SidebarGroup>
-  );
+    </SidebarGroup>;
 }
-
-export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+export function AppSidebar({
+  ...props
+}: React.ComponentProps<typeof Sidebar>) {
   const location = useLocation();
   const navigate = useNavigate();
-  const { user, signOut } = useSimpleAuth();
-  const { toast } = useToast();
-
+  const {
+    user,
+    signOut
+  } = useSimpleAuth();
+  const {
+    toast
+  } = useToast();
   const handleLogout = async () => {
     await signOut();
     toast({
@@ -196,26 +194,19 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     });
     navigate('/');
   };
-
-  return (
-    <Sidebar variant="inset" className="border-r border-slate-200 bg-white" {...props}>
+  return <Sidebar variant="inset" className="border-r border-slate-200 bg-white" {...props}>
       <SidebarHeader>
         <div className="p-4 border-b border-slate-100">
           <div className="flex items-center gap-3 mb-4">
-            <div className="w-12 h-12 flex items-center justify-center">
-              <img 
-                src="/lovable-uploads/d8973707-35cf-4652-8170-03093cb0c2f4.png" 
-                alt="Assunnah Mart Logo" 
-                className="h-10 w-auto object-contain"
-              />
+            <div className="w-12 h-12 flex items-center justify-center mx-0">
+              <img src="/lovable-uploads/d8973707-35cf-4652-8170-03093cb0c2f4.png" alt="Assunnah Mart Logo" className="h-10 w-auto object-cover" />
             </div>
             <div>
               <h2 className="text-lg font-bold text-slate-800">Assunnah Mart</h2>
               <p className="text-sm text-slate-500">Management System</p>
             </div>
           </div>
-          {user && (
-            <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-lg border border-slate-100">
+          {user && <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-lg border border-slate-100">
               <div className="w-8 h-8 bg-gradient-to-br from-green-500 to-green-600 rounded-full flex items-center justify-center">
                 <User className="h-4 w-4 text-white" />
               </div>
@@ -223,55 +214,24 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 <p className="text-sm font-medium text-slate-800">{user.full_name}</p>
                 <p className="text-xs text-slate-500 capitalize">{user.role}</p>
               </div>
-            </div>
-          )}
+            </div>}
         </div>
       </SidebarHeader>
       
       <SidebarContent className="py-4">
-        <MenuSection 
-          label="Sistem Utama" 
-          menuItems={mainMenuItems} 
-          user={user} 
-          location={location} 
-          onNavigate={navigate} 
-        />
-        <MenuSection 
-          label="Penjualan & Pembelian" 
-          menuItems={jualBeliMenuItems} 
-          user={user} 
-          location={location} 
-          onNavigate={navigate} 
-        />
-        <MenuSection 
-          label="Kas & Piutang" 
-          menuItems={kasPiutangMenuItems} 
-          user={user} 
-          location={location} 
-          onNavigate={navigate} 
-        />
-        <MenuSection 
-          label="Panel Administrator" 
-          menuItems={adminMenuItems} 
-          user={user} 
-          location={location} 
-          onNavigate={navigate} 
-          adminOnly 
-        />
+        <MenuSection label="Sistem Utama" menuItems={mainMenuItems} user={user} location={location} onNavigate={navigate} />
+        <MenuSection label="Penjualan & Pembelian" menuItems={jualBeliMenuItems} user={user} location={location} onNavigate={navigate} />
+        <MenuSection label="Kas & Piutang" menuItems={kasPiutangMenuItems} user={user} location={location} onNavigate={navigate} />
+        <MenuSection label="Panel Administrator" menuItems={adminMenuItems} user={user} location={location} onNavigate={navigate} adminOnly />
       </SidebarContent>
       
       <SidebarFooter>
         <div className="p-4 border-t border-slate-100">
-          <Button 
-            onClick={handleLogout} 
-            variant="outline" 
-            className="w-full border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300 transition-colors duration-200"
-          >
+          <Button onClick={handleLogout} variant="outline" className="w-full border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300 transition-colors duration-200">
             <LogOut className="h-4 w-4 mr-2" />
             Keluar
           </Button>
         </div>
       </SidebarFooter>
-    </Sidebar>
-  );
+    </Sidebar>;
 }

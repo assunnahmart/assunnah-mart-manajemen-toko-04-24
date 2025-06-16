@@ -1,3 +1,4 @@
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -151,6 +152,8 @@ export const useCreateKonsinyasiMingguan = () => {
       const weeklyData = {
         supplier_id: data.supplier_id,
         product_id: data.product_id,
+        supplier_name: data.supplier_name,
+        product_name: data.product_name,
         jumlah_titipan: data.jumlah_titipan,
         jumlah_terjual_sistem: data.jumlah_terjual_sistem,
         jumlah_real_terjual: data.jumlah_real_terjual,

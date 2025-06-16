@@ -29,6 +29,7 @@ import PembayaranPiutangPage from "@/pages/PembayaranPiutangPage";
 import PembayaranHutangPage from "@/pages/PembayaranHutangPage";
 import PiutangPage from "@/pages/PiutangPage";
 import StockOpnamePage from "@/pages/StockOpnamePage";
+import StockOpnameLoginPage from "@/pages/StockOpnameLoginPage";
 
 function App() {
   const { isAuthenticated, loading } = useSimpleAuth();
@@ -71,6 +72,7 @@ function App() {
           <Route path="/pembayaran-hutang" element={isAuthenticated ? <PembayaranHutangPage /> : <Navigate to="/login" />} />
           <Route path="/Piutang" element={isAuthenticated ? <PiutangPage /> : <Navigate to="/login" />} />
           <Route path="/stok-opname" element={<StockOpnamePage />} />
+          <Route path="/stok-opname-login" element={<StockOpnameLoginPage />} />
         </Routes>
       </Router>
     </ErrorBoundary>

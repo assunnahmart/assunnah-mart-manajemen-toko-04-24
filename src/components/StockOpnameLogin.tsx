@@ -6,19 +6,21 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { useNavigate } from 'react-router-dom';
+import { Package, Scan } from 'lucide-react';
 
-const NewLoginForm = () => {
+interface StockOpnameLoginProps {
+  onLoginSuccess: () => void;
+}
+
+const StockOpnameLogin = ({ onLoginSuccess }: StockOpnameLoginProps) => {
   const { signIn } = useSimpleAuth();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('NewLoginForm: Form submitted with:', { username, password: '***' });
     
     if (!username || !password) {
       setError('Username dan password harus diisi');
@@ -30,93 +32,95 @@ const NewLoginForm = () => {
 
     try {
       const success = await signIn(username, password);
-      console.log('NewLoginForm: Sign in result:', success);
       
       if (!success) {
-        console.log('NewLoginForm: Login failed');
-        setError('Username atau password salah. Silakan coba lagi.');
+        setError('Username atau password salah untuk akses stok opname');
         setLoading(false);
       } else {
-        console.log('NewLoginForm: Login successful, navigating to POS');
-        // Reset form
         setUsername('');
         setPassword('');
         setLoading(false);
-
-        // Navigate immediately after successful login
-        navigate('/pos', { replace: true });
+        onLoginSuccess();
       }
     } catch (error) {
-      console.error('NewLoginForm: Unexpected error during login:', error);
-      setError('Terjadi kesalahan yang tidak terduga');
+      console.error('Stock opname login error:', error);
+      setError('Terjadi kesalahan saat login');
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center gradient-assunnah p-4 bg-yellow-200">
-      <Card className="w-full max-w-md shadow-assunnah border-0">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
+      <Card className="w-full max-w-md shadow-lg">
         <CardHeader className="text-center pb-6">
-          <div className="flex justify-center mb-6 bg-transparent">
+          <div className="flex justify-center mb-6">
             <img 
               src="/lovable-uploads/63181b78-99d7-4d69-be72-332dd429807c.png" 
               alt="Assunnah Mart Logo" 
-              className="h-32 w-auto sm:h-36 md:h-40 object-contain" 
+              className="h-20 w-auto object-contain"
             />
           </div>
-          <CardTitle className="text-2xl sm:text-3xl font-bold text-sky-600">Assunnah Mart</CardTitle>
-          <CardDescription className="text-base text-gray-600 mobile-optimized">
-            Silakan masuk dengan akun Anda
+          <CardTitle className="text-2xl font-bold text-gray-800 flex items-center justify-center gap-2">
+            <Package className="h-6 w-6 text-blue-600" />
+            Stok Opname
+          </CardTitle>
+          <CardDescription className="text-base text-gray-600">
+            Login khusus untuk input stok opname
           </CardDescription>
         </CardHeader>
+        
         <CardContent className="space-y-6">
           <form onSubmit={handleSubmit} className="space-y-4">
             {error && (
               <Alert variant="destructive">
-                <AlertDescription className="mobile-optimized">{error}</AlertDescription>
+                <AlertDescription>{error}</AlertDescription>
               </Alert>
             )}
             
             <div className="space-y-2">
               <Label htmlFor="username" className="text-base font-medium">Username</Label>
-              <Input 
-                id="username" 
-                type="text" 
-                value={username} 
-                onChange={e => setUsername(e.target.value)} 
-                placeholder="Masukkan username" 
-                required 
-                className="h-12 text-base" 
-                disabled={loading} 
-                autoComplete="username" 
+              <Input
+                id="username"
+                type="text"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                placeholder="Masukkan username"
+                required
+                className="h-12 text-base"
+                disabled={loading}
+                autoComplete="username"
               />
             </div>
             
             <div className="space-y-2">
               <Label htmlFor="password" className="text-base font-medium">Password</Label>
-              <Input 
-                id="password" 
-                type="password" 
-                value={password} 
-                onChange={e => setPassword(e.target.value)} 
-                placeholder="Masukkan password" 
-                required 
-                className="h-12 text-base" 
-                disabled={loading} 
-                autoComplete="current-password" 
+              <Input
+                id="password"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Masukkan password"
+                required
+                className="h-12 text-base"
+                disabled={loading}
+                autoComplete="current-password"
               />
             </div>
             
             <Button 
               type="submit" 
               disabled={loading} 
-              className="w-full h-12 text-base font-semibold bg-yellow-600 hover:bg-yellow-500 text-gray-50"
+              className="w-full h-12 text-base font-semibold bg-blue-600 hover:bg-blue-700 text-white"
             >
-              {loading ? 'Memproses...' : 'Masuk'}
+              <Scan className="h-4 w-4 mr-2" />
+              {loading ? 'Memproses...' : 'Masuk ke Stok Opname'}
             </Button>
           </form>
           
-          <div className="text-center">
+          <div className="text-center pt-4 border-t">
+            <p className="text-sm text-gray-600 mb-2">
+              Akses khusus untuk petugas stok opname
+            </p>
             <p className="text-xs text-gray-500">
               Copyright © 2025 Program by Junaedi Abu Mughiroh
             </p>
@@ -127,4 +131,4 @@ const NewLoginForm = () => {
   );
 };
 
-export default NewLoginForm;
+export default StockOpnameLogin;

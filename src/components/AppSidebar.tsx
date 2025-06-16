@@ -202,8 +202,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       <SidebarHeader>
         <div className="p-4 border-b border-slate-100">
           <div className="flex items-center gap-3 mb-4">
-            <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-800 rounded-lg flex items-center justify-center">
-              <Store className="h-6 w-6 text-white" />
+            <div className="w-12 h-12 flex items-center justify-center">
+              <img 
+                src="/lovable-uploads/63181b78-99d7-4d69-be72-332dd429807c.png" 
+                alt="Assunnah Mart Logo" 
+                className="h-10 w-auto object-contain"
+              />
             </div>
             <div>
               <h2 className="text-lg font-bold text-slate-800">Assunnah Mart</h2>

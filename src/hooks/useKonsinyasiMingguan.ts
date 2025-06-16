@@ -1,4 +1,3 @@
-
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -22,8 +21,8 @@ export const useKonsinyasiMingguan = () => {
       // Transform data to match expected structure
       return data?.map(item => ({
         id: item.id,
-        minggu_mulai: item.tanggal,
-        minggu_selesai: item.tanggal_selesai || item.tanggal,
+        minggu_mulai: item.created_at.split('T')[0], // Use created_at as start date
+        minggu_selesai: item.updated_at ? item.updated_at.split('T')[0] : item.created_at.split('T')[0], // Use updated_at as end date
         supplier_name: item.supplier?.nama || '',
         product_name: item.barang_konsinyasi?.nama || '',
         jumlah_titipan: item.jumlah_titipan,
@@ -152,8 +151,6 @@ export const useCreateKonsinyasiMingguan = () => {
       const weeklyData = {
         supplier_id: data.supplier_id,
         product_id: data.product_id,
-        tanggal: data.minggu_mulai,
-        tanggal_selesai: data.minggu_selesai,
         jumlah_titipan: data.jumlah_titipan,
         jumlah_terjual_sistem: data.jumlah_terjual_sistem,
         jumlah_real_terjual: data.jumlah_real_terjual,
@@ -161,7 +158,7 @@ export const useCreateKonsinyasiMingguan = () => {
         selisih_stok: data.selisih_stok,
         total_pembayaran: data.total_pembayaran,
         status: data.status,
-        keterangan: `MINGGUAN - ${data.supplier_name} - ${data.product_name}`,
+        keterangan: `MINGGUAN - ${data.supplier_name} - ${data.product_name} - Periode: ${data.minggu_mulai} s/d ${data.minggu_selesai}`,
         kasir_id: 'system',
         kasir_name: 'System',
         harga_beli: 0
@@ -169,7 +166,7 @@ export const useCreateKonsinyasiMingguan = () => {
       
       const { data: result, error } = await supabase
         .from('konsinyasi_harian')
-        .insert([weeklyData])
+        .insert(weeklyData)
         .select()
         .single();
       

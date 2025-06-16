@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import NewProtectedRoute from '@/components/NewProtectedRoute';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -31,16 +32,19 @@ const DataProduk = () => {
 
   console.log('DataProduk state:', { products, isLoading, error });
 
+  // Display all products from POS system (including active and inactive)
   const filteredProducts = products?.filter(product =>
-    product.nama.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    product.nama?.toLowerCase().includes(searchQuery.toLowerCase()) ||
     product.barcode?.toLowerCase().includes(searchQuery.toLowerCase()) ||
     product.supplier?.nama?.toLowerCase().includes(searchQuery.toLowerCase())
   ) || [];
 
-  // Calculate actual counts
+  // Calculate comprehensive statistics for all POS products
   const totalProducts = products?.length || 0;
   const activeProducts = products?.filter(p => p.status === 'aktif')?.length || 0;
-  const lowStockProducts = products?.filter(p => p.stok_saat_ini <= p.stok_minimal)?.length || 0;
+  const inactiveProducts = products?.filter(p => p.status === 'nonaktif')?.length || 0;
+  const lowStockProducts = products?.filter(p => p.stok_saat_ini <= (p.stok_minimal || 0))?.length || 0;
+  const outOfStockProducts = products?.filter(p => p.stok_saat_ini === 0)?.length || 0;
 
   const handleEdit = (product) => {
     setEditingProduct(product);
@@ -57,7 +61,7 @@ const DataProduk = () => {
       await refetch();
       toast({
         title: "Data berhasil diperbarui",
-        description: "Data produk telah disinkronkan dengan database"
+        description: "Semua data produk POS System telah disinkronkan dengan database"
       });
     } catch (error) {
       console.error('Refresh error:', error);
@@ -85,6 +89,16 @@ const DataProduk = () => {
     );
   };
 
+  const getStockBadge = (stokSaatIni, stokMinimal) => {
+    if (stokSaatIni === 0) {
+      return <Badge variant="destructive">Habis</Badge>;
+    } else if (stokSaatIni <= (stokMinimal || 0)) {
+      return <Badge variant="outline" className="text-orange-600 border-orange-300">Stok Rendah</Badge>;
+    } else {
+      return <Badge variant="outline" className="text-green-600 border-green-300">Tersedia</Badge>;
+    }
+  };
+
   const getJenisDisplay = (jenis) => {
     switch (jenis) {
       case 'harian':
@@ -93,8 +107,10 @@ const DataProduk = () => {
         return 'Mingguan';
       case 'pembelian':
         return 'Pembelian';
+      case 'lainnya':
+        return 'Lainnya';
       default:
-        return jenis;
+        return jenis || 'Tidak Diketahui';
     }
   };
 
@@ -111,7 +127,7 @@ const DataProduk = () => {
           <SidebarInset>
             <div className="flex h-16 shrink-0 items-center gap-2 border-b px-4">
               <SidebarTrigger className="-ml-1" />
-              <h1 className="text-lg font-semibold">Data Produk</h1>
+              <h1 className="text-lg font-semibold">Data Produk POS System</h1>
               <div className="ml-auto flex gap-2">
                 <Button
                   variant="destructive"
@@ -138,19 +154,19 @@ const DataProduk = () => {
                 <div className="mb-6">
                   <div className="flex items-center justify-between mb-4">
                     <div>
-                      <h1 className="text-3xl font-bold text-gray-900 mb-2">Data Produk</h1>
-                      <p className="text-gray-600">Kelola data produk dan inventori (Terintegrasi dengan POS System)</p>
+                      <h1 className="text-3xl font-bold text-gray-900 mb-2">Semua Data Produk POS System</h1>
+                      <p className="text-gray-600">Kelola semua data produk yang tersedia di POS System (Aktif & Nonaktif)</p>
                     </div>
                     <div className="flex gap-2">
                       <Button onClick={handleAddNew} className="flex items-center gap-2">
                         <Plus className="h-4 w-4" />
-                        Tambah Produk
+                        Tambah Produk Baru
                       </Button>
                     </div>
                   </div>
 
-                  {/* Product Statistics Cards */}
-                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                  {/* Enhanced Product Statistics Cards */}
+                  <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
                     <Card>
                       <CardContent className="pt-4">
                         <div className="flex items-center justify-between">
@@ -179,10 +195,10 @@ const DataProduk = () => {
                       <CardContent className="pt-4">
                         <div className="flex items-center justify-between">
                           <div>
-                            <p className="text-sm text-gray-600">Stok Rendah</p>
-                            <p className="text-2xl font-bold text-red-600">{lowStockProducts.toLocaleString('id-ID')}</p>
+                            <p className="text-sm text-gray-600">Produk Nonaktif</p>
+                            <p className="text-2xl font-bold text-gray-600">{inactiveProducts.toLocaleString('id-ID')}</p>
                           </div>
-                          <Badge variant="destructive">Alert</Badge>
+                          <Badge variant="secondary">Nonaktif</Badge>
                         </div>
                       </CardContent>
                     </Card>
@@ -191,13 +207,22 @@ const DataProduk = () => {
                       <CardContent className="pt-4">
                         <div className="flex items-center justify-between">
                           <div>
-                            <p className="text-sm text-gray-600">Kapasitas Import</p>
-                            <p className="text-sm font-bold text-green-600">Unlimited</p>
+                            <p className="text-sm text-gray-600">Stok Rendah</p>
+                            <p className="text-2xl font-bold text-orange-600">{lowStockProducts.toLocaleString('id-ID')}</p>
                           </div>
-                          <Badge variant="outline" className="bg-green-50 text-green-700">
-                            <Package className="h-3 w-3 mr-1" />
-                            No Limit
-                          </Badge>
+                          <Badge variant="outline" className="text-orange-600 border-orange-300">Alert</Badge>
+                        </div>
+                      </CardContent>
+                    </Card>
+                    
+                    <Card>
+                      <CardContent className="pt-4">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="text-sm text-gray-600">Stok Habis</p>
+                            <p className="text-2xl font-bold text-red-600">{outOfStockProducts.toLocaleString('id-ID')}</p>
+                          </div>
+                          <Badge variant="destructive">Habis</Badge>
                         </div>
                       </CardContent>
                     </Card>
@@ -209,9 +234,9 @@ const DataProduk = () => {
                       <div className="flex items-center gap-2">
                         <RefreshCw className="h-5 w-5 text-blue-600" />
                         <div>
-                          <h3 className="font-medium text-blue-900">Integrasi POS System Aktif</h3>
+                          <h3 className="font-medium text-blue-900">Sinkronisasi POS System Aktif</h3>
                           <p className="text-sm text-blue-600">
-                            Data produk tersinkronisasi real-time dengan POS System. Mendukung unlimited import produk dengan performa optimal.
+                            Menampilkan semua data produk dari POS System secara real-time. Termasuk produk aktif dan nonaktif.
                           </p>
                         </div>
                       </div>
@@ -272,14 +297,14 @@ const DataProduk = () => {
                 <Card>
                   <CardHeader>
                     <CardTitle className="flex items-center justify-between">
-                      <span>Data Produk POS System</span>
+                      <span>Semua Data Produk POS System</span>
                       <div className="flex items-center gap-4">
                         <div className="text-sm text-gray-500">
                           Menampilkan: {filteredProducts.length.toLocaleString('id-ID')} dari {totalProducts.toLocaleString('id-ID')} produk
                         </div>
-                        <Badge variant="outline" className="bg-green-50 text-green-700">
+                        <Badge variant="outline" className="bg-blue-50 text-blue-700">
                           <Package className="h-3 w-3 mr-1" />
-                          Unlimited Capacity
+                          Semua Status
                         </Badge>
                       </div>
                     </CardTitle>
@@ -288,13 +313,13 @@ const DataProduk = () => {
                     {isLoading ? (
                       <div className="text-center py-8">
                         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-                        <p className="mt-2 text-gray-600">Memuat data produk dari database...</p>
+                        <p className="mt-2 text-gray-600">Memuat semua data produk dari POS System...</p>
                       </div>
                     ) : filteredProducts.length === 0 ? (
                       <div className="text-center py-8">
                         <Package className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                         <p className="text-gray-600">
-                          {searchQuery ? `Tidak ditemukan produk dengan pencarian "${searchQuery}"` : 'Belum ada produk'}
+                          {searchQuery ? `Tidak ditemukan produk dengan pencarian "${searchQuery}"` : 'Belum ada produk di POS System'}
                         </p>
                         {!searchQuery && (
                           <Button onClick={handleAddNew} className="mt-4">
@@ -312,18 +337,20 @@ const DataProduk = () => {
                               <TableHead>Supplier</TableHead>
                               <TableHead>Barcode</TableHead>
                               <TableHead>Jenis Barang</TableHead>
+                              <TableHead>Kategori</TableHead>
                               <TableHead>Satuan</TableHead>
                               <TableHead>Harga Beli</TableHead>
                               <TableHead>Harga Jual</TableHead>
-                              <TableHead>Stok Saat Ini</TableHead>
+                              <TableHead>Stok</TableHead>
                               <TableHead>Stok Minimal</TableHead>
+                              <TableHead>Status Stok</TableHead>
                               <TableHead>Status</TableHead>
                               <TableHead>Aksi</TableHead>
                             </TableRow>
                           </TableHeader>
                           <TableBody>
                             {filteredProducts.map((product) => (
-                              <TableRow key={product.id}>
+                              <TableRow key={product.id} className={product.status === 'nonaktif' ? 'opacity-60' : ''}>
                                 <TableCell className="font-medium">{product.nama}</TableCell>
                                 <TableCell>
                                   {product.supplier?.nama ? (
@@ -344,6 +371,11 @@ const DataProduk = () => {
                                     {getJenisDisplay(product.jenis_konsinyasi)}
                                   </Badge>
                                 </TableCell>
+                                <TableCell>
+                                  <Badge variant="outline" className="bg-purple-50 text-purple-700">
+                                    {product.kategori_pembelian || 'retail'}
+                                  </Badge>
+                                </TableCell>
                                 <TableCell>{product.satuan}</TableCell>
                                 <TableCell>{formatCurrency(product.harga_beli || 0)}</TableCell>
                                 <TableCell className="font-medium text-green-600">
@@ -351,19 +383,19 @@ const DataProduk = () => {
                                 </TableCell>
                                 <TableCell>
                                   <span className={`font-medium ${
-                                    product.stok_saat_ini <= product.stok_minimal 
+                                    product.stok_saat_ini === 0
                                       ? 'text-red-600' 
+                                      : product.stok_saat_ini <= (product.stok_minimal || 0)
+                                      ? 'text-orange-600'
                                       : 'text-green-600'
                                   }`}>
                                     {product.stok_saat_ini}
                                   </span>
-                                  {product.stok_saat_ini <= product.stok_minimal && (
-                                    <Badge variant="destructive" className="ml-2 text-xs">
-                                      Stok Rendah
-                                    </Badge>
-                                  )}
                                 </TableCell>
                                 <TableCell>{product.stok_minimal}</TableCell>
+                                <TableCell>
+                                  {getStockBadge(product.stok_saat_ini, product.stok_minimal)}
+                                </TableCell>
                                 <TableCell>{getStatusBadge(product.status)}</TableCell>
                                 <TableCell>
                                   <div className="flex gap-2">

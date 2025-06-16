@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -9,14 +8,16 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Search, Plus, Edit, Trash2, Building2, User, Phone, MapPin } from 'lucide-react';
+import { Search, Plus, Edit, Trash2, Building2, User, Phone, MapPin, FileSpreadsheet } from 'lucide-react';
 import { usePelangganUnit, usePelangganPerorangan, useCreatePelangganUnit, useCreatePelangganPerorangan } from '@/hooks/usePelanggan';
 import { useToast } from '@/hooks/use-toast';
+import CustomerExportImport from './CustomerExportImport';
 
 const PelangganManagement = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isExportImportOpen, setIsExportImportOpen] = useState(false);
   const [editingCustomer, setEditingCustomer] = useState(null);
   const [editingType, setEditingType] = useState('unit');
   const [newCustomer, setNewCustomer] = useState({
@@ -29,11 +30,17 @@ const PelangganManagement = () => {
     limit_kredit: 0
   });
 
-  const { data: pelangganUnit } = usePelangganUnit();
-  const { data: pelangganPerorangan } = usePelangganPerorangan();
+  const { data: pelangganUnit, refetch: refetchUnit } = usePelangganUnit();
+  const { data: pelangganPerorangan, refetch: refetchPerorangan } = usePelangganPerorangan();
   const createPelangganUnit = useCreatePelangganUnit();
   const createPelangganPerorangan = useCreatePelangganPerorangan();
   const { toast } = useToast();
+
+  // Combine all customers for export
+  const allCustomers = [
+    ...(pelangganUnit || []).map(customer => ({ ...customer, type: 'unit' })),
+    ...(pelangganPerorangan || []).map(customer => ({ ...customer, type: 'perorangan' }))
+  ];
 
   const handleCreateCustomer = async (type) => {
     try {
@@ -110,124 +117,149 @@ const PelangganManagement = () => {
     customer.nama.toLowerCase().includes(searchTerm.toLowerCase())
   ) || [];
 
+  const handleImportSuccess = () => {
+    refetchUnit();
+    refetchPerorangan();
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold">Manajemen Pelanggan</h1>
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogTrigger asChild>
-            <Button className="bg-blue-600 hover:bg-blue-700">
-              <Plus className="h-4 w-4 mr-2" />
-              Tambah Pelanggan
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-2xl">
-            <DialogHeader>
-              <DialogTitle>Tambah Pelanggan Baru</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="nama">Nama Lengkap *</Label>
-                  <Input
-                    id="nama"
-                    value={newCustomer.nama}
-                    onChange={(e) => setNewCustomer(prev => ({ ...prev, nama: e.target.value }))}
-                    placeholder="Masukkan nama lengkap"
-                  />
+        <div className="flex gap-2">
+          <Dialog open={isExportImportOpen} onOpenChange={setIsExportImportOpen}>
+            <DialogTrigger asChild>
+              <Button variant="outline" className="bg-green-600 hover:bg-green-700 text-white">
+                <FileSpreadsheet className="h-4 w-4 mr-2" />
+                Export/Import
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle>Export/Import Data Pelanggan</DialogTitle>
+              </DialogHeader>
+              <CustomerExportImport 
+                customers={allCustomers} 
+                onImportSuccess={handleImportSuccess}
+              />
+            </DialogContent>
+          </Dialog>
+          
+          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+            <DialogTrigger asChild>
+              <Button className="bg-blue-600 hover:bg-blue-700">
+                <Plus className="h-4 w-4 mr-2" />
+                Tambah Pelanggan
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-2xl">
+              <DialogHeader>
+                <DialogTitle>Tambah Pelanggan Baru</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="nama">Nama Lengkap *</Label>
+                    <Input
+                      id="nama"
+                      value={newCustomer.nama}
+                      onChange={(e) => setNewCustomer(prev => ({ ...prev, nama: e.target.value }))}
+                      placeholder="Masukkan nama lengkap"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="nama_unit">Nama Unit/Perusahaan</Label>
+                    <Input
+                      id="nama_unit"
+                      value={newCustomer.nama_unit}
+                      onChange={(e) => setNewCustomer(prev => ({ ...prev, nama_unit: e.target.value }))}
+                      placeholder="Nama unit atau perusahaan"
+                    />
+                  </div>
                 </div>
-                <div>
-                  <Label htmlFor="nama_unit">Nama Unit/Perusahaan</Label>
-                  <Input
-                    id="nama_unit"
-                    value={newCustomer.nama_unit}
-                    onChange={(e) => setNewCustomer(prev => ({ ...prev, nama_unit: e.target.value }))}
-                    placeholder="Nama unit atau perusahaan"
-                  />
-                </div>
-              </div>
 
-              <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="jabatan">Jabatan</Label>
+                    <Input
+                      id="jabatan"
+                      value={newCustomer.jabatan}
+                      onChange={(e) => setNewCustomer(prev => ({ ...prev, jabatan: e.target.value }))}
+                      placeholder="Jabatan"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="telepon">Nomor Telepon</Label>
+                    <Input
+                      id="telepon"
+                      value={newCustomer.telepon}
+                      onChange={(e) => setNewCustomer(prev => ({ ...prev, telepon: e.target.value }))}
+                      placeholder="Nomor telepon"
+                    />
+                  </div>
+                </div>
+
                 <div>
-                  <Label htmlFor="jabatan">Jabatan</Label>
-                  <Input
-                    id="jabatan"
-                    value={newCustomer.jabatan}
-                    onChange={(e) => setNewCustomer(prev => ({ ...prev, jabatan: e.target.value }))}
-                    placeholder="Jabatan"
+                  <Label htmlFor="alamat">Alamat</Label>
+                  <Textarea
+                    id="alamat"
+                    value={newCustomer.alamat}
+                    onChange={(e) => setNewCustomer(prev => ({ ...prev, alamat: e.target.value }))}
+                    placeholder="Alamat lengkap"
                   />
                 </div>
-                <div>
-                  <Label htmlFor="telepon">Nomor Telepon</Label>
-                  <Input
-                    id="telepon"
-                    value={newCustomer.telepon}
-                    onChange={(e) => setNewCustomer(prev => ({ ...prev, telepon: e.target.value }))}
-                    placeholder="Nomor telepon"
-                  />
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="jenis_pembayaran">Jenis Pembayaran</Label>
+                    <Select
+                      value={newCustomer.jenis_pembayaran}
+                      onValueChange={(value) => setNewCustomer(prev => ({ ...prev, jenis_pembayaran: value }))}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="tunai">Tunai</SelectItem>
+                        <SelectItem value="kredit">Kredit</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label htmlFor="limit_kredit">Limit Kredit</Label>
+                    <Input
+                      id="limit_kredit"
+                      type="number"
+                      value={newCustomer.limit_kredit}
+                      onChange={(e) => setNewCustomer(prev => ({ ...prev, limit_kredit: parseInt(e.target.value) || 0 }))}
+                      placeholder="0"
+                    />
+                  </div>
                 </div>
-              </div>
 
-              <div>
-                <Label htmlFor="alamat">Alamat</Label>
-                <Textarea
-                  id="alamat"
-                  value={newCustomer.alamat}
-                  onChange={(e) => setNewCustomer(prev => ({ ...prev, alamat: e.target.value }))}
-                  placeholder="Alamat lengkap"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="jenis_pembayaran">Jenis Pembayaran</Label>
-                  <Select
-                    value={newCustomer.jenis_pembayaran}
-                    onValueChange={(value) => setNewCustomer(prev => ({ ...prev, jenis_pembayaran: value }))}
+                <div className="flex gap-2">
+                  <Button
+                    onClick={() => handleCreateCustomer('unit')}
+                    disabled={!newCustomer.nama || createPelangganUnit.isPending}
+                    className="flex-1"
                   >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="tunai">Tunai</SelectItem>
-                      <SelectItem value="kredit">Kredit</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label htmlFor="limit_kredit">Limit Kredit</Label>
-                  <Input
-                    id="limit_kredit"
-                    type="number"
-                    value={newCustomer.limit_kredit}
-                    onChange={(e) => setNewCustomer(prev => ({ ...prev, limit_kredit: parseInt(e.target.value) || 0 }))}
-                    placeholder="0"
-                  />
+                    <Building2 className="h-4 w-4 mr-2" />
+                    Simpan sebagai Unit
+                  </Button>
+                  <Button
+                    onClick={() => handleCreateCustomer('perorangan')}
+                    disabled={!newCustomer.nama || createPelangganPerorangan.isPending}
+                    variant="outline"
+                    className="flex-1"
+                  >
+                    <User className="h-4 w-4 mr-2" />
+                    Simpan sebagai Perorangan
+                  </Button>
                 </div>
               </div>
-
-              <div className="flex gap-2">
-                <Button
-                  onClick={() => handleCreateCustomer('unit')}
-                  disabled={!newCustomer.nama || createPelangganUnit.isPending}
-                  className="flex-1"
-                >
-                  <Building2 className="h-4 w-4 mr-2" />
-                  Simpan sebagai Unit
-                </Button>
-                <Button
-                  onClick={() => handleCreateCustomer('perorangan')}
-                  disabled={!newCustomer.nama || createPelangganPerorangan.isPending}
-                  variant="outline"
-                  className="flex-1"
-                >
-                  <User className="h-4 w-4 mr-2" />
-                  Simpan sebagai Perorangan
-                </Button>
-              </div>
-            </div>
-          </DialogContent>
-        </Dialog>
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
 
       {/* Edit Dialog */}

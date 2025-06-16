@@ -56,6 +56,10 @@ const jualBeliMenuItems = [{
   url: "/konsinyasi-harian",
   icon: Package
 }, {
+  title: "Konsinyasi Mingguan",
+  url: "/konsinyasi-mingguan",
+  icon: Package
+}, {
   title: "Pembelian",
   url: "/purchase",
   icon: ShoppingCart

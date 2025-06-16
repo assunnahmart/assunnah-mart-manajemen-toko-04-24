@@ -62,7 +62,7 @@ const POSSidebar = ({
     description: 'Riwayat transaksi'
   }, {
     icon: Package,
-    label: 'Konsinyasi',
+    label: 'Konsinyasi Harian',
     onClick: onKonsinyasi,
     color: 'bg-purple-600 hover:bg-purple-700',
     description: 'Konsinyasi harian'

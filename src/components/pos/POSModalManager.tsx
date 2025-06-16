@@ -1,8 +1,16 @@
-
-import POSModals from '@/components/pos/POSModals';
+import { Package, Scan, Wallet, X } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import POSKasirTransactionHistory from '@/components/pos/POSKasirTransactionHistory';
+import POSDailyReport from '@/components/pos/POSDailyReport';
+import KonsinyasiHarianForm from '@/components/konsinyasi/KonsinyasiHarianForm';
+import KonsinyasiHarianHistory from '@/components/konsinyasi/KonsinyasiHarianHistory';
+import StockOpname from '@/components/stock/StockOpname';
+import KasirKasForm from '@/components/kas/KasirKasForm';
+import KasirKasHistory from '@/components/kas/KasirKasHistory';
+import KasUmumForm from '@/components/kas/KasUmumForm';
+import KasUmumHistory from '@/components/kas/KasUmumHistory';
 import CameraBarcodeScanner from '@/components/stock/CameraBarcodeScanner';
-import POSFastTransactionHistory from '@/components/pos/POSFastTransactionHistory';
-import { useToast } from '@/hooks/use-toast';
+import POSModals from './POSModals';
 
 interface POSModalManagerProps {
   showTransactionHistory: boolean;
@@ -41,25 +49,26 @@ const POSModalManager = ({
   setSearchQuery,
   userFullName
 }: POSModalManagerProps) => {
-  const { toast } = useToast();
-
-  const handleQuickScanBarcodeScanned = (barcode: string) => {
+  const handleBarcodeScanned = (barcode: string) => {
     setSearchQuery(barcode);
     setShowQuickScanner(false);
-    toast({
-      title: "Produk ditemukan",
-      description: `Barcode ${barcode} berhasil di-scan`
-    });
   };
 
   return (
     <>
+      {/* Quick Scanner Modal */}
+      <CameraBarcodeScanner 
+        isOpen={showQuickScanner} 
+        onScan={handleBarcodeScanned} 
+        onClose={() => setShowQuickScanner(false)} 
+      />
+
+      {/* All other modals */}
       <POSModals
         showTransactionHistory={showTransactionHistory}
         setShowTransactionHistory={setShowTransactionHistory}
         showKonsinyasi={showKonsinyasi}
-        setShowKonsinyasi={setShowKonsinyasi}
-        showStockOpname={showStockOpname}
+        setShowStockOpname={showStockOpname}
         setShowStockOpname={setShowStockOpname}
         showKasirKas={showKasirKas}
         setShowKasirKas={setShowKasirKas}
@@ -68,18 +77,6 @@ const POSModalManager = ({
         showDailyReport={showDailyReport}
         setShowDailyReport={setShowDailyReport}
         userFullName={userFullName}
-      />
-
-      <POSFastTransactionHistory
-        isOpen={showTransactionHistory}
-        onClose={() => setShowTransactionHistory(false)}
-        kasirName={userFullName}
-      />
-
-      <CameraBarcodeScanner 
-        isOpen={showQuickScanner} 
-        onScan={handleQuickScanBarcodeScanned} 
-        onClose={() => setShowQuickScanner(false)} 
       />
     </>
   );

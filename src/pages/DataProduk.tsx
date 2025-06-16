@@ -143,7 +143,7 @@ const DataProduk = () => {
                         <div>
                           <h3 className="font-medium text-blue-900">Integrasi POS System Aktif</h3>
                           <p className="text-sm text-blue-600">
-                            Data produk tersinkronisasi real-time dengan POS System. Stok otomatis terupdate saat ada transaksi penjualan.
+                            Data produk tersinkronisasi real-time dengan POS System. Mendukung unlimited produk dengan performa optimal.
                           </p>
                         </div>
                       </div>
@@ -208,7 +208,7 @@ const DataProduk = () => {
                       <div className="flex items-center gap-2">
                         <Badge variant="outline" className="bg-green-50 text-green-700">
                           <Package className="h-3 w-3 mr-1" />
-                          Database Connected
+                          Unlimited Capacity
                         </Badge>
                         <div className="text-sm text-gray-500">
                           Total: {products?.length || 0} produk

@@ -1,3 +1,4 @@
+
 import { Package, Scan, Wallet, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import POSKasirTransactionHistory from '@/components/pos/POSKasirTransactionHistory';
@@ -68,7 +69,8 @@ const POSModalManager = ({
         showTransactionHistory={showTransactionHistory}
         setShowTransactionHistory={setShowTransactionHistory}
         showKonsinyasi={showKonsinyasi}
-        setShowStockOpname={showStockOpname}
+        setShowKonsinyasi={setShowKonsinyasi}
+        showStockOpname={showStockOpname}
         setShowStockOpname={setShowStockOpname}
         showKasirKas={showKasirKas}
         setShowKasirKas={setShowKasirKas}

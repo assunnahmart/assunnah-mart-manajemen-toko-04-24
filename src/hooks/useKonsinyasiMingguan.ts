@@ -2,26 +2,45 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
+// Since konsinyasi_mingguan table doesn't exist yet, we'll use konsinyasi_harian with a filter
+// This is a temporary solution until the database table is created
 export const useKonsinyasiMingguan = () => {
   return useQuery({
     queryKey: ['konsinyasi_mingguan'],
     queryFn: async () => {
+      // Using konsinyasi_harian table with weekly filter for now
       const { data, error } = await supabase
-        .from('konsinyasi_mingguan')
+        .from('konsinyasi_harian')
         .select(`
           *,
           supplier:supplier_id (nama),
           barang_konsinyasi:product_id (nama, stok_saat_ini, harga_jual)
         `)
+        .eq('jenis_periode', 'mingguan') // Filter for weekly records
         .order('created_at', { ascending: false });
       
       if (error) throw error;
-      return data;
+      
+      // Transform data to match expected structure
+      return data?.map(item => ({
+        id: item.id,
+        minggu_mulai: item.tanggal_mulai,
+        minggu_selesai: item.tanggal_selesai,
+        supplier_name: item.supplier?.nama || '',
+        product_name: item.barang_konsinyasi?.nama || '',
+        jumlah_titipan: item.jumlah_titipan,
+        jumlah_terjual_sistem: item.jumlah_terjual_sistem,
+        jumlah_real_terjual: item.jumlah_real_terjual || 0,
+        sisa_stok: item.sisa_stok || 0,
+        selisih_stok: item.selisih_stok || 0,
+        total_pembayaran: item.total_pembayaran || 0,
+        status: item.status || 'pending',
+        harga_satuan: item.barang_konsinyasi?.harga_jual || 0
+      })) || [];
     },
   });
 };
 
-// Reuse suppliers hook from daily consignment for weekly
 export const useKonsinyasiSuppliers = () => {
   return useQuery({
     queryKey: ['konsinyasi_suppliers_mingguan'],
@@ -41,7 +60,6 @@ export const useKonsinyasiSuppliers = () => {
       
       if (error) throw error;
       
-      // Get suppliers that have weekly consignment products
       const suppliersWithProducts = await Promise.all(
         data.map(async (supplier) => {
           const { data: products, error: productsError } = await supabase
@@ -62,7 +80,6 @@ export const useKonsinyasiSuppliers = () => {
         })
       );
       
-      // Filter suppliers that have at least one weekly consignment product
       return suppliersWithProducts.filter(supplier => 
         supplier.barang_konsinyasi && supplier.barang_konsinyasi.length > 0
       );
@@ -70,7 +87,6 @@ export const useKonsinyasiSuppliers = () => {
   });
 };
 
-// Get weekly consignment products by supplier
 export const useKonsinyasiProductsBySupplier = (supplierId: string) => {
   return useQuery({
     queryKey: ['konsinyasi_products_mingguan', supplierId],
@@ -91,14 +107,12 @@ export const useKonsinyasiProductsBySupplier = (supplierId: string) => {
   });
 };
 
-// Get POS sales data for a product within a week range
 export const usePOSSalesForProduct = (productId: string, startDate?: string) => {
   return useQuery({
     queryKey: ['pos_sales_mingguan', productId, startDate],
     queryFn: async () => {
       if (!productId || !startDate) return { totalSold: 0 };
       
-      // Calculate end date (7 days from start date)
       const start = new Date(startDate);
       const end = new Date(start);
       end.setDate(start.getDate() + 6);
@@ -136,9 +150,17 @@ export const useCreateKonsinyasiMingguan = () => {
     mutationFn: async (data: any) => {
       console.log('Creating konsinyasi mingguan with data:', data);
       
+      // Use konsinyasi_harian table with weekly indicator
+      const weeklyData = {
+        ...data,
+        jenis_periode: 'mingguan',
+        tanggal_mulai: data.minggu_mulai,
+        tanggal_selesai: data.minggu_selesai
+      };
+      
       const { data: result, error } = await supabase
-        .from('konsinyasi_mingguan')
-        .insert([data])
+        .from('konsinyasi_harian')
+        .insert([weeklyData])
         .select()
         .single();
       
@@ -165,7 +187,7 @@ export const useUpdateKonsinyasiMingguan = () => {
   return useMutation({
     mutationFn: async ({ id, data }: { id: string; data: any }) => {
       const { error } = await supabase
-        .from('konsinyasi_mingguan')
+        .from('konsinyasi_harian')
         .update(data)
         .eq('id', id);
       

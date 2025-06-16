@@ -1,3 +1,4 @@
+
 import {
   BrowserRouter as Router,
   Routes,
@@ -15,6 +16,7 @@ import DataProduk from "@/pages/DataProduk";
 import StockManagementPage from "@/pages/StockManagementPage";
 import Konsinyasi from "@/pages/Konsinyasi";
 import KonsinyasiHarianPage from "@/pages/KonsinyasiHarianPage";
+import KonsinyasiMingguanPage from "@/pages/KonsinyasiMingguanPage";
 import PurchasePage from "@/pages/PurchasePage";
 import PenjualanKredit from "@/pages/PenjualanKredit";
 import KasirKasPage from "@/pages/KasirKasPage";
@@ -55,6 +57,7 @@ function App() {
           <Route path="/stock-management" element={isAuthenticated ? <StockManagementPage /> : <Navigate to="/login" />} />
           <Route path="/konsinyasi" element={isAuthenticated ? <Konsinyasi /> : <Navigate to="/login" />} />
           <Route path="/konsinyasi-harian" element={isAuthenticated ? <KonsinyasiHarianPage /> : <Navigate to="/login" />} />
+          <Route path="/konsinyasi-mingguan" element={isAuthenticated ? <KonsinyasiMingguanPage /> : <Navigate to="/login" />} />
           <Route path="/purchase" element={isAuthenticated ? <PurchasePage /> : <Navigate to="/login" />} />
           <Route path="/penjualan-kredit" element={isAuthenticated ? <PenjualanKredit /> : <Navigate to="/login" />} />
           <Route path="/kasir-kas" element={isAuthenticated ? <KasirKasPage /> : <Navigate to="/login" />} />
@@ -65,7 +68,6 @@ function App() {
           <Route path="/laporan/rekap-hutang" element={isAuthenticated ? <RekapHutangPage /> : <Navigate to="/login" />} />
           <Route path="/pembayaran-piutang" element={isAuthenticated ? <PembayaranPiutangPage /> : <Navigate to="/login" />} />
           <Route path="/pembayaran-hutang" element={isAuthenticated ? <PembayaranHutangPage /> : <Navigate to="/login" />} />
-          {/* Tambahkan route Piutang di sini */}
           <Route path="/Piutang" element={isAuthenticated ? <PiutangPage /> : <Navigate to="/login" />} />
         </Routes>
       </Router>

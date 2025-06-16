@@ -11,7 +11,7 @@ export const useBarangKonsinyasi = () => {
         .from('barang_konsinyasi')
         .select(`
           *,
-          supplier!supplier_id (
+          supplier:supplier_id (
             id,
             nama
           )
@@ -25,6 +25,9 @@ export const useBarangKonsinyasi = () => {
   });
 };
 
+// Export alias for backward compatibility
+export const useBarang = useBarangKonsinyasi;
+
 export const useBarangStokRendah = () => {
   return useQuery({
     queryKey: ['barang-stok-rendah'],
@@ -33,7 +36,7 @@ export const useBarangStokRendah = () => {
         .from('barang_konsinyasi')
         .select(`
           *,
-          supplier!supplier_id (
+          supplier:supplier_id (
             id,
             nama
           )
@@ -147,7 +150,7 @@ export const usePOSBarangKonsinyasi = () => {
         .from('barang_konsinyasi')
         .select(`
           *,
-          supplier!supplier_id (
+          supplier:supplier_id (
             id,
             nama
           )

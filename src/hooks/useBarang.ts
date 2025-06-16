@@ -1,4 +1,3 @@
-
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -11,7 +10,7 @@ export const useBarangKonsinyasi = () => {
         .from('barang_konsinyasi')
         .select(`
           *,
-          supplier:supplier_id (
+          supplier!barang_konsinyasi_supplier_id_fkey (
             id,
             nama
           )
@@ -36,7 +35,7 @@ export const useBarangStokRendah = () => {
         .from('barang_konsinyasi')
         .select(`
           *,
-          supplier:supplier_id (
+          supplier!barang_konsinyasi_supplier_id_fkey (
             id,
             nama
           )
@@ -150,7 +149,7 @@ export const usePOSBarangKonsinyasi = () => {
         .from('barang_konsinyasi')
         .select(`
           *,
-          supplier:supplier_id (
+          supplier!barang_konsinyasi_supplier_id_fkey (
             id,
             nama
           )

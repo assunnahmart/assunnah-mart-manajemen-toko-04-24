@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import NewProtectedRoute from '@/components/NewProtectedRoute';
@@ -15,19 +14,25 @@ import { useBarangStokRendah } from '@/hooks/useBarangKonsinyasi';
 import { useKasUmumSummary } from '@/hooks/useKasUmum';
 import DashboardCharts from '@/components/DashboardCharts';
 import DashboardFilter from '@/components/DashboardFilter';
-
 const Dashboard = () => {
   const navigate = useNavigate();
-  const { user } = useSimpleAuth();
-  const { data: todayTransactions } = usePOSTransactionsToday();
-  const { data: stockAlerts } = useBarangStokRendah();
-  const { data: kasSummary } = useKasUmumSummary();
+  const {
+    user
+  } = useSimpleAuth();
+  const {
+    data: todayTransactions
+  } = usePOSTransactionsToday();
+  const {
+    data: stockAlerts
+  } = useBarangStokRendah();
+  const {
+    data: kasSummary
+  } = useKasUmumSummary();
 
   // Filter state
   const [selectedPeriod, setSelectedPeriod] = useState('7days');
   const [customStartDate, setCustomStartDate] = useState('');
   const [customEndDate, setCustomEndDate] = useState('');
-
   const handlePeriodChange = (period: string) => {
     setSelectedPeriod(period);
     if (period !== 'custom') {
@@ -35,90 +40,75 @@ const Dashboard = () => {
       setCustomEndDate('');
     }
   };
-
   const handleCustomDateChange = (startDate: string, endDate: string) => {
     setCustomStartDate(startDate);
     setCustomEndDate(endDate);
   };
 
   // Quick actions for kasir only include POS, Konsinyasi Harian, and Kas
-  const kasirQuickActions = [
-    {
-      title: 'POS System',
-      description: 'Kasir dan penjualan',
-      icon: ShoppingCart,
-      color: 'bg-blue-500',
-      path: '/pos'
-    },
-    {
-      title: 'Konsinyasi Harian',
-      description: 'Input konsinyasi harian',
-      icon: Package,
-      color: 'bg-green-500',
-      path: '/konsinyasi-harian'
-    },
-    {
-      title: 'Kas Kasir',
-      description: 'Kelola kas harian kasir',
-      icon: Wallet,
-      color: 'bg-orange-500',
-      path: '/kasir-kas'
-    }
-  ];
-
-  const quickActions = [
-    {
-      title: 'POS System',
-      description: 'Kasir dan penjualan',
-      icon: ShoppingCart,
-      color: 'bg-blue-500',
-      path: '/pos'
-    },
-    {
-      title: 'Data Produk',
-      description: 'Kelola produk konsinyasi & lainnya',
-      icon: Package,
-      color: 'bg-green-500',
-      path: '/data-produk'
-    },
-    {
-      title: 'Pembelian',
-      description: 'Transaksi pembelian barang',
-      icon: ShoppingBag,
-      color: 'bg-purple-500',
-      path: '/purchase'
-    },
-    {
-      title: 'Stok Management',
-      description: 'Monitoring dan opname stok',
-      icon: ClipboardList,
-      color: 'bg-orange-500',
-      path: '/stock-management'
-    },
-    {
-      title: 'Kas Umum',
-      description: 'Manajemen kas harian',
-      icon: DollarSign,
-      color: 'bg-yellow-500',
-      path: '/kas-umum'
-    },
-    {
-      title: 'Laporan',
-      description: 'Analisis dan rekap',
-      icon: BarChart3,
-      color: 'bg-indigo-500',
-      path: '/admin'
-    }
-  ];
+  const kasirQuickActions = [{
+    title: 'POS System',
+    description: 'Kasir dan penjualan',
+    icon: ShoppingCart,
+    color: 'bg-blue-500',
+    path: '/pos'
+  }, {
+    title: 'Konsinyasi Harian',
+    description: 'Input konsinyasi harian',
+    icon: Package,
+    color: 'bg-green-500',
+    path: '/konsinyasi-harian'
+  }, {
+    title: 'Kas Kasir',
+    description: 'Kelola kas harian kasir',
+    icon: Wallet,
+    color: 'bg-orange-500',
+    path: '/kasir-kas'
+  }];
+  const quickActions = [{
+    title: 'POS System',
+    description: 'Kasir dan penjualan',
+    icon: ShoppingCart,
+    color: 'bg-blue-500',
+    path: '/pos'
+  }, {
+    title: 'Data Produk',
+    description: 'Kelola produk konsinyasi & lainnya',
+    icon: Package,
+    color: 'bg-green-500',
+    path: '/data-produk'
+  }, {
+    title: 'Pembelian',
+    description: 'Transaksi pembelian barang',
+    icon: ShoppingBag,
+    color: 'bg-purple-500',
+    path: '/purchase'
+  }, {
+    title: 'Stok Management',
+    description: 'Monitoring dan opname stok',
+    icon: ClipboardList,
+    color: 'bg-orange-500',
+    path: '/stock-management'
+  }, {
+    title: 'Kas Umum',
+    description: 'Manajemen kas harian',
+    icon: DollarSign,
+    color: 'bg-yellow-500',
+    path: '/kas-umum'
+  }, {
+    title: 'Laporan',
+    description: 'Analisis dan rekap',
+    icon: BarChart3,
+    color: 'bg-indigo-500',
+    path: '/admin'
+  }];
 
   // Filter quick actions for kasir - show kasir specific menu
   const filteredQuickActions = user?.role === 'kasir' ? kasirQuickActions : quickActions;
-
-  return (
-    <NewProtectedRoute>
+  return <NewProtectedRoute>
       <SidebarProvider>
         <div className="min-h-screen flex w-full">
-          <AppSidebar />
+          <AppSidebar className="bg-sky-100" />
           <SidebarInset className="flex-1">
             <NewNavbar />
             
@@ -148,8 +138,7 @@ const Dashboard = () => {
                   </CardContent>
                 </Card>
 
-                {user?.role !== 'kasir' && (
-                  <>
+                {user?.role !== 'kasir' && <>
                     <Card>
                       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <CardTitle className="text-sm font-medium">Saldo Kas</CardTitle>
@@ -179,8 +168,7 @@ const Dashboard = () => {
                         </p>
                       </CardContent>
                     </Card>
-                  </>
-                )}
+                  </>}
 
                 <Card>
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -197,21 +185,11 @@ const Dashboard = () => {
               </div>
 
               {/* Dashboard Filter and Charts - Only show for non-kasir users */}
-              {user?.role !== 'kasir' && (
-                <>
-                  <DashboardFilter 
-                    onPeriodChange={handlePeriodChange}
-                    onCustomDateChange={handleCustomDateChange}
-                    selectedPeriod={selectedPeriod}
-                  />
+              {user?.role !== 'kasir' && <>
+                  <DashboardFilter onPeriodChange={handlePeriodChange} onCustomDateChange={handleCustomDateChange} selectedPeriod={selectedPeriod} />
                   
-                  <DashboardCharts 
-                    startDate={customStartDate}
-                    endDate={customEndDate}
-                    period={selectedPeriod}
-                  />
-                </>
-              )}
+                  <DashboardCharts startDate={customStartDate} endDate={customEndDate} period={selectedPeriod} />
+                </>}
 
               {/* Quick Actions - Show appropriate menu for kasir */}
               <Card>
@@ -222,13 +200,7 @@ const Dashboard = () => {
                 </CardHeader>
                 <CardContent>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {filteredQuickActions.map((action) => (
-                      <Button
-                        key={action.title}
-                        variant="outline"
-                        className="h-auto p-6 flex flex-col items-start space-y-2"
-                        onClick={() => navigate(action.path)}
-                      >
+                    {filteredQuickActions.map(action => <Button key={action.title} variant="outline" className="h-auto p-6 flex flex-col items-start space-y-2" onClick={() => navigate(action.path)}>
                         <div className="flex items-center space-x-3 w-full">
                           <div className={`p-2 rounded-lg ${action.color}`}>
                             <action.icon className="h-6 w-6 text-white" />
@@ -240,15 +212,13 @@ const Dashboard = () => {
                             </div>
                           </div>
                         </div>
-                      </Button>
-                    ))}
+                      </Button>)}
                   </div>
                 </CardContent>
               </Card>
 
               {/* Stock Alerts - Hide for kasir */}
-              {user?.role !== 'kasir' && stockAlerts && stockAlerts.length > 0 && (
-                <Card className="mt-6">
+              {user?.role !== 'kasir' && stockAlerts && stockAlerts.length > 0 && <Card className="mt-6">
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                       <AlertTriangle className="h-5 w-5 text-orange-500" />
@@ -257,8 +227,7 @@ const Dashboard = () => {
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-2">
-                      {stockAlerts.slice(0, 5).map((item) => (
-                        <div key={item.id} className="flex items-center justify-between p-3 bg-orange-50 rounded-lg">
+                      {stockAlerts.slice(0, 5).map(item => <div key={item.id} className="flex items-center justify-between p-3 bg-orange-50 rounded-lg">
                           <div>
                             <div className="font-medium">{item.nama}</div>
                             <div className="text-sm text-muted-foreground">
@@ -266,25 +235,16 @@ const Dashboard = () => {
                             </div>
                           </div>
                           <Badge variant="destructive">Stok Rendah</Badge>
-                        </div>
-                      ))}
+                        </div>)}
                     </div>
-                    {stockAlerts.length > 5 && (
-                      <Button
-                        variant="outline"
-                        className="w-full mt-4"
-                        onClick={() => navigate('/stock-management')}
-                      >
+                    {stockAlerts.length > 5 && <Button variant="outline" className="w-full mt-4" onClick={() => navigate('/stock-management')}>
                         Lihat Semua ({stockAlerts.length} produk)
-                      </Button>
-                    )}
+                      </Button>}
                   </CardContent>
-                </Card>
-              )}
+                </Card>}
 
               {/* Additional message for kasir */}
-              {user?.role === 'kasir' && (
-                <Card className="mt-6 bg-blue-50 border-blue-200">
+              {user?.role === 'kasir' && <Card className="mt-6 bg-blue-50 border-blue-200">
                   <CardContent className="pt-4">
                     <div className="text-center">
                       <ShoppingCart className="h-12 w-12 text-blue-500 mx-auto mb-3" />
@@ -310,14 +270,11 @@ const Dashboard = () => {
                       </div>
                     </div>
                   </CardContent>
-                </Card>
-              )}
+                </Card>}
             </div>
           </SidebarInset>
         </div>
       </SidebarProvider>
-    </NewProtectedRoute>
-  );
+    </NewProtectedRoute>;
 };
-
 export default Dashboard;

@@ -3,6 +3,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import PurchaseSupplierSelect from './PurchaseSupplierSelect';
 
 interface PurchaseFormHeaderProps {
   supplierId: string;
@@ -27,59 +28,13 @@ const PurchaseFormHeader = ({
   setCatatan,
   suppliers
 }: PurchaseFormHeaderProps) => {
-  console.log('PurchaseFormHeader - DEBUG START');
-  console.log('PurchaseFormHeader suppliers:', suppliers);
-  
-  // Enhanced validation to filter out suppliers with invalid IDs
-  const validSuppliers = suppliers?.filter(supplier => {
-    const hasValidId = supplier && 
-                      supplier.id && 
-                      typeof supplier.id === 'string' && 
-                      supplier.id.trim() !== '' &&
-                      supplier.id !== null &&
-                      supplier.id !== undefined;
-    
-    console.log('Supplier validation:', { 
-      supplier: supplier?.nama, 
-      id: supplier?.id, 
-      type: typeof supplier?.id,
-      isValid: hasValidId 
-    });
-    
-    if (!hasValidId) {
-      console.error('INVALID SUPPLIER DETECTED:', supplier);
-    }
-    
-    return hasValidId;
-  }) || [];
-
-  console.log('Valid suppliers after filtering:', validSuppliers.length);
-  console.log('PurchaseFormHeader - DEBUG END');
-
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-      <div>
-        <Label htmlFor="supplier">Supplier</Label>
-        <Select value={supplierId || ""} onValueChange={setSupplierId}>
-          <SelectTrigger>
-            <SelectValue placeholder="Pilih supplier..." />
-          </SelectTrigger>
-          <SelectContent>
-            {validSuppliers.map((supplier) => {
-              console.log('Rendering supplier SelectItem:', { id: supplier.id, nama: supplier.nama });
-              if (!supplier.id || supplier.id.trim() === '') {
-                console.error('ATTEMPTING TO RENDER INVALID SUPPLIER:', supplier);
-                return null;
-              }
-              return (
-                <SelectItem key={supplier.id} value={supplier.id}>
-                  {supplier.nama}
-                </SelectItem>
-              );
-            })}
-          </SelectContent>
-        </Select>
-      </div>
+      <PurchaseSupplierSelect
+        supplierId={supplierId}
+        setSupplierId={setSupplierId}
+        suppliers={suppliers}
+      />
 
       <div>
         <Label htmlFor="jenis">Jenis Pembayaran</Label>
@@ -102,6 +57,7 @@ const PurchaseFormHeader = ({
             type="date"
             value={jatuhTempo}
             onChange={(e) => setJatuhTempo(e.target.value)}
+            min={new Date().toISOString().split('T')[0]}
           />
         </div>
       )}
@@ -113,6 +69,7 @@ const PurchaseFormHeader = ({
           placeholder="Catatan transaksi..."
           value={catatan}
           onChange={(e) => setCatatan(e.target.value)}
+          rows={3}
         />
       </div>
     </div>

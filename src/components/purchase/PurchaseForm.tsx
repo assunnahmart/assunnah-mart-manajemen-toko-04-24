@@ -1,13 +1,14 @@
 
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ShoppingCart } from 'lucide-react';
+import { ShoppingCart, AlertCircle } from 'lucide-react';
 import { useCreatePurchaseTransaction } from '@/hooks/usePurchaseTransactions';
 import { useBarang } from '@/hooks/useBarang';
 import { useSimpleAuth } from '@/hooks/useSimpleAuth';
 import { useKasir } from '@/hooks/useKasir';
 import { useSupplier } from '@/hooks/useSupplier';
 import { useToast } from '@/hooks/use-toast';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import PurchaseFormHeader from './PurchaseFormHeader';
 import PurchaseItemForm from './PurchaseItemForm';
 import PurchaseItemsTable from './PurchaseItemsTable';
@@ -41,15 +42,19 @@ const PurchaseForm = () => {
 
   const userKasir = kasirData?.find(k => k.nama === user?.full_name);
 
-  // Filter products based on selected supplier
+  // Filter products based on selected supplier with improved performance
   useEffect(() => {
     if (supplierId && products) {
-      const supplierProducts = products.filter(product => product.supplier_id === supplierId);
-      setFilteredProducts(supplierProducts);
+      const supplierProducts = products.filter(product => 
+        product.supplier_id === supplierId &&
+        product.id &&
+        typeof product.id === 'string' &&
+        product.id.trim() !== ''
+      );
+      setFilteredProducts(supplierProducts.slice(0, 5000)); // Limit to 5000 products
     } else {
-      setFilteredProducts(products || []);
+      setFilteredProducts((products || []).slice(0, 5000));
     }
-    // Reset selected product when supplier changes
     setSelectedProduct('');
     setUnitPrice(0);
   }, [supplierId, products]);
@@ -58,8 +63,8 @@ const PurchaseForm = () => {
   useEffect(() => {
     if (selectedProduct && products) {
       const product = products.find(p => p.id === selectedProduct);
-      if (product) {
-        setUnitPrice(product.harga_jual || 0);
+      if (product && product.harga_jual) {
+        setUnitPrice(product.harga_jual);
       }
     }
   }, [selectedProduct, products]);
@@ -91,12 +96,6 @@ const PurchaseForm = () => {
   const totalAmount = items.reduce((sum, item) => sum + item.subtotal, 0);
 
   const handleSubmit = async () => {
-    console.log('Validating form data...');
-    console.log('Supplier ID:', supplierId);
-    console.log('Items count:', items.length);
-    console.log('User Kasir:', userKasir);
-
-    // Perbaikan validasi - check yang benar
     if (!supplierId) {
       toast({
         title: "Error",
@@ -124,6 +123,15 @@ const PurchaseForm = () => {
       return;
     }
 
+    if (jenisTransaksi === 'kredit' && !jatuhTempo) {
+      toast({
+        title: "Error",
+        description: "Tanggal jatuh tempo harus diisi untuk transaksi kredit",
+        variant: "destructive"
+      });
+      return;
+    }
+
     try {
       await createPurchase.mutateAsync({
         transaction: {
@@ -134,7 +142,7 @@ const PurchaseForm = () => {
           kasir_id: userKasir.id,
           jatuh_tempo: jenisTransaksi === 'kredit' ? jatuhTempo : null,
           catatan,
-          status: 'completed' // Otomatis selesai
+          status: 'completed'
         },
         items: items.map(item => ({
           barang_id: item.barang_id,
@@ -175,6 +183,14 @@ const PurchaseForm = () => {
           <ShoppingCart className="h-5 w-5" />
           Transaksi Pembelian Baru
         </CardTitle>
+        {products && products.length >= 5000 && (
+          <Alert>
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>
+              Sistem mendukung hingga 5000 produk. Gunakan pencarian untuk menemukan produk lebih cepat.
+            </AlertDescription>
+          </Alert>
+        )}
       </CardHeader>
       <CardContent className="space-y-6">
         <PurchaseFormHeader

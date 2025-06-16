@@ -129,7 +129,7 @@ const Layout = ({
       
       {/* Main Content */}
       <main className="flex-1">
-        <div className="p-6 bg-slate-50">
+        <div className="p-6 bg-transparent">
           {children}
         </div>
       </main>

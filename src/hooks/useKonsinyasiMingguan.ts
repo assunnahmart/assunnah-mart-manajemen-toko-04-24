@@ -2,13 +2,11 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
-// Since konsinyasi_mingguan table doesn't exist yet, we'll use konsinyasi_harian with a filter
-// This is a temporary solution until the database table is created
+// Use konsinyasi_harian table but with a naming convention to identify weekly records
 export const useKonsinyasiMingguan = () => {
   return useQuery({
     queryKey: ['konsinyasi_mingguan'],
     queryFn: async () => {
-      // Using konsinyasi_harian table with weekly filter for now
       const { data, error } = await supabase
         .from('konsinyasi_harian')
         .select(`
@@ -16,7 +14,7 @@ export const useKonsinyasiMingguan = () => {
           supplier:supplier_id (nama),
           barang_konsinyasi:product_id (nama, stok_saat_ini, harga_jual)
         `)
-        .eq('jenis_periode', 'mingguan') // Filter for weekly records
+        .ilike('keterangan', '%MINGGUAN%') // Filter weekly records by keterangan field
         .order('created_at', { ascending: false });
       
       if (error) throw error;
@@ -24,8 +22,8 @@ export const useKonsinyasiMingguan = () => {
       // Transform data to match expected structure
       return data?.map(item => ({
         id: item.id,
-        minggu_mulai: item.tanggal_mulai,
-        minggu_selesai: item.tanggal_selesai,
+        minggu_mulai: item.tanggal,
+        minggu_selesai: item.tanggal_selesai || item.tanggal,
         supplier_name: item.supplier?.nama || '',
         product_name: item.barang_konsinyasi?.nama || '',
         jumlah_titipan: item.jumlah_titipan,
@@ -150,12 +148,23 @@ export const useCreateKonsinyasiMingguan = () => {
     mutationFn: async (data: any) => {
       console.log('Creating konsinyasi mingguan with data:', data);
       
-      // Use konsinyasi_harian table with weekly indicator
+      // Use konsinyasi_harian table with weekly identifier in keterangan
       const weeklyData = {
-        ...data,
-        jenis_periode: 'mingguan',
-        tanggal_mulai: data.minggu_mulai,
-        tanggal_selesai: data.minggu_selesai
+        supplier_id: data.supplier_id,
+        product_id: data.product_id,
+        tanggal: data.minggu_mulai,
+        tanggal_selesai: data.minggu_selesai,
+        jumlah_titipan: data.jumlah_titipan,
+        jumlah_terjual_sistem: data.jumlah_terjual_sistem,
+        jumlah_real_terjual: data.jumlah_real_terjual,
+        sisa_stok: data.sisa_stok,
+        selisih_stok: data.selisih_stok,
+        total_pembayaran: data.total_pembayaran,
+        status: data.status,
+        keterangan: `MINGGUAN - ${data.supplier_name} - ${data.product_name}`,
+        kasir_id: 'system',
+        kasir_name: 'System',
+        harga_beli: 0
       };
       
       const { data: result, error } = await supabase

@@ -1,11 +1,10 @@
-
 import { useState } from 'react';
 import NewProtectedRoute from '@/components/NewProtectedRoute';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Search, Edit, Package, Plus, RefreshCw } from 'lucide-react';
+import { Search, Edit, Package, Plus, RefreshCw, Trash2 } from 'lucide-react';
 import { useBarangKonsinyasi } from '@/hooks/useBarang';
 import { useToast } from '@/hooks/use-toast';
 import { SidebarProvider, SidebarInset, SidebarTrigger } from '@/components/ui/sidebar';
@@ -20,6 +19,7 @@ import {
 } from '@/components/ui/table';
 import ProductForm from '@/components/products/ProductForm';
 import ProductExportImport from '@/components/products/ProductExportImport';
+import ProductDataManagement from '@/components/admin/ProductDataManagement';
 
 const DataProduk = () => {
   const { data: products, isLoading, refetch, error } = useBarangKonsinyasi();
@@ -27,6 +27,7 @@ const DataProduk = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [showForm, setShowForm] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
+  const [showDataManagement, setShowDataManagement] = useState(false);
 
   console.log('DataProduk state:', { products, isLoading, error });
 
@@ -111,7 +112,15 @@ const DataProduk = () => {
             <div className="flex h-16 shrink-0 items-center gap-2 border-b px-4">
               <SidebarTrigger className="-ml-1" />
               <h1 className="text-lg font-semibold">Data Produk</h1>
-              <div className="ml-auto">
+              <div className="ml-auto flex gap-2">
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  onClick={() => setShowDataManagement(true)}
+                >
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Hapus Data Produk
+                </Button>
                 <Button
                   variant="outline"
                   size="sm"
@@ -182,7 +191,7 @@ const DataProduk = () => {
                       <CardContent className="pt-4">
                         <div className="flex items-center justify-between">
                           <div>
-                            <p className="text-sm text-gray-600">Capacity</p>
+                            <p className="text-sm text-gray-600">Kapasitas Import</p>
                             <p className="text-sm font-bold text-green-600">Unlimited</p>
                           </div>
                           <Badge variant="outline" className="bg-green-50 text-green-700">
@@ -202,7 +211,7 @@ const DataProduk = () => {
                         <div>
                           <h3 className="font-medium text-blue-900">Integrasi POS System Aktif</h3>
                           <p className="text-sm text-blue-600">
-                            Data produk tersinkronisasi real-time dengan POS System. Mendukung unlimited produk dengan performa optimal.
+                            Data produk tersinkronisasi real-time dengan POS System. Mendukung unlimited import produk dengan performa optimal.
                           </p>
                         </div>
                       </div>
@@ -397,6 +406,23 @@ const DataProduk = () => {
               });
             }}
           />
+        )}
+
+        {showDataManagement && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg p-6 max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-xl font-semibold">Manajemen Data Produk</h2>
+                <Button 
+                  variant="outline" 
+                  onClick={() => setShowDataManagement(false)}
+                >
+                  Tutup
+                </Button>
+              </div>
+              <ProductDataManagement />
+            </div>
+          </div>
         )}
       </SidebarProvider>
     </NewProtectedRoute>

@@ -115,13 +115,13 @@ const ProductExportImport = ({ products, onImportSuccess }: ProductExportImportP
     });
   };
 
-  // Improved batch processing with better error handling
+  // Enhanced batch processing for unlimited imports
   const processBatch = async (batch: any[], batchIndex: number, totalBatches: number) => {
     const results = { success: 0, errors: [] as string[] };
     
     for (let i = 0; i < batch.length; i++) {
       const row = batch[i];
-      const rowNumber = batchIndex * 50 + i + 2; // Reduced batch size to 50 for better performance
+      const rowNumber = batchIndex * 25 + i + 2; // Reduced to 25 per batch for better performance
       
       try {
         // Validate required fields first
@@ -259,8 +259,10 @@ const ProductExportImport = ({ products, onImportSuccess }: ProductExportImportP
           return;
         }
 
-        // Process in smaller batches of 50 items for better performance and error handling
-        const batchSize = 50;
+        console.log(`Starting import of ${validData.length} products (unlimited capacity)`);
+
+        // Process in smaller batches of 25 items for unlimited capacity handling
+        const batchSize = 25;
         const totalBatches = Math.ceil(validData.length / batchSize);
         let totalSuccess = 0;
         let allErrors: string[] = [];
@@ -280,32 +282,32 @@ const ProductExportImport = ({ products, onImportSuccess }: ProductExportImportP
           const progress = ((batchIndex + 1) / totalBatches) * 100;
           setImportProgress(progress);
           
-          // Small delay to prevent UI blocking and database overload
-          await new Promise(resolve => setTimeout(resolve, 200));
+          // Small delay to prevent database overload for large imports
+          await new Promise(resolve => setTimeout(resolve, 100));
         }
 
-        // Show results with better messaging
+        // Show results with enhanced messaging for unlimited imports
         if (totalSuccess > 0) {
           onImportSuccess();
           toast({
             title: "Import berhasil",
-            description: `${totalSuccess} dari ${validData.length} produk berhasil diimpor${allErrors.length > 0 ? `. ${allErrors.length} produk gagal.` : ''}`
+            description: `${totalSuccess.toLocaleString('id-ID')} dari ${validData.length.toLocaleString('id-ID')} produk berhasil diimpor${allErrors.length > 0 ? `. ${allErrors.length} produk gagal.` : ''}`
           });
         }
 
         if (allErrors.length > 0) {
-          if (allErrors.length <= 3) {
+          if (allErrors.length <= 5) {
             // Show specific errors for small number of failures
             toast({
               title: "Beberapa produk gagal diimpor",
-              description: allErrors.slice(0, 3).join('; '),
+              description: allErrors.slice(0, 5).join('; '),
               variant: "destructive"
             });
           } else {
             // Show summary for many failures
             toast({
               title: "Banyak produk gagal diimpor",
-              description: `${allErrors.length} produk gagal. Periksa format file dan pastikan tidak ada duplikat barcode.`,
+              description: `${allErrors.length.toLocaleString('id-ID')} produk gagal. Periksa format file dan pastikan tidak ada duplikat barcode.`,
               variant: "destructive"
             });
           }
@@ -381,18 +383,19 @@ const ProductExportImport = ({ products, onImportSuccess }: ProductExportImportP
           </div>
           <Progress value={importProgress} className="w-full" />
           <div className="text-xs text-gray-500">
-            Memproses dalam batch kecil untuk performa optimal
+            Memproses dalam batch kecil untuk performa optimal (Unlimited Capacity)
           </div>
         </div>
       )}
 
       <div className="text-xs text-gray-500 space-y-1">
-        <p><strong>Tips Import:</strong></p>
+        <p><strong>Tips Import (Unlimited Capacity):</strong></p>
         <ul className="list-disc list-inside space-y-1">
           <li>Pastikan kolom "Nama Produk" terisi</li>
           <li>Barcode harus unik (tidak boleh sama)</li>
           <li>Gunakan template yang disediakan</li>
-          <li>Maksimal 5000 produk per file untuk performa optimal</li>
+          <li>Sistem mendukung unlimited import dengan batch processing otomatis</li>
+          <li>File besar akan diproses secara bertahap untuk performa optimal</li>
         </ul>
       </div>
     </div>

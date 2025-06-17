@@ -4,12 +4,11 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Separator } from '@/components/ui/separator';
-import { Download, Calendar, TrendingUp } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
+import { CalendarIcon, Download, FileText } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 
 interface ProfitLossData {
   periode: {
@@ -59,25 +58,31 @@ interface ProfitLossData {
 }
 
 const ComprehensiveProfitLoss = () => {
-  const [startDate, setStartDate] = useState(new Date().toISOString().split('T')[0]);
-  const [endDate, setEndDate] = useState(new Date().toISOString().split('T')[0]);
   const { toast } = useToast();
+  const [startDate, setStartDate] = useState(() => {
+    const today = new Date();
+    const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+    return firstDay.toISOString().split('T')[0];
+  });
+  const [endDate, setEndDate] = useState(() => {
+    return new Date().toISOString().split('T')[0];
+  });
 
   const { data: profitLossData, isLoading, refetch } = useQuery({
-    queryKey: ['comprehensive-profit-loss', startDate, endDate],
+    queryKey: ['comprehensive_profit_loss', startDate, endDate],
     queryFn: async () => {
       const { data, error } = await supabase.rpc('get_comprehensive_profit_loss_report', {
         p_start_date: startDate,
         p_end_date: endDate
       });
-
+      
       if (error) {
         console.error('Error fetching profit loss data:', error);
-        throw new Error('Gagal mengambil data laporan laba rugi');
+        throw error;
       }
-
+      
       return data as ProfitLossData;
-    }
+    },
   });
 
   const formatCurrency = (amount: number) => {
@@ -85,335 +90,310 @@ const ComprehensiveProfitLoss = () => {
       style: 'currency',
       currency: 'IDR',
       minimumFractionDigits: 0
-    }).format(amount);
+    }).format(amount || 0);
   };
 
-  const handleExport = () => {
+  const exportToPrint = () => {
     if (!profitLossData) return;
     
-    // Create export data
-    const exportData = {
-      laporan: 'Laporan Laba Rugi Komprehensif',
-      periode: `${startDate} - ${endDate}`,
-      data: profitLossData
-    };
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) return;
     
-    const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `laporan-laba-rugi-${startDate}-${endDate}.json`;
-    a.click();
-    URL.revokeObjectURL(url);
-
-    toast({
-      title: "Export berhasil",
-      description: "Laporan laba rugi telah diexport"
-    });
-  };
-
-  const handleRefresh = () => {
-    refetch();
-    toast({
-      title: "Data diperbarui",
-      description: "Laporan laba rugi telah diperbarui"
-    });
+    const htmlContent = `
+      <html>
+        <head>
+          <title>Laporan Laba Rugi</title>
+          <style>
+            body { font-family: Arial, sans-serif; margin: 20px; }
+            table { width: 100%; border-collapse: collapse; margin: 10px 0; }
+            th, td { padding: 8px; text-align: left; border-bottom: 1px solid #ddd; }
+            .text-right { text-align: right; }
+            .font-bold { font-weight: bold; }
+            .bg-gray { background-color: #f5f5f5; }
+            h1, h2 { text-align: center; }
+          </style>
+        </head>
+        <body>
+          <h1>LAPORAN LABA RUGI</h1>
+          <h2>Periode: ${profitLossData.periode.start_date} s/d ${profitLossData.periode.end_date}</h2>
+          
+          <table>
+            <tr class="bg-gray"><th colspan="2">PENDAPATAN</th></tr>
+            <tr><td>Penjualan Tunai</td><td class="text-right">${formatCurrency(profitLossData.pendapatan.penjualan_tunai)}</td></tr>
+            <tr><td>Penjualan Kredit</td><td class="text-right">${formatCurrency(profitLossData.pendapatan.penjualan_kredit)}</td></tr>
+            <tr><td>Pendapatan Konsinyasi Harian Tunai</td><td class="text-right">${formatCurrency(profitLossData.pendapatan.konsinyasi_harian_tunai)}</td></tr>
+            <tr><td>Pendapatan Konsinyasi Harian Kredit</td><td class="text-right">${formatCurrency(profitLossData.pendapatan.konsinyasi_harian_kredit)}</td></tr>
+            <tr><td>Pendapatan Konsinyasi Mingguan Tunai</td><td class="text-right">${formatCurrency(profitLossData.pendapatan.konsinyasi_mingguan_tunai)}</td></tr>
+            <tr><td>Pendapatan Konsinyasi Mingguan Kredit</td><td class="text-right">${formatCurrency(profitLossData.pendapatan.konsinyasi_mingguan_kredit)}</td></tr>
+            <tr><td>Selisih Lebih/Pendapatan Lain-lain</td><td class="text-right">${formatCurrency(profitLossData.pendapatan.pendapatan_lain)}</td></tr>
+            <tr class="font-bold bg-gray"><td>Total Penjualan</td><td class="text-right">${formatCurrency(profitLossData.pendapatan.total_penjualan)}</td></tr>
+          </table>
+          
+          <table>
+            <tr class="bg-gray"><th colspan="2">HARGA POKOK PENJUALAN</th></tr>
+            <tr><td>Persediaan Awal</td><td class="text-right">${formatCurrency(profitLossData.hpp.persediaan_awal)}</td></tr>
+            <tr><td>Pembelian Tunai</td><td class="text-right">${formatCurrency(profitLossData.hpp.pembelian_tunai)}</td></tr>
+            <tr><td>Pembelian Kredit</td><td class="text-right">${formatCurrency(profitLossData.hpp.pembelian_kredit)}</td></tr>
+            <tr><td>Barang Tersedia untuk Dijual</td><td class="text-right">${formatCurrency(profitLossData.hpp.barang_tersedia)}</td></tr>
+            <tr><td>Beban Konsinyasi Harian</td><td class="text-right">${formatCurrency(profitLossData.hpp.beban_konsinyasi_harian)}</td></tr>
+            <tr><td>Beban Konsinyasi Mingguan</td><td class="text-right">${formatCurrency(profitLossData.hpp.beban_konsinyasi_mingguan)}</td></tr>
+            <tr><td>Persediaan Akhir</td><td class="text-right">${formatCurrency(profitLossData.hpp.persediaan_akhir)}</td></tr>
+            <tr class="font-bold bg-gray"><td>HPP</td><td class="text-right">${formatCurrency(profitLossData.hpp.hpp_total)}</td></tr>
+            <tr class="font-bold bg-gray"><td>Laba Kotor</td><td class="text-right">${formatCurrency(profitLossData.laba_kotor)}</td></tr>
+          </table>
+          
+          <table>
+            <tr class="bg-gray"><th colspan="2">BEBAN OPERASIONAL</th></tr>
+            <tr><td>Total Beban Administrasi & Umum</td><td class="text-right">${formatCurrency(profitLossData.beban_administrasi)}</td></tr>
+            <tr class="font-bold bg-gray"><td>Laba (Rugi) Bersih</td><td class="text-right">${formatCurrency(profitLossData.laba_bersih)}</td></tr>
+          </table>
+        </body>
+      </html>
+    `;
+    
+    printWindow.document.write(htmlContent);
+    printWindow.document.close();
+    printWindow.print();
   };
 
   if (isLoading) {
     return (
-      <Card>
-        <CardContent className="p-6">
-          <div className="text-center">Loading...</div>
-        </CardContent>
-      </Card>
+      <div className="text-center py-8">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+        <p className="mt-2 text-gray-600">Memuat laporan laba rugi...</p>
+      </div>
     );
   }
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold">Laporan Laba Rugi Komprehensif</h2>
-          <p className="text-gray-600">Analisis detail pendapatan, biaya, dan profitabilitas</p>
-        </div>
-        <div className="flex gap-2">
-          <Button onClick={handleRefresh} variant="outline" className="gap-2">
-            <TrendingUp className="h-4 w-4" />
-            Refresh
-          </Button>
-          <Button onClick={handleExport} variant="outline" className="gap-2">
-            <Download className="h-4 w-4" />
-            Export
-          </Button>
-        </div>
-      </div>
-
-      {/* Date Filter */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Calendar className="h-5 w-5" />
-            Filter Periode
+            <FileText className="h-5 w-5" />
+            Laporan Laba Rugi Komprehensif
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
             <div>
-              <Label htmlFor="startDate">Tanggal Mulai</Label>
+              <Label htmlFor="start-date">Tanggal Mulai</Label>
               <Input
-                id="startDate"
+                id="start-date"
                 type="date"
                 value={startDate}
                 onChange={(e) => setStartDate(e.target.value)}
               />
             </div>
             <div>
-              <Label htmlFor="endDate">Tanggal Selesai</Label>
+              <Label htmlFor="end-date">Tanggal Selesai</Label>
               <Input
-                id="endDate"
+                id="end-date"
                 type="date"
                 value={endDate}
                 onChange={(e) => setEndDate(e.target.value)}
               />
             </div>
-            <div className="flex items-end">
-              <Button onClick={handleRefresh} className="w-full">
+            <div className="flex items-end gap-2">
+              <Button onClick={() => refetch()} className="flex-1">
+                <CalendarIcon className="h-4 w-4 mr-2" />
                 Update Laporan
+              </Button>
+              <Button onClick={exportToPrint} variant="outline">
+                <Download className="h-4 w-4 mr-2" />
+                Print
               </Button>
             </div>
           </div>
-        </CardContent>
-      </Card>
 
-      {/* Main Report */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Laporan Laba Rugi</CardTitle>
-          <p className="text-sm text-gray-600">
-            Periode: {new Date(startDate).toLocaleDateString('id-ID')} - {new Date(endDate).toLocaleDateString('id-ID')}
-          </p>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-6">
-            {/* PENDAPATAN */}
-            <div>
-              <h3 className="text-lg font-semibold mb-4 text-green-700">PENDAPATAN</h3>
-              <Table>
-                <TableBody>
-                  <TableRow>
-                    <TableCell className="font-medium">Penjualan Tunai</TableCell>
-                    <TableCell className="text-right">{formatCurrency(profitLossData?.pendapatan.penjualan_tunai || 0)}</TableCell>
-                  </TableRow>
-                  <TableRow>
-                    <TableCell className="font-medium">Penjualan Kredit</TableCell>
-                    <TableCell className="text-right">{formatCurrency(profitLossData?.pendapatan.penjualan_kredit || 0)}</TableCell>
-                  </TableRow>
-                  <TableRow>
-                    <TableCell className="font-medium">Pendapatan Konsinyasi Harian Tunai</TableCell>
-                    <TableCell className="text-right">{formatCurrency(profitLossData?.pendapatan.konsinyasi_harian_tunai || 0)}</TableCell>
-                  </TableRow>
-                  <TableRow>
-                    <TableCell className="font-medium">Pendapatan Konsinyasi Harian Kredit</TableCell>
-                    <TableCell className="text-right">{formatCurrency(profitLossData?.pendapatan.konsinyasi_harian_kredit || 0)}</TableCell>
-                  </TableRow>
-                  <TableRow>
-                    <TableCell className="font-medium">Pendapatan Konsinyasi Mingguan Tunai</TableCell>
-                    <TableCell className="text-right">{formatCurrency(profitLossData?.pendapatan.konsinyasi_mingguan_tunai || 0)}</TableCell>
-                  </TableRow>
-                  <TableRow>
-                    <TableCell className="font-medium">Pendapatan Konsinyasi Mingguan Kredit</TableCell>
-                    <TableCell className="text-right">{formatCurrency(profitLossData?.pendapatan.konsinyasi_mingguan_kredit || 0)}</TableCell>
-                  </TableRow>
-                  <TableRow>
-                    <TableCell className="font-medium">Selisih Lebih/ Pendapatan Lain-lain</TableCell>
-                    <TableCell className="text-right">{formatCurrency(profitLossData?.pendapatan.pendapatan_lain || 0)}</TableCell>
-                  </TableRow>
-                  <TableRow className="border-t-2 border-gray-400">
-                    <TableCell className="font-bold text-lg">Total Penjualan</TableCell>
-                    <TableCell className="text-right font-bold text-lg text-green-600">
-                      {formatCurrency(profitLossData?.pendapatan.total_penjualan || 0)}
-                    </TableCell>
-                  </TableRow>
-                </TableBody>
-              </Table>
+          {profitLossData && (
+            <div className="space-y-6">
+              <div className="text-center mb-6">
+                <h2 className="text-xl font-bold">LAPORAN LABA RUGI</h2>
+                <p className="text-gray-600">
+                  Periode: {profitLossData.periode.start_date} s/d {profitLossData.periode.end_date}
+                </p>
+              </div>
+
+              {/* PENDAPATAN */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">PENDAPATAN</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2">
+                    <div className="flex justify-between">
+                      <span>Penjualan Tunai</span>
+                      <span className="font-mono">{formatCurrency(profitLossData.pendapatan.penjualan_tunai)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Penjualan Kredit</span>
+                      <span className="font-mono">{formatCurrency(profitLossData.pendapatan.penjualan_kredit)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Pendapatan Konsinyasi Harian Tunai</span>
+                      <span className="font-mono">{formatCurrency(profitLossData.pendapatan.konsinyasi_harian_tunai)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Pendapatan Konsinyasi Harian Kredit</span>
+                      <span className="font-mono">{formatCurrency(profitLossData.pendapatan.konsinyasi_harian_kredit)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Pendapatan Konsinyasi Mingguan Tunai</span>
+                      <span className="font-mono">{formatCurrency(profitLossData.pendapatan.konsinyasi_mingguan_tunai)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Pendapatan Konsinyasi Mingguan Kredit</span>
+                      <span className="font-mono">{formatCurrency(profitLossData.pendapatan.konsinyasi_mingguan_kredit)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Selisih Lebih/Pendapatan Lain-lain</span>
+                      <span className="font-mono">{formatCurrency(profitLossData.pendapatan.pendapatan_lain)}</span>
+                    </div>
+                    <Separator />
+                    <div className="flex justify-between font-bold text-lg bg-gray-50 p-2 rounded">
+                      <span>Total Penjualan</span>
+                      <span className="font-mono">{formatCurrency(profitLossData.pendapatan.total_penjualan)}</span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* HPP */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">HARGA POKOK PENJUALAN</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2">
+                    <div className="flex justify-between">
+                      <span>Persediaan Awal</span>
+                      <span className="font-mono">{formatCurrency(profitLossData.hpp.persediaan_awal)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Pembelian Tunai</span>
+                      <span className="font-mono">{formatCurrency(profitLossData.hpp.pembelian_tunai)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Pembelian Kredit</span>
+                      <span className="font-mono">{formatCurrency(profitLossData.hpp.pembelian_kredit)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Barang Tersedia untuk Dijual</span>
+                      <span className="font-mono">{formatCurrency(profitLossData.hpp.barang_tersedia)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Beban Konsinyasi Harian</span>
+                      <span className="font-mono">{formatCurrency(profitLossData.hpp.beban_konsinyasi_harian)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Beban Konsinyasi Mingguan</span>
+                      <span className="font-mono">{formatCurrency(profitLossData.hpp.beban_konsinyasi_mingguan)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Persediaan Akhir</span>
+                      <span className="font-mono">{formatCurrency(profitLossData.hpp.persediaan_akhir)}</span>
+                    </div>
+                    <Separator />
+                    <div className="flex justify-between font-bold text-lg bg-gray-50 p-2 rounded">
+                      <span>HPP</span>
+                      <span className="font-mono">{formatCurrency(profitLossData.hpp.hpp_total)}</span>
+                    </div>
+                    <div className="flex justify-between font-bold text-lg bg-green-50 p-2 rounded">
+                      <span>Laba Kotor</span>
+                      <span className="font-mono text-green-600">{formatCurrency(profitLossData.laba_kotor)}</span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* BEBAN OPERASIONAL */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">BEBAN OPERASIONAL</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2">
+                    <div className="flex justify-between">
+                      <span>Total Beban Administrasi & Umum</span>
+                      <span className="font-mono">{formatCurrency(profitLossData.beban_administrasi)}</span>
+                    </div>
+                    <Separator />
+                    <div className="flex justify-between font-bold text-xl bg-blue-50 p-3 rounded">
+                      <span>Laba (Rugi) Bersih</span>
+                      <span className={`font-mono ${profitLossData.laba_bersih >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                        {formatCurrency(profitLossData.laba_bersih)}
+                      </span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* SEGMENTASI */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">LAPORAN LABA RUGI SEGMENTASI</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="space-y-2">
+                      <h4 className="font-bold">Barang Milik Assunnah Mart</h4>
+                      <div className="text-sm space-y-1">
+                        <div className="flex justify-between">
+                          <span>Omset:</span>
+                          <span className="font-mono">{formatCurrency(profitLossData.segmentasi.barang_milik.omset)}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>HPP:</span>
+                          <span className="font-mono">{formatCurrency(profitLossData.segmentasi.barang_milik.hpp)}</span>
+                        </div>
+                        <div className="flex justify-between font-bold">
+                          <span>Laba Kotor:</span>
+                          <span className="font-mono text-green-600">{formatCurrency(profitLossData.segmentasi.barang_milik.laba_kotor)}</span>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <h4 className="font-bold">Konsinyasi Harian</h4>
+                      <div className="text-sm space-y-1">
+                        <div className="flex justify-between">
+                          <span>Omset:</span>
+                          <span className="font-mono">{formatCurrency(profitLossData.segmentasi.konsinyasi_harian.omset)}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>HPP:</span>
+                          <span className="font-mono">{formatCurrency(profitLossData.segmentasi.konsinyasi_harian.hpp)}</span>
+                        </div>
+                        <div className="flex justify-between font-bold">
+                          <span>Laba Kotor:</span>
+                          <span className="font-mono text-green-600">{formatCurrency(profitLossData.segmentasi.konsinyasi_harian.laba_kotor)}</span>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <h4 className="font-bold">Konsinyasi Mingguan</h4>
+                      <div className="text-sm space-y-1">
+                        <div className="flex justify-between">
+                          <span>Omset:</span>
+                          <span className="font-mono">{formatCurrency(profitLossData.segmentasi.konsinyasi_mingguan.omset)}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>HPP:</span>
+                          <span className="font-mono">{formatCurrency(profitLossData.segmentasi.konsinyasi_mingguan.hpp)}</span>
+                        </div>
+                        <div className="flex justify-between font-bold">
+                          <span>Laba Kotor:</span>
+                          <span className="font-mono text-green-600">{formatCurrency(profitLossData.segmentasi.konsinyasi_mingguan.laba_kotor)}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
             </div>
-
-            <Separator />
-
-            {/* HARGA POKOK PENJUALAN */}
-            <div>
-              <h3 className="text-lg font-semibold mb-4 text-red-700">HARGA POKOK PENJUALAN</h3>
-              <Table>
-                <TableBody>
-                  <TableRow>
-                    <TableCell className="font-medium">Persediaan Awal</TableCell>
-                    <TableCell className="text-right">{formatCurrency(profitLossData?.hpp.persediaan_awal || 0)}</TableCell>
-                  </TableRow>
-                  <TableRow>
-                    <TableCell className="font-medium">Pembelian Tunai</TableCell>
-                    <TableCell className="text-right">{formatCurrency(profitLossData?.hpp.pembelian_tunai || 0)}</TableCell>
-                  </TableRow>
-                  <TableRow>
-                    <TableCell className="font-medium">Pembelian Kredit</TableCell>
-                    <TableCell className="text-right">{formatCurrency(profitLossData?.hpp.pembelian_kredit || 0)}</TableCell>
-                  </TableRow>
-                  <TableRow>
-                    <TableCell className="font-medium">Barang Tersedia untuk Dijual</TableCell>
-                    <TableCell className="text-right">{formatCurrency(profitLossData?.hpp.barang_tersedia || 0)}</TableCell>
-                  </TableRow>
-                  <TableRow>
-                    <TableCell className="font-medium">Beban Konsinyasi Harian</TableCell>
-                    <TableCell className="text-right">{formatCurrency(profitLossData?.hpp.beban_konsinyasi_harian || 0)}</TableCell>
-                  </TableRow>
-                  <TableRow>
-                    <TableCell className="font-medium">Beban Konsinyasi Mingguan</TableCell>
-                    <TableCell className="text-right">{formatCurrency(profitLossData?.hpp.beban_konsinyasi_mingguan || 0)}</TableCell>
-                  </TableRow>
-                  <TableRow>
-                    <TableCell className="font-medium">Persediaan Akhir</TableCell>
-                    <TableCell className="text-right">({formatCurrency(profitLossData?.hpp.persediaan_akhir || 0)})</TableCell>
-                  </TableRow>
-                  <TableRow className="border-t-2 border-gray-400">
-                    <TableCell className="font-bold text-lg">HPP</TableCell>
-                    <TableCell className="text-right font-bold text-lg text-red-600">
-                      {formatCurrency(profitLossData?.hpp.hpp_total || 0)}
-                    </TableCell>
-                  </TableRow>
-                </TableBody>
-              </Table>
-            </div>
-
-            <Separator />
-
-            {/* LABA KOTOR */}
-            <div>
-              <Table>
-                <TableBody>
-                  <TableRow className="border-t-2 border-gray-400">
-                    <TableCell className="font-bold text-xl">Laba Kotor</TableCell>
-                    <TableCell className="text-right font-bold text-xl text-blue-600">
-                      {formatCurrency(profitLossData?.laba_kotor || 0)}
-                    </TableCell>
-                  </TableRow>
-                </TableBody>
-              </Table>
-            </div>
-
-            <Separator />
-
-            {/* BEBAN OPERASIONAL */}
-            <div>
-              <h3 className="text-lg font-semibold mb-4 text-orange-700">BEBAN ADMINISTRASI & UMUM</h3>
-              <Table>
-                <TableBody>
-                  <TableRow>
-                    <TableCell className="font-medium">Total Beban Administrasi & Umum</TableCell>
-                    <TableCell className="text-right">{formatCurrency(profitLossData?.beban_administrasi || 0)}</TableCell>
-                  </TableRow>
-                </TableBody>
-              </Table>
-            </div>
-
-            <Separator />
-
-            {/* LABA BERSIH */}
-            <div>
-              <Table>
-                <TableBody>
-                  <TableRow className="border-t-2 border-gray-400">
-                    <TableCell className="font-bold text-xl">Laba (Rugi) Bersih</TableCell>
-                    <TableCell className={`text-right font-bold text-xl ${(profitLossData?.laba_bersih || 0) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                      {formatCurrency(profitLossData?.laba_bersih || 0)}
-                    </TableCell>
-                  </TableRow>
-                </TableBody>
-              </Table>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Segmentation Report */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Laporan Laba Rugi Segmentasi</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            <div>
-              <h4 className="font-semibold mb-2">Perbandingan Omset</h4>
-              <Table>
-                <TableBody>
-                  <TableRow>
-                    <TableCell>- Barang Milik Assunnah Mart</TableCell>
-                    <TableCell className="text-right">{formatCurrency(profitLossData?.segmentasi.barang_milik.omset || 0)}</TableCell>
-                  </TableRow>
-                  <TableRow>
-                    <TableCell>- Konsinyasi Harian</TableCell>
-                    <TableCell className="text-right">{formatCurrency(profitLossData?.segmentasi.konsinyasi_harian.omset || 0)}</TableCell>
-                  </TableRow>
-                  <TableRow>
-                    <TableCell>- Konsinyasi Mingguan</TableCell>
-                    <TableCell className="text-right">{formatCurrency(profitLossData?.segmentasi.konsinyasi_mingguan.omset || 0)}</TableCell>
-                  </TableRow>
-                  <TableRow className="font-bold">
-                    <TableCell>Total</TableCell>
-                    <TableCell className="text-right">{formatCurrency(profitLossData?.pendapatan.total_penjualan || 0)}</TableCell>
-                  </TableRow>
-                </TableBody>
-              </Table>
-            </div>
-
-            <div>
-              <h4 className="font-semibold mb-2">HPP</h4>
-              <Table>
-                <TableBody>
-                  <TableRow>
-                    <TableCell>- Barang Milik Assunnah Mart</TableCell>
-                    <TableCell className="text-right">{formatCurrency(profitLossData?.segmentasi.barang_milik.hpp || 0)}</TableCell>
-                  </TableRow>
-                  <TableRow>
-                    <TableCell>- Barang Konsinyasi Harian</TableCell>
-                    <TableCell className="text-right">{formatCurrency(profitLossData?.segmentasi.konsinyasi_harian.hpp || 0)}</TableCell>
-                  </TableRow>
-                  <TableRow>
-                    <TableCell>- Barang Konsinyasi Mingguan</TableCell>
-                    <TableCell className="text-right">{formatCurrency(profitLossData?.segmentasi.konsinyasi_mingguan.hpp || 0)}</TableCell>
-                  </TableRow>
-                  <TableRow className="font-bold">
-                    <TableCell>Total</TableCell>
-                    <TableCell className="text-right">{formatCurrency(profitLossData?.hpp.hpp_total || 0)}</TableCell>
-                  </TableRow>
-                </TableBody>
-              </Table>
-            </div>
-
-            <div>
-              <h4 className="font-semibold mb-2">Perbandingan Laba Kotor</h4>
-              <Table>
-                <TableBody>
-                  <TableRow>
-                    <TableCell>- Barang Milik Assunnah Mart</TableCell>
-                    <TableCell className="text-right">{formatCurrency(profitLossData?.segmentasi.barang_milik.laba_kotor || 0)}</TableCell>
-                  </TableRow>
-                  <TableRow>
-                    <TableCell>- Konsinyasi Harian</TableCell>
-                    <TableCell className="text-right">{formatCurrency(profitLossData?.segmentasi.konsinyasi_harian.laba_kotor || 0)}</TableCell>
-                  </TableRow>
-                  <TableRow>
-                    <TableCell>- Konsinyasi Mingguan</TableCell>
-                    <TableCell className="text-right">{formatCurrency(profitLossData?.segmentasi.konsinyasi_mingguan.laba_kotor || 0)}</TableCell>
-                  </TableRow>
-                  <TableRow className="font-bold">
-                    <TableCell>Laba Kotor</TableCell>
-                    <TableCell className="text-right">{formatCurrency(profitLossData?.laba_kotor || 0)}</TableCell>
-                  </TableRow>
-                </TableBody>
-              </Table>
-            </div>
-          </div>
+          )}
         </CardContent>
       </Card>
     </div>

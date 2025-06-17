@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -23,6 +23,8 @@ const POSProductSearch = ({
   const { data: products, isLoading } = usePOSBarangKonsinyasi();
   const { toast } = useToast();
   const [selectedIndex, setSelectedIndex] = useState(0);
+  const autoAddProcessedRef = useRef<Set<string>>(new Set());
+  const lastProcessedQueryRef = useRef<string>('');
 
   const filteredProducts = products?.filter(product =>
     product.nama.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -38,6 +40,22 @@ const POSProductSearch = ({
       );
       
       if (exactMatch) {
+        // Create unique key for this scan
+        const scanKey = `${exactMatch.id}-${searchQuery}-${Date.now()}`;
+        
+        // Prevent duplicate processing of the same query
+        if (lastProcessedQueryRef.current === searchQuery) {
+          return;
+        }
+        
+        // Prevent processing if we've already handled this exact barcode recently
+        if (autoAddProcessedRef.current.has(exactMatch.barcode || '')) {
+          return;
+        }
+        
+        lastProcessedQueryRef.current = searchQuery;
+        autoAddProcessedRef.current.add(exactMatch.barcode || '');
+        
         const timeoutId = setTimeout(() => {
           onAddToCart(exactMatch);
           toast({
@@ -46,12 +64,25 @@ const POSProductSearch = ({
             duration: 2000
           });
           onProductAutoAdded?.();
+          
+          // Clean up the processed barcode after a delay to allow for new scans
+          setTimeout(() => {
+            autoAddProcessedRef.current.delete(exactMatch.barcode || '');
+          }, 2000);
         }, 500);
         
         return () => clearTimeout(timeoutId);
       }
     }
   }, [searchQuery, filteredProducts, enableEnterToAdd, onAddToCart, onProductAutoAdded, toast]);
+
+  // Clear processed queries when search query changes significantly
+  useEffect(() => {
+    if (!searchQuery) {
+      lastProcessedQueryRef.current = '';
+      autoAddProcessedRef.current.clear();
+    }
+  }, [searchQuery]);
 
   // Handle keyboard navigation
   useEffect(() => {
@@ -66,12 +97,28 @@ const POSProductSearch = ({
         setSelectedIndex(prev => Math.max(prev - 1, 0));
       } else if (e.key === 'Enter' && filteredProducts[selectedIndex]) {
         e.preventDefault();
-        onAddToCart(filteredProducts[selectedIndex]);
+        
+        // Prevent duplicate Enter key processing
+        const selectedProduct = filteredProducts[selectedIndex];
+        const enterKey = `enter-${selectedProduct.id}-${Date.now()}`;
+        
+        if (autoAddProcessedRef.current.has(enterKey)) {
+          return;
+        }
+        
+        autoAddProcessedRef.current.add(enterKey);
+        
+        onAddToCart(selectedProduct);
         toast({
           title: "Produk ditambahkan",
-          description: `${filteredProducts[selectedIndex].nama} berhasil ditambahkan`,
+          description: `${selectedProduct.nama} berhasil ditambahkan`,
           duration: 2000
         });
+        
+        // Clean up after a short delay
+        setTimeout(() => {
+          autoAddProcessedRef.current.delete(enterKey);
+        }, 1000);
       }
     };
 
@@ -99,6 +146,38 @@ const POSProductSearch = ({
       return <Badge variant="outline" className="text-orange-600 border-orange-300 text-xs">Stok Rendah</Badge>;
     } else {
       return <Badge variant="outline" className="text-green-600 border-green-300 text-xs">Tersedia</Badge>;
+    }
+  };
+
+  const handleManualAddToCart = (product: any) => {
+    if (product.stok_saat_ini > 0) {
+      // Create unique key for manual add
+      const manualKey = `manual-${product.id}-${Date.now()}`;
+      
+      if (autoAddProcessedRef.current.has(manualKey)) {
+        return;
+      }
+      
+      autoAddProcessedRef.current.add(manualKey);
+      
+      onAddToCart(product);
+      toast({
+        title: "Produk ditambahkan",
+        description: `${product.nama} berhasil ditambahkan ke keranjang`,
+        duration: 2000
+      });
+      
+      // Clean up after a short delay
+      setTimeout(() => {
+        autoAddProcessedRef.current.delete(manualKey);
+      }, 1000);
+    } else {
+      toast({
+        title: "Stok habis",
+        description: `${product.nama} tidak tersedia`,
+        variant: "destructive",
+        duration: 2000
+      });
     }
   };
 
@@ -187,23 +266,7 @@ const POSProductSearch = ({
             <div className="ml-4 flex flex-col gap-2">
               <Button
                 size="sm"
-                onClick={() => {
-                  if (product.stok_saat_ini > 0) {
-                    onAddToCart(product);
-                    toast({
-                      title: "Produk ditambahkan",
-                      description: `${product.nama} berhasil ditambahkan ke keranjang`,
-                      duration: 2000
-                    });
-                  } else {
-                    toast({
-                      title: "Stok habis",
-                      description: `${product.nama} tidak tersedia`,
-                      variant: "destructive",
-                      duration: 2000
-                    });
-                  }
-                }}
+                onClick={() => handleManualAddToCart(product)}
                 disabled={product.stok_saat_ini === 0}
                 className="bg-red-600 hover:bg-red-700 text-white"
               >

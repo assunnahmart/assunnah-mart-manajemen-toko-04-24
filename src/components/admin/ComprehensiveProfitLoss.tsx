@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -81,7 +80,7 @@ const ComprehensiveProfitLoss = () => {
         throw error;
       }
       
-      return data as ProfitLossData;
+      return data as unknown as ProfitLossData;
     },
   });
 

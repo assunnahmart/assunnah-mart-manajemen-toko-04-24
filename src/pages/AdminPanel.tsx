@@ -17,6 +17,7 @@ import ProductDataManagement from '@/components/admin/ProductDataManagement';
 import DataBackupManager from '@/components/admin/DataBackupManager';
 import KartuHutangSupplier from '@/components/admin/KartuHutangSupplier';
 import KartuPiutangPelanggan from '@/components/admin/KartuPiutangPelanggan';
+import CustomerReceivablesLedger from '@/components/ledgers/CustomerReceivablesLedger';
 import { useLocation, useNavigate } from 'react-router-dom';
 
 // Mapping routes ke nama tab-nya (konstanta, agar mudah dicek/diedit)
@@ -82,7 +83,7 @@ const AdminPanel = () => {
                   <SupplierManagement />
                 </TabsContent>
                 <TabsContent value="buku-besar-piutang">
-                  <BukuBesarPiutang />
+                  <CustomerReceivablesLedger />
                 </TabsContent>
                 <TabsContent value="buku-besar-hutang">
                   <BukuBesarHutang />

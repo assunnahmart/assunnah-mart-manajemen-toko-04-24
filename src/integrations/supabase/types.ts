@@ -2305,6 +2305,10 @@ export type Database = {
         Args: { p_period_id: string }
         Returns: undefined
       }
+      get_comprehensive_profit_loss_report: {
+        Args: { p_start_date?: string; p_end_date?: string }
+        Returns: Json
+      }
       get_credit_transactions: {
         Args: {
           p_start_date?: string

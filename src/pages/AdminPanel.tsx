@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import NewProtectedRoute from '@/components/NewProtectedRoute';
@@ -100,6 +101,9 @@ const AdminPanel = () => {
                 </TabsContent>
                 <TabsContent value="backup-manager">
                   <DataBackupManager />
+                </TabsContent>
+                <TabsContent value="product-management">
+                  <ProductDataManagement />
                 </TabsContent>
                 <TabsContent value="kartu-hutang">
                   <KartuHutangSupplier />

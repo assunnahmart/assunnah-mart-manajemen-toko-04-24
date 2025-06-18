@@ -5,8 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Search, Edit, Package, Plus, RefreshCw, Trash2 } from 'lucide-react';
-import { useBarangKonsinyasi } from '@/hooks/useBarang';
+import { Search, Edit, Package, Plus, RefreshCw, Trash2, ChevronLeft, ChevronRight } from 'lucide-react';
+import { useAllBarangKonsinyasi } from '@/hooks/useBarang';
 import { useToast } from '@/hooks/use-toast';
 import { SidebarProvider, SidebarInset, SidebarTrigger } from '@/components/ui/sidebar';
 import { AppSidebar } from '@/components/AppSidebar';
@@ -18,33 +18,60 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from '@/components/ui/pagination';
 import ProductForm from '@/components/products/ProductForm';
 import ProductExportImport from '@/components/products/ProductExportImport';
 import ProductDataManagement from '@/components/admin/ProductDataManagement';
 
+const ITEMS_PER_PAGE = 50; // Show 50 items per page for better performance
+
 const DataProduk = () => {
-  const { data: products, isLoading, refetch, error } = useBarangKonsinyasi();
+  const { data: productsResult, isLoading, refetch, error } = useAllBarangKonsinyasi();
   const { toast } = useToast();
   const [searchQuery, setSearchQuery] = useState('');
   const [showForm, setShowForm] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
   const [showDataManagement, setShowDataManagement] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
 
-  console.log('DataProduk state:', { products, isLoading, error });
+  console.log('DataProduk state:', { productsResult, isLoading, error });
 
-  // Display all products from POS system (including active and inactive)
-  const filteredProducts = products?.filter(product =>
+  const products = productsResult?.data || [];
+  const totalCount = productsResult?.count || 0;
+
+  // Filter products based on search query
+  const filteredProducts = products.filter(product =>
     product.nama?.toLowerCase().includes(searchQuery.toLowerCase()) ||
     product.barcode?.toLowerCase().includes(searchQuery.toLowerCase()) ||
     product.supplier?.nama?.toLowerCase().includes(searchQuery.toLowerCase())
-  ) || [];
+  );
+
+  // Calculate pagination
+  const totalPages = Math.ceil(filteredProducts.length / ITEMS_PER_PAGE);
+  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+  const endIndex = startIndex + ITEMS_PER_PAGE;
+  const currentProducts = filteredProducts.slice(startIndex, endIndex);
+
+  // Reset to first page when search changes
+  const handleSearchChange = (value: string) => {
+    setSearchQuery(value);
+    setCurrentPage(1);
+  };
 
   // Calculate comprehensive statistics for all POS products
-  const totalProducts = products?.length || 0;
-  const activeProducts = products?.filter(p => p.status === 'aktif')?.length || 0;
-  const inactiveProducts = products?.filter(p => p.status === 'nonaktif')?.length || 0;
-  const lowStockProducts = products?.filter(p => p.stok_saat_ini <= (p.stok_minimal || 0))?.length || 0;
-  const outOfStockProducts = products?.filter(p => p.stok_saat_ini === 0)?.length || 0;
+  const totalProducts = products.length;
+  const activeProducts = products.filter(p => p.status === 'aktif').length;
+  const inactiveProducts = products.filter(p => p.status === 'nonaktif').length;
+  const lowStockProducts = products.filter(p => p.stok_saat_ini <= (p.stok_minimal || 0)).length;
+  const outOfStockProducts = products.filter(p => p.stok_saat_ini === 0).length;
 
   const handleEdit = (product) => {
     setEditingProduct(product);
@@ -61,7 +88,7 @@ const DataProduk = () => {
       await refetch();
       toast({
         title: "Data berhasil diperbarui",
-        description: "Semua data produk POS System telah disinkronkan dengan database"
+        description: `Berhasil memuat ${totalCount.toLocaleString('id-ID')} produk dari database`
       });
     } catch (error) {
       console.error('Refresh error:', error);
@@ -155,7 +182,10 @@ const DataProduk = () => {
                   <div className="flex items-center justify-between mb-4">
                     <div>
                       <h1 className="text-3xl font-bold text-gray-900 mb-2">Semua Data Produk POS System</h1>
-                      <p className="text-gray-600">Kelola semua data produk yang tersedia di POS System (Aktif & Nonaktif)</p>
+                      <p className="text-gray-600">
+                        Kelola semua data produk yang tersedia di POS System (Aktif & Nonaktif) - 
+                        Total: {totalCount.toLocaleString('id-ID')} produk
+                      </p>
                     </div>
                     <div className="flex gap-2">
                       <Button onClick={handleAddNew} className="flex items-center gap-2">
@@ -236,7 +266,8 @@ const DataProduk = () => {
                         <div>
                           <h3 className="font-medium text-blue-900">Sinkronisasi POS System Aktif</h3>
                           <p className="text-sm text-blue-600">
-                            Menampilkan semua data produk dari POS System secara real-time. Termasuk produk aktif dan nonaktif.
+                            Menampilkan semua {totalCount.toLocaleString('id-ID')} data produk dari POS System secara real-time. 
+                            Menggunakan pagination untuk performa optimal.
                           </p>
                         </div>
                       </div>
@@ -271,7 +302,7 @@ const DataProduk = () => {
                   {/* Export/Import Controls */}
                   <div className="mb-4">
                     <ProductExportImport 
-                      products={products || []} 
+                      products={products} 
                       onImportSuccess={() => {
                         refetch();
                         toast({
@@ -288,7 +319,7 @@ const DataProduk = () => {
                     <Input
                       placeholder="Cari nama produk, barcode, supplier..."
                       value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
+                      onChange={(e) => handleSearchChange(e.target.value)}
                       className="pl-10"
                     />
                   </div>
@@ -300,11 +331,12 @@ const DataProduk = () => {
                       <span>Semua Data Produk POS System</span>
                       <div className="flex items-center gap-4">
                         <div className="text-sm text-gray-500">
-                          Menampilkan: {filteredProducts.length.toLocaleString('id-ID')} dari {totalProducts.toLocaleString('id-ID')} produk
+                          Menampilkan: {currentProducts.length.toLocaleString('id-ID')} dari {filteredProducts.length.toLocaleString('id-ID')} produk
+                          {searchQuery && ` (total tersedia: ${totalProducts.toLocaleString('id-ID')})`}
                         </div>
                         <Badge variant="outline" className="bg-blue-50 text-blue-700">
                           <Package className="h-3 w-3 mr-1" />
-                          Semua Status
+                          Halaman {currentPage} dari {totalPages}
                         </Badge>
                       </div>
                     </CardTitle>
@@ -315,7 +347,7 @@ const DataProduk = () => {
                         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
                         <p className="mt-2 text-gray-600">Memuat semua data produk dari POS System...</p>
                       </div>
-                    ) : filteredProducts.length === 0 ? (
+                    ) : currentProducts.length === 0 ? (
                       <div className="text-center py-8">
                         <Package className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                         <p className="text-gray-600">
@@ -329,90 +361,145 @@ const DataProduk = () => {
                         )}
                       </div>
                     ) : (
-                      <div className="overflow-x-auto">
-                        <Table>
-                          <TableHeader>
-                            <TableRow>
-                              <TableHead>Nama Produk</TableHead>
-                              <TableHead>Supplier</TableHead>
-                              <TableHead>Barcode</TableHead>
-                              <TableHead>Jenis Barang</TableHead>
-                              <TableHead>Kategori</TableHead>
-                              <TableHead>Satuan</TableHead>
-                              <TableHead>Harga Beli</TableHead>
-                              <TableHead>Harga Jual</TableHead>
-                              <TableHead>Stok</TableHead>
-                              <TableHead>Stok Minimal</TableHead>
-                              <TableHead>Status Stok</TableHead>
-                              <TableHead>Status</TableHead>
-                              <TableHead>Aksi</TableHead>
-                            </TableRow>
-                          </TableHeader>
-                          <TableBody>
-                            {filteredProducts.map((product) => (
-                              <TableRow key={product.id} className={product.status === 'nonaktif' ? 'opacity-60' : ''}>
-                                <TableCell className="font-medium">{product.nama}</TableCell>
-                                <TableCell>
-                                  {product.supplier?.nama ? (
-                                    <Badge variant="outline" className="bg-blue-50 text-blue-700">
-                                      {product.supplier.nama}
-                                    </Badge>
-                                  ) : (
-                                    <span className="text-gray-400">-</span>
-                                  )}
-                                </TableCell>
-                                <TableCell>
-                                  <code className="bg-gray-100 px-2 py-1 rounded text-sm">
-                                    {product.barcode || '-'}
-                                  </code>
-                                </TableCell>
-                                <TableCell>
-                                  <Badge variant="outline">
-                                    {getJenisDisplay(product.jenis_konsinyasi)}
-                                  </Badge>
-                                </TableCell>
-                                <TableCell>
-                                  <Badge variant="outline" className="bg-purple-50 text-purple-700">
-                                    {product.kategori_pembelian || 'retail'}
-                                  </Badge>
-                                </TableCell>
-                                <TableCell>{product.satuan}</TableCell>
-                                <TableCell>{formatCurrency(product.harga_beli || 0)}</TableCell>
-                                <TableCell className="font-medium text-green-600">
-                                  {formatCurrency(product.harga_jual || 0)}
-                                </TableCell>
-                                <TableCell>
-                                  <span className={`font-medium ${
-                                    product.stok_saat_ini === 0
-                                      ? 'text-red-600' 
-                                      : product.stok_saat_ini <= (product.stok_minimal || 0)
-                                      ? 'text-orange-600'
-                                      : 'text-green-600'
-                                  }`}>
-                                    {product.stok_saat_ini}
-                                  </span>
-                                </TableCell>
-                                <TableCell>{product.stok_minimal}</TableCell>
-                                <TableCell>
-                                  {getStockBadge(product.stok_saat_ini, product.stok_minimal)}
-                                </TableCell>
-                                <TableCell>{getStatusBadge(product.status)}</TableCell>
-                                <TableCell>
-                                  <div className="flex gap-2">
-                                    <Button
-                                      variant="outline"
-                                      size="sm"
-                                      onClick={() => handleEdit(product)}
-                                    >
-                                      <Edit className="h-4 w-4" />
-                                    </Button>
-                                  </div>
-                                </TableCell>
+                      <>
+                        <div className="overflow-x-auto">
+                          <Table>
+                            <TableHeader>
+                              <TableRow>
+                                <TableHead>Nama Produk</TableHead>
+                                <TableHead>Supplier</TableHead>
+                                <TableHead>Barcode</TableHead>
+                                <TableHead>Jenis Barang</TableHead>
+                                <TableHead>Kategori</TableHead>
+                                <TableHead>Satuan</TableHead>
+                                <TableHead>Harga Beli</TableHead>
+                                <TableHead>Harga Jual</TableHead>
+                                <TableHead>Stok</TableHead>
+                                <TableHead>Stok Minimal</TableHead>
+                                <TableHead>Status Stok</TableHead>
+                                <TableHead>Status</TableHead>
+                                <TableHead>Aksi</TableHead>
                               </TableRow>
-                            ))}
-                          </TableBody>
-                        </Table>
-                      </div>
+                            </TableHeader>
+                            <TableBody>
+                              {currentProducts.map((product) => (
+                                <TableRow key={product.id} className={product.status === 'nonaktif' ? 'opacity-60' : ''}>
+                                  <TableCell className="font-medium">{product.nama}</TableCell>
+                                  <TableCell>
+                                    {product.supplier?.nama ? (
+                                      <Badge variant="outline" className="bg-blue-50 text-blue-700">
+                                        {product.supplier.nama}
+                                      </Badge>
+                                    ) : (
+                                      <span className="text-gray-400">-</span>
+                                    )}
+                                  </TableCell>
+                                  <TableCell>
+                                    <code className="bg-gray-100 px-2 py-1 rounded text-sm">
+                                      {product.barcode || '-'}
+                                    </code>
+                                  </TableCell>
+                                  <TableCell>
+                                    <Badge variant="outline">
+                                      {getJenisDisplay(product.jenis_konsinyasi)}
+                                    </Badge>
+                                  </TableCell>
+                                  <TableCell>
+                                    <Badge variant="outline" className="bg-purple-50 text-purple-700">
+                                      {product.kategori_pembelian || 'retail'}
+                                    </Badge>
+                                  </TableCell>
+                                  <TableCell>{product.satuan}</TableCell>
+                                  <TableCell>{formatCurrency(product.harga_beli || 0)}</TableCell>
+                                  <TableCell className="font-medium text-green-600">
+                                    {formatCurrency(product.harga_jual || 0)}
+                                  </TableCell>
+                                  <TableCell>
+                                    <span className={`font-medium ${
+                                      product.stok_saat_ini === 0
+                                        ? 'text-red-600' 
+                                        : product.stok_saat_ini <= (product.stok_minimal || 0)
+                                        ? 'text-orange-600'
+                                        : 'text-green-600'
+                                    }`}>
+                                      {product.stok_saat_ini}
+                                    </span>
+                                  </TableCell>
+                                  <TableCell>{product.stok_minimal}</TableCell>
+                                  <TableCell>
+                                    {getStockBadge(product.stok_saat_ini, product.stok_minimal)}
+                                  </TableCell>
+                                  <TableCell>{getStatusBadge(product.status)}</TableCell>
+                                  <TableCell>
+                                    <div className="flex gap-2">
+                                      <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => handleEdit(product)}
+                                      >
+                                        <Edit className="h-4 w-4" />
+                                      </Button>
+                                    </div>
+                                  </TableCell>
+                                </TableRow>
+                              ))}
+                            </TableBody>
+                          </Table>
+                        </div>
+
+                        {/* Pagination */}
+                        {totalPages > 1 && (
+                          <div className="mt-6">
+                            <Pagination>
+                              <PaginationContent>
+                                <PaginationItem>
+                                  <PaginationPrevious 
+                                    onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                                    className={currentPage === 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                                  />
+                                </PaginationItem>
+                                
+                                {/* Page numbers */}
+                                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                                  const pageNum = Math.max(1, Math.min(totalPages - 4, currentPage - 2)) + i;
+                                  if (pageNum <= totalPages) {
+                                    return (
+                                      <PaginationItem key={pageNum}>
+                                        <PaginationLink
+                                          onClick={() => setCurrentPage(pageNum)}
+                                          isActive={currentPage === pageNum}
+                                          className="cursor-pointer"
+                                        >
+                                          {pageNum}
+                                        </PaginationLink>
+                                      </PaginationItem>
+                                    );
+                                  }
+                                  return null;
+                                })}
+                                
+                                {totalPages > 5 && currentPage < totalPages - 2 && (
+                                  <PaginationItem>
+                                    <PaginationEllipsis />
+                                  </PaginationItem>
+                                )}
+                                
+                                <PaginationItem>
+                                  <PaginationNext 
+                                    onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                                    className={currentPage === totalPages ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                                  />
+                                </PaginationItem>
+                              </PaginationContent>
+                            </Pagination>
+                            
+                            <div className="text-center mt-2 text-sm text-gray-500">
+                              Halaman {currentPage} dari {totalPages} 
+                              ({filteredProducts.length.toLocaleString('id-ID')} produk{searchQuery ? ' yang cocok' : ''})
+                            </div>
+                          </div>
+                        )}
+                      </>
                     )}
                   </CardContent>
                 </Card>

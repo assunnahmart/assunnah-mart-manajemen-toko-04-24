@@ -1,12 +1,15 @@
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
-// Enhanced hook with real-time sync for POS integration
-export const useBarangKonsinyasi = () => {
+// Enhanced hook with pagination support for large datasets
+export const useBarangKonsinyasi = (limit?: number, offset?: number) => {
   return useQuery({
-    queryKey: ['barang-konsinyasi'],
+    queryKey: ['barang-konsinyasi', limit, offset],
     queryFn: async () => {
-      const { data, error } = await supabase
+      console.log('Fetching barang konsinyasi with limit:', limit, 'offset:', offset);
+      
+      let query = supabase
         .from('barang_konsinyasi')
         .select(`
           *,
@@ -14,13 +17,56 @@ export const useBarangKonsinyasi = () => {
             id,
             nama
           )
-        `)
+        `, { count: 'exact' })
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
-      return data;
+      // Apply pagination if specified
+      if (limit && offset !== undefined) {
+        query = query.range(offset, offset + limit - 1);
+      }
+
+      const { data, error, count } = await query;
+
+      if (error) {
+        console.error('Error fetching barang konsinyasi:', error);
+        throw error;
+      }
+      
+      console.log(`Successfully fetched ${data?.length || 0} products out of ${count || 0} total`);
+      return { data: data || [], count: count || 0 };
     },
     refetchInterval: 5000, // Auto-refresh every 5 seconds for POS sync
+  });
+};
+
+// Hook to get ALL products without pagination (for exports, reports, etc)
+export const useAllBarangKonsinyasi = () => {
+  return useQuery({
+    queryKey: ['all-barang-konsinyasi'],
+    queryFn: async () => {
+      console.log('Fetching ALL barang konsinyasi products...');
+      
+      const { data, error, count } = await supabase
+        .from('barang_konsinyasi')
+        .select(`
+          *,
+          supplier!barang_konsinyasi_supplier_id_fkey (
+            id,
+            nama
+          )
+        `, { count: 'exact' })
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Error fetching all barang konsinyasi:', error);
+        throw error;
+      }
+      
+      console.log(`Successfully fetched ALL ${data?.length || 0} products (total: ${count || 0})`);
+      return { data: data || [], count: count || 0 };
+    },
+    refetchInterval: 10000, // Less frequent refresh for all data
+    staleTime: 30000, // Keep data fresh for 30 seconds
   });
 };
 
@@ -68,6 +114,7 @@ export const useCreateBarang = () => {
     onSuccess: () => {
       // Comprehensive cache invalidation for POS sync
       queryClient.invalidateQueries({ queryKey: ['barang-konsinyasi'] });
+      queryClient.invalidateQueries({ queryKey: ['all-barang-konsinyasi'] });
       queryClient.invalidateQueries({ queryKey: ['barang-stok-rendah'] });
       queryClient.invalidateQueries({ queryKey: ['barang'] });
       queryClient.invalidateQueries({ queryKey: ['stock_data'] });
@@ -99,6 +146,7 @@ export const useUpdateBarang = () => {
     onSuccess: () => {
       // Comprehensive cache invalidation for POS sync
       queryClient.invalidateQueries({ queryKey: ['barang-konsinyasi'] });
+      queryClient.invalidateQueries({ queryKey: ['all-barang-konsinyasi'] });
       queryClient.invalidateQueries({ queryKey: ['barang-stok-rendah'] });
       queryClient.invalidateQueries({ queryKey: ['barang'] });
       queryClient.invalidateQueries({ queryKey: ['stock_data'] });
@@ -127,6 +175,7 @@ export const useDeleteBarang = () => {
     onSuccess: () => {
       // Comprehensive cache invalidation for POS sync
       queryClient.invalidateQueries({ queryKey: ['barang-konsinyasi'] });
+      queryClient.invalidateQueries({ queryKey: ['all-barang-konsinyasi'] });
       queryClient.invalidateQueries({ queryKey: ['barang-stok-rendah'] });
       queryClient.invalidateQueries({ queryKey: ['barang'] });
       queryClient.invalidateQueries({ queryKey: ['stock_data'] });

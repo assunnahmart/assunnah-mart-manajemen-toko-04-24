@@ -161,7 +161,6 @@ const CustomerReceivablesLedger = () => {
                   <SelectValue placeholder="Pilih pelanggan" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Semua Pelanggan</SelectItem>
                   {allCustomers.map((customer) => (
                     <SelectItem key={customer.name} value={customer.name}>
                       {customer.name} ({customer.type})

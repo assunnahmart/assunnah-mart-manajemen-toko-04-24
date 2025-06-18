@@ -27,10 +27,10 @@ interface ReturnItem {
 const SalesReturnForm = () => {
   const [selectedTransactionId, setSelectedTransactionId] = useState('');
   const [pelangganName, setPelangganName] = useState('');
-  const [jenisRetur, setJenisRetur] = useState<'barang' | 'uang'>('barang');
   const [alasanRetur, setAlasanRetur] = useState('');
   const [catatan, setCatatan] = useState('');
   const [status, setStatus] = useState<'pending' | 'approved'>('pending');
+  const [jenisRetur, setJenisRetur] = useState<'barang' | 'uang'>('barang');
   const [items, setItems] = useState<ReturnItem[]>([]);
   
   const [selectedProductId, setSelectedProductId] = useState('');
@@ -39,18 +39,20 @@ const SalesReturnForm = () => {
   const [itemReason, setItemReason] = useState('');
 
   const { data: posTransactions } = usePOSTransactions();
-  const { data: products } = useBarang();
+  const { data: productsResult } = useBarang();
   const { data: kasirData } = useKasir();
   const { user } = useSimpleAuth();
   const createReturn = useCreateSalesReturn();
   const { toast } = useToast();
 
+  const products = productsResult?.data || [];
   const userKasir = kasirData?.find(k => k.nama === user?.full_name);
+  const selectedTransaction = posTransactions?.find(t => t.id === selectedTransactionId);
 
   const addItem = () => {
     if (!selectedProductId || quantity <= 0 || unitPrice <= 0) return;
 
-    const product = products?.find(p => p.id === selectedProductId);
+    const product = products.find(p => p.id === selectedProductId);
     if (!product) return;
 
     const newItem: ReturnItem = {
@@ -92,8 +94,8 @@ const SalesReturnForm = () => {
           pelanggan_name: pelangganName,
           kasir_id: userKasir.id,
           total_retur: totalReturn,
-          jenis_retur: jenisRetur,
           alasan_retur: alasanRetur,
+          jenis_retur: jenisRetur,
           status,
           catatan
         },
@@ -115,7 +117,6 @@ const SalesReturnForm = () => {
       // Reset form
       setSelectedTransactionId('');
       setPelangganName('');
-      setJenisRetur('barang');
       setAlasanRetur('');
       setCatatan('');
       setStatus('pending');
@@ -135,7 +136,7 @@ const SalesReturnForm = () => {
         <CardTitle>Retur Penjualan</CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
-        {/* Transaction and Customer Info */}
+        {/* Transaction Selection */}
         <div className="grid grid-cols-2 gap-4">
           <div>
             <Label htmlFor="transaction">Transaksi POS (Opsional)</Label>
@@ -146,7 +147,7 @@ const SalesReturnForm = () => {
               <SelectContent>
                 {posTransactions?.map((transaction) => (
                   <SelectItem key={transaction.id} value={transaction.id}>
-                    {transaction.transaction_number} - Rp {transaction.total_amount.toLocaleString('id-ID')}
+                    {transaction.transaction_number} - {transaction.kasir_name}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -172,8 +173,8 @@ const SalesReturnForm = () => {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="barang">Tukar Barang</SelectItem>
-                <SelectItem value="uang">Refund Uang</SelectItem>
+                <SelectItem value="barang">Retur Barang</SelectItem>
+                <SelectItem value="uang">Retur Uang</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -217,7 +218,7 @@ const SalesReturnForm = () => {
                     <SelectValue placeholder="Pilih produk" />
                   </SelectTrigger>
                   <SelectContent>
-                    {products?.map((product) => (
+                    {products.map((product) => (
                       <SelectItem key={product.id} value={product.id}>
                         {product.nama}
                       </SelectItem>

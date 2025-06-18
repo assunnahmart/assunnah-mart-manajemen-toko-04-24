@@ -17,7 +17,9 @@ const ProductDataManagement = () => {
   const [confirmText, setConfirmText] = useState('');
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const { toast } = useToast();
-  const { data: products, refetch } = useBarangKonsinyasi();
+  const { data: productsResult, refetch } = useBarangKonsinyasi();
+
+  const products = productsResult?.data || [];
 
   const handleDeleteAllProducts = async () => {
     setIsDeleting(true);
@@ -163,16 +165,16 @@ const ProductDataManagement = () => {
               <span>Statistik Produk</span>
               <Badge variant="outline" className="bg-blue-100 text-blue-800">
                 <Package className="h-3 w-3 mr-1" />
-                {products?.length || 0} produk
+                {products.length || 0} produk
               </Badge>
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="text-sm text-gray-600 space-y-2">
-              <p><strong>Total Produk:</strong> {products?.length || 0}</p>
-              <p><strong>Produk Aktif:</strong> {products?.filter(p => p.status === 'aktif').length || 0}</p>
-              <p><strong>Produk Nonaktif:</strong> {products?.filter(p => p.status === 'nonaktif').length || 0}</p>
-              <p><strong>Stok Rendah:</strong> {products?.filter(p => p.stok_saat_ini <= p.stok_minimal).length || 0}</p>
+              <p><strong>Total Produk:</strong> {products.length || 0}</p>
+              <p><strong>Produk Aktif:</strong> {products.filter(p => p.status === 'aktif').length || 0}</p>
+              <p><strong>Produk Nonaktif:</strong> {products.filter(p => p.status === 'nonaktif').length || 0}</p>
+              <p><strong>Stok Rendah:</strong> {products.filter(p => p.stok_saat_ini <= p.stok_minimal).length || 0}</p>
             </div>
             
             <Button

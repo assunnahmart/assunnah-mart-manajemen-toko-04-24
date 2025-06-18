@@ -37,19 +37,20 @@ const PurchaseReturnForm = () => {
   const [itemReason, setItemReason] = useState('');
 
   const { data: purchaseTransactions } = usePurchaseTransactions();
-  const { data: products } = useBarang();
+  const { data: productsResult } = useBarang();
   const { data: kasirData } = useKasir();
   const { user } = useSimpleAuth();
   const createReturn = useCreatePurchaseReturn();
   const { toast } = useToast();
 
+  const products = productsResult?.data || [];
   const userKasir = kasirData?.find(k => k.nama === user?.full_name);
   const selectedTransaction = purchaseTransactions?.find(t => t.id === selectedTransactionId);
 
   const addItem = () => {
     if (!selectedProductId || quantity <= 0 || unitPrice <= 0) return;
 
-    const product = products?.find(p => p.id === selectedProductId);
+    const product = products.find(p => p.id === selectedProductId);
     if (!product) return;
 
     const newItem: ReturnItem = {
@@ -188,7 +189,7 @@ const PurchaseReturnForm = () => {
                     <SelectValue placeholder="Pilih produk" />
                   </SelectTrigger>
                   <SelectContent>
-                    {products?.map((product) => (
+                    {products.map((product) => (
                       <SelectItem key={product.id} value={product.id}>
                         {product.nama}
                       </SelectItem>

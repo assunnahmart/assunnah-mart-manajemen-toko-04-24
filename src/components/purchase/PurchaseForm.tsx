@@ -33,13 +33,14 @@ const PurchaseForm = () => {
   const [unitPrice, setUnitPrice] = useState(0);
   const [filteredProducts, setFilteredProducts] = useState<any[]>([]);
 
-  const { data: products } = useBarang();
+  const { data: productsResult } = useBarang();
   const { data: suppliers } = useSupplier();
   const { data: kasirData } = useKasir();
   const { user } = useSimpleAuth();
   const createPurchase = useCreatePurchaseTransaction();
   const { toast } = useToast();
 
+  const products = productsResult?.data || [];
   const userKasir = kasirData?.find(k => k.nama === user?.full_name);
 
   // Filter products based on selected supplier with improved performance
@@ -53,7 +54,7 @@ const PurchaseForm = () => {
       );
       setFilteredProducts(supplierProducts.slice(0, 5000)); // Limit to 5000 products
     } else {
-      setFilteredProducts((products || []).slice(0, 5000));
+      setFilteredProducts(products.slice(0, 5000));
     }
     setSelectedProduct('');
     setUnitPrice(0);
@@ -72,7 +73,7 @@ const PurchaseForm = () => {
   const addItem = () => {
     if (!selectedProduct || quantity <= 0 || unitPrice <= 0) return;
 
-    const product = products?.find(p => p.id === selectedProduct);
+    const product = products.find(p => p.id === selectedProduct);
     if (!product) return;
 
     const newItem: PurchaseItem = {

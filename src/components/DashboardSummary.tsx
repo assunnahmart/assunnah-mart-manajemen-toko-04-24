@@ -10,7 +10,7 @@ import { useSupplier } from '@/hooks/useSupplier';
 const DashboardSummary = () => {
   const { data: todayPOS, isLoading: posLoading } = usePOSTransactionsToday();
   const { data: kasSummary, isLoading: kasLoading } = useKasUmumSummary();
-  const { data: barangList, isLoading: barangLoading } = useBarang();
+  const { data: barangResult, isLoading: barangLoading } = useBarang();
   const { data: suppliers, isLoading: supplierLoading } = useSupplier();
 
   const isLoading = posLoading || kasLoading || barangLoading || supplierLoading;
@@ -29,7 +29,8 @@ const DashboardSummary = () => {
     );
   }
 
-  const lowStockItems = barangList?.filter(item => 
+  const barangList = barangResult?.data || [];
+  const lowStockItems = barangList.filter(item => 
     (item.stok_saat_ini || 0) <= (item.stok_minimal || 0)
   ).length || 0;
 
@@ -52,7 +53,7 @@ const DashboardSummary = () => {
     },
     {
       title: 'Total Produk',
-      value: barangList?.length || 0,
+      value: barangList.length || 0,
       subtitle: lowStockItems > 0 ? `${lowStockItems} stok rendah` : 'Stok normal',
       icon: Package,
       trend: lowStockItems > 0 ? 'down' : 'up',

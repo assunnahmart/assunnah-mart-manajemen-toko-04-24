@@ -16,17 +16,19 @@ interface POSProductListProps {
 
 const POSProductList = ({ onAddToCart, showAddToCart = false }: POSProductListProps) => {
   const [searchQuery, setSearchQuery] = useState('');
-  const { data: products, isLoading, refetch, error } = useBarangKonsinyasi();
+  const { data: productsResult, isLoading, refetch, error } = useBarangKonsinyasi();
   const { toast } = useToast();
 
+  const products = productsResult?.data || [];
+
   // Filter products based on search query and only show active products
-  const filteredProducts = products?.filter(product =>
+  const filteredProducts = products.filter(product =>
     product.status === 'aktif' && (
       product.nama.toLowerCase().includes(searchQuery.toLowerCase()) ||
       product.barcode?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       product.supplier?.nama?.toLowerCase().includes(searchQuery.toLowerCase())
     )
-  ) || [];
+  );
 
   const handleAddToCart = (product: any) => {
     if (product.stok_saat_ini <= 0) {

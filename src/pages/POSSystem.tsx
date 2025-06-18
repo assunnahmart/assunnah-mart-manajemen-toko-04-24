@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import POSSidebar from '@/components/pos/POSSidebar';
@@ -5,6 +6,7 @@ import POSHeader from '@/components/pos/POSHeader';
 import POSCartManager from '@/components/pos/POSCartManager';
 import POSPaymentManager from '@/components/pos/POSPaymentManager';
 import POSModalManager from '@/components/pos/POSModalManager';
+import POSReceiptPrint from '@/components/pos/POSReceiptPrint';
 import { useCreatePOSTransaction } from '@/hooks/usePOSTransactions';
 import { useSimpleAuth } from '@/hooks/useSimpleAuth';
 import { useToast } from '@/hooks/use-toast';
@@ -12,6 +14,7 @@ import NewProtectedRoute from '@/components/NewProtectedRoute';
 import POSTransactionSync from '@/components/pos/POSTransactionSync';
 import { usePOSTransactionSync } from '@/hooks/usePOSTransactionSync';
 import POSProductList from '@/components/pos/POSProductList';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 interface Customer {
   id: string;
@@ -232,6 +235,31 @@ const POSSystem = () => {
                 getTotalAmount={getTotalAmount}
                 onPaymentSuccess={handlePaymentSuccess}
               />
+
+              {/* Print Preview & Receipt Section */}
+              <Card className="mb-6">
+                <CardHeader>
+                  <CardTitle className="text-lg font-semibold text-gray-800">
+                    Print Preview & Struk
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex justify-center">
+                    <POSReceiptPrint
+                      cartItems={cartItems}
+                      totalAmount={getTotalAmount()}
+                      transactionNumber={`TRX-${Date.now()}`}
+                      amountPaid={selectedPaymentMethod === 'cash' ? getTotalAmount() : undefined}
+                      changeAmount={selectedPaymentMethod === 'cash' ? 0 : undefined}
+                    />
+                  </div>
+                  {cartItems.length === 0 && (
+                    <p className="text-center text-gray-500 text-sm mt-2">
+                      Tambahkan produk ke keranjang untuk melihat preview struk
+                    </p>
+                  )}
+                </CardContent>
+              </Card>
 
               {(isSyncingStock || isSyncingDebt) && (
                 <div className="bg-blue-50 border border-blue-200 p-3 rounded-lg mb-4">
